@@ -9,9 +9,12 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
+import net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter;
 import net.onixary.sscPrimalstinct.component.PrimalstinctComponent;
 import net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent;
+import net.onixary.sscPrimalstinct.data.PrimalRoster;
 import net.onixary.sscPrimalstinct.data.PrimalRosterManager;
 import net.onixary.sscPrimalstinct.instinct.PrimalstinctService;
 
@@ -52,6 +55,8 @@ public final class PrimalstinctNetwork {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> syncNow(newPlayer));
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register(
                 (player, origin, destination) -> syncNow(player));
+        // 卡15：形态切换后的 managed 即时同步由 SSCPrimalstinct 主初始化器的
+        // FORM_CHANGE_END 钩子触发（SSC 事件类的 import 集中在主类，与既有约定一致）
 
         ServerTickEvents.END_SERVER_TICK.register(PrimalstinctNetwork::tickCorrection);
     }
@@ -79,15 +84,29 @@ public final class PrimalstinctNetwork {
                                                  PrimalstinctComponent component, float rate) {
         net.onixary.sscPrimalstinct.inventory.InventoryLockRule rule =
                 net.onixary.sscPrimalstinct.inventory.InventoryLockManager.rule(player);
+        PrimalRoster roster = PrimalRosterManager.active();
         return new PrimalstinctStateS2C(
                 component.getValue(),
                 rate,
                 component.getLevel(),
                 component.isLocked(),
                 server == null ? 0L : server.getTicks(),
-                PrimalRosterManager.active().revision,
+                roster.revision,
                 rule == null ? 9 : rule.allowedHotbarSlots(),
-                rule == null ? 27 : rule.allowedMainSlots());
+                rule == null ? 27 : rule.allowedMainSlots(),
+                isManaged(player),
+                roster.levels.maxValue,
+                PrimalstinctService.BASE_GROWTH_PER_SECOND,
+                roster.levels.thresholds);
+    }
+
+    /** 卡15：当前 SSC 形态是否受本玩法管理（名单内含子形态继承）。HUD 显隐以此为准，不读 NoInstinct。 */
+    private static boolean isManaged(ServerPlayerEntity player) {
+        if (!SSCAdapter.isLoaded()) {
+            return false;
+        }
+        String formId = SSCAdapter.readInstinct(player).formId();
+        return formId != null && PrimalRosterManager.resolve(Identifier.tryParse(formId)) != null;
     }
 
     private static void tickCorrection(MinecraftServer server) {

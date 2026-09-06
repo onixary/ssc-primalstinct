@@ -8,7 +8,9 @@
     "InstinctUtilsMixin",
     "InstinctValueConditionMixin"
   ],
-  "client": [],
+  "client": [
+    "client.InstinctBarRendererMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

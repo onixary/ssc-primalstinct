@@ -74,6 +74,13 @@ public class SSCPrimalstinct implements ModInitializer {
             }
         });
 
+        // 卡15：形态切换后即时同步快照（managed 标记随名单形态变化，HUD 显隐不等待限频校正）
+        SSCEvent.FORM_CHANGE_END.register((player, oldForm, newForm) -> {
+            if (!player.getWorld().isClient() && player instanceof ServerPlayerEntity serverPlayer) {
+                serverPlayer.getServer().execute(() -> PrimalstinctNetwork.syncNow(serverPlayer));
+            }
+        });
+
         // 卡10：交互限制规则生命周期
         net.onixary.sscPrimalstinct.interaction.InteractionRuleManager.init();
 
