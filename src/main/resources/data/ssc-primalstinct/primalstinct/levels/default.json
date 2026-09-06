@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "max_value": 100.0,
+  "lock_at_max": true,
+  "thresholds": [20.0, 40.0, 60.0, 80.0, 100.0],
+  "levels": {
+    "1": { "powers": { "add": [], "remove": [] } },
+    "2": { "powers": { "add": ["shape-shifter-curse:barehand_digging_speed_up"], "remove": [] } },
+    "3": { "powers": { "add": ["shape-shifter-curse:barehand_attack_up"], "remove": [] } },
+    "4": { "powers": { "add": [], "remove": ["shape-shifter-curse:barehand_digging_speed_up"] } },
+    "5": { "powers": { "add": [], "remove": [] } }
+  }
+}

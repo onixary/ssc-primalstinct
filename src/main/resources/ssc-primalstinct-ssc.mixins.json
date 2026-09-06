@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.onixary.sscPrimalstinct.mixin.ssc",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ssc-primalstinct-refmap.json",
+  "mixins": [
+    "InstinctUtilsMixin",
+    "InstinctValueConditionMixin"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "form_id": "shape-shifter-curse:ocelot_3",
+  "selectable": true,
+  "order": 10,
+  "fallback_form": "shape-shifter-curse:original_before_enable",
+  "base_powers": {
+    "add": [
+      "shape-shifter-curse:cat_friendly",
+      "ssc-primalstinct:ocelot_3_env_jungle",
+      "ssc-primalstinct:ocelot_3_eat_raw_meat",
+      "ssc-primalstinct:ocelot_3_combat_hit"
+    ],
+    "remove": []
+  },
+  "level_overrides": {},
+  "instinct_powers": [],
+  "diet_profile": "ssc-primalstinct:carnivore",
+  "sleep_profile": "ssc-primalstinct:curl"
+}

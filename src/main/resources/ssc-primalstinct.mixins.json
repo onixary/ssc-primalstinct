@@ -1,0 +1,30 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.onixary.sscPrimalstinct.mixin.vanilla",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "ssc-primalstinct-refmap.json",
+  "mixins": [
+    "SlotMixin",
+    "ScreenHandlerMixin",
+    "CraftingScreenHandlerMixin",
+    "PlayerInventoryMixin",
+    "ServerPlayNetworkHandlerMixin",
+    "ServerPlayerEntityMixin",
+    "ServerPlayerInteractionManagerMixin",
+    "ItemStackMixin",
+    "PlayerEntityEquipMixin",
+    "ServerPlayerDamageWakeMixin",
+    "PlayerCurlSleepMixin",
+    "LivingEntityCurlSleepMixin"
+  ],
+  "client": [
+    "client.ClientPlayerInteractionManagerMixin",
+    "client.InGameHudMixin",
+    "client.HandledScreenMixin",
+    "client.PlayerInventoryClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

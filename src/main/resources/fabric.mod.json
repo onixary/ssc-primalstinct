@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "ssc-primalstinct",
+  "version": "${version}",
+  "name": "SSC Primalstinct",
+  "description": "Official addon of Shape Shifter Curse: rewrites the instinct resource into a levelled, lockable progression core with feral form selection and progressive ability gating.",
+  "authors": [
+    {
+      "name": "onixary",
+      "contact": {
+        "github": "https://github.com/onixary"
+      }
+    }
+  ],
+  "contact": {
+    "sources": "https://github.com/onixary/ssc-primalstinct"
+  },
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.onixary.sscPrimalstinct.SSCPrimalstinct"
+    ],
+    "client": [
+      "net.onixary.sscPrimalstinct.client.SSCPrimalstinctClient"
+    ],
+    "cardinal-components-entity": [
+      "net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent"
+    ]
+  },
+  "mixins": [
+    "ssc-primalstinct.mixins.json",
+    "ssc-primalstinct-ssc.mixins.json"
+  ],
+  "custom": {
+    "cardinal-components": [
+      "ssc-primalstinct:primalstinct"
+    ]
+  },
+  "depends": {
+    "java": ">=17",
+    "fabricloader": ">=0.14.21",
+    "fabric-api": "*",
+    "minecraft": "1.20.1",
+    "shape-shifter-curse": ">=1.10.0"
+  }
+}

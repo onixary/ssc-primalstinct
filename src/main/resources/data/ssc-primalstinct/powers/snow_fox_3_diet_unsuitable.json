@@ -1,0 +1,13 @@
+{
+  "type": "apoli:action_on_item_use",
+  "entity_action": {
+    "type": "ssc-primalstinct:add_primalstinct",
+    "amount": 1.0
+  },
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": {
+      "tag": "ssc-primalstinct:snow_fox_diet_unsuitable"
+    }
+  }
+}

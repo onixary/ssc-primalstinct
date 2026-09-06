@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "normal": {
+    "instinct_delta": -1.0,
+    "item_tag": "ssc-primalstinct:snow_fox_diet_normal"
+  },
+  "unsuitable": {
+    "instinct_delta": 1.0,
+    "item_tag": "ssc-primalstinct:snow_fox_diet_unsuitable"
+  },
+  "forbidden": {
+    "item_tag": "ssc-primalstinct:snow_fox_diet_forbidden"
+  }
+}

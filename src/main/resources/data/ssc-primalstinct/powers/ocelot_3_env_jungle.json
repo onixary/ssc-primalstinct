@@ -1,0 +1,12 @@
+{
+  "type": "ssc-primalstinct:modify_primalstinct_rate",
+  "source_id": "ocelot_3_jungle",
+  "rate_per_second": 0.02,
+  "condition": {
+    "type": "apoli:biome",
+    "condition": {
+      "type": "apoli:in_tag",
+      "tag": "minecraft:is_jungle"
+    }
+  }
+}

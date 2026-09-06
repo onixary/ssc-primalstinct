@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "form_id": "shape-shifter-curse:bat_3_sub_avali",
+  "selectable": true,
+  "order": 20,
+  "base_powers": {
+    "add": [],
+    "remove": []
+  },
+  "level_overrides": {},
+  "instinct_powers": [],
+  "diet_profile": "ssc-primalstinct:avivore",
+  "sleep_profile": "ssc-primalstinct:curl"
+}

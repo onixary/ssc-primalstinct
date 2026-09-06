@@ -1,0 +1,196 @@
+plugins {
+    id 'fabric-loom' version '1.9-SNAPSHOT'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+loom {
+    runs {
+        client {
+            programArgs([
+                    "--username", "Dev",
+                    "--uuid", "12345678-1234-1234-1234-123456789012"
+            ])
+            runDir "run/client"
+        }
+        server {
+            runDir "run/server"
+        }
+    }
+}
+
+// 仓库集合与 SSC 主工程保持一致：附属需要解析 SSC 发布 POM 的传递依赖
+// （geckolib/apoli/pehkui/satin/reach/cloth-config/modmenu/player-anim/jei 等）
+repositories {
+    maven {
+        url 'https://maven.aliyun.com/nexus/content/groups/public'
+    }
+
+    maven {
+        name = 'GeckoLib'
+        url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content {
+            includeGroupByRegex("software\\.bernie.*")
+            includeGroup("com.eliotlash.mclib")
+        }
+    }
+
+    maven { url 'https://maven.wispforest.io/releases/' }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = "https://cursemaven.com"
+            }
+        }
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
+
+    maven {
+        name = "Ladysnake Mods"
+        url 'https://maven.ladysnake.org/releases'
+    }
+    maven {
+        url 'https://maven.jamieswhiteshirt.com/libs-release'
+        content {
+            includeGroup "com.jamieswhiteshirt"
+        }
+    }
+    maven {
+        url 'https://jitpack.io'
+    }
+    maven {
+        url 'https://maven.shedaniel.me'
+    }
+    maven {
+        url 'https://maven.terraformersmc.com'
+    }
+    maven {
+        name "KosmX's maven"
+        url 'https://maven.kosmx.dev/'
+    }
+    maven {
+        name = "Fuzs Mod Resources"
+        url 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/'
+    }
+    maven { url "https://maven.ryanliptak.com/" }
+    maven {
+        name = "Jared's maven"
+        url 'https://maven.blamejared.com/'
+    }
+
+    mavenLocal()
+}
+
+// SSC 基线 jar（remap 生产产物）：编译期作 modCompileOnly，运行期手动放入 run/*/mods
+// （参照 SSC_Xu_Addon 的成熟模式：SSC 不上 dev classpath。
+//  原因：loom 对 classpath 上 SSC 的重映射类路径不含可选集成模组的类层次，
+//  SSC 调用其“继承自 MC 类的成员”（如 TrinketInventory.size()，intermediary 名 method_5439）
+//  不会被映射为 named 名，运行时可选模组在场即 NoSuchMethodError（客户端创建世界崩溃实例）；
+//  mods 目录的生产 jar 由 FabricLoader 运行时重映射，带完整模组集知识，无此问题。
+//  更新 SSC 基线后：SSC 工程重新 remapJar，再手动把 build/libs 产物替换进两个 run/*/mods。）
+def sscJar = file(properties.sscJar ?: "../shape-shifter-curse-fabric/build/libs/shape-shifter-curse-fabric-${project.ssc_version}.jar")
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // SSC 仅编译引用；运行时见 installSscToRunDirs。
+    // 注意 SSC 的 Fabric mod ID 是 shape-shifter-curse（与产物名不同）；其内嵌 Origins 源码，环境不得另装真 Origins。
+    if (!sscJar.exists()) {
+        throw new GradleException("SSC 基线产物未找到: ${sscJar}\n请先在 SSC 工程执行 ./gradlew remapJar 生成 ${project.ssc_version} 产物，或用 -PsscJar=... 指定 jar 路径。")
+    }
+    modCompileOnly files(sscJar)
+
+    // 与 SSC 对齐的编译依赖；运行时由下方平铺声明提供（Apoli 同时也是 SSC 的 jij），不重复 include。
+    modImplementation("io.github.apace100:apoli:${project.apoli_version}") { transitive = false }
+    modImplementation("io.github.apace100:calio:${project.calio_version}") { transitive = false }
+    modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cca_version}") { transitive = false }
+    modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}") { transitive = false }
+
+    // SSC 的运行时模组集（fabric.mod.json depends + 其构建脚本实际启用项；可选兼容项不列入）
+    modRuntimeOnly("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}") { transitive = false }
+    implementation("com.eliotlash.mclib:mclib:20")                       // geckolib 的非 mod 库依赖
+    modRuntimeOnly("org.ladysnake:satin:${project.satin_version}") { transitive = false }
+    modRuntimeOnly("com.github.Virtuoel:Pehkui:${project.pehkui_version}") { transitive = false }
+    modRuntimeOnly("com.github.Virtuoel:KanosConfig:${project.kanosconfig_version}") { transitive = false }  // pehkui 的库依赖
+    modRuntimeOnly("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") { transitive = false }
+    modRuntimeOnly("me.shedaniel.cloth:basic-math:${project.basic_math_version}")   // cloth-config 的库依赖
+    modRuntimeOnly("com.jamieswhiteshirt:reach-entity-attributes:${project.reach_version}") { transitive = false }
+    modImplementation("dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim_version}") { transitive = false }
+    // apoli 的编译依赖（生产经 apoli jij 提供；dev 环境 jij 不展开，需平铺）
+    modRuntimeOnly("io.github.ladysnake:PlayerAbilityLib:${project.pal_version}") { transitive = false }
+    modRuntimeOnly("maven.modrinth:AdditionalEntityAttributes:${project.aea_version}") { transitive = false }
+
+    // 卡05：内核纯函数单元测试（PrimalstinctKernel 不依赖 MC 类）
+    testImplementation 'junit:junit:4.13.2'
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "loader_version", project.loader_version
+    filteringCharset "UTF-8"
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version,
+                "minecraft_version": project.minecraft_version,
+                "loader_version": project.loader_version
+    }
+}
+
+def targetJavaVersion = 17
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        it.options.release.set(targetJavaVersion)
+    }
+}
+
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+    withSourcesJar()
+}
+
+jar {
+    from("LICENSE") {
+        rename { "${it}_${project.archivesBaseName}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+    repositories {
+    }
+}

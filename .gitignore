@@ -12,6 +12,7 @@
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
@@ -22,3 +23,25 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Gradle / Fabric Loom
+.gradle/
+build/
+out/
+classes/
+remappedSrc/
+
+# IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+bin/
+.classpath
+.project
+.settings/
+
+# Fabric dev run directories
+run/
+

@@ -1,0 +1,5 @@
+{
+  "type": "ssc-primalstinct:curl_sleep",
+  "allow_sleep": true,
+  "instinct_rate_while_sleeping": -0.5
+}
