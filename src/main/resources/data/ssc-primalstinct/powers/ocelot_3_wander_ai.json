@@ -1,0 +1,13 @@
+{
+  "type": "ssc-primalstinct:instinct_wander_ai",
+  "entity": "minecraft:ocelot",
+  "afk_ticks": 40,
+  "wander_chance": 20,
+  "speed_multiplier": 1.5,
+  "jump_height_multiplier": 2.0,
+  "condition": {
+    "type": "ssc-primalstinct:primalstinct_level",
+    "comparison": ">=",
+    "compare_to": 3
+  }
+}

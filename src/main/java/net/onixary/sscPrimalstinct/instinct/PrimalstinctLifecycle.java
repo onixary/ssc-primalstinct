@@ -36,6 +36,7 @@ public final class PrimalstinctLifecycle {
         Boolean previous = MANAGED.put(player.getUuid(), managed);
         if (managed) RegPrimalstinctComponent.PRIMALSTINCT.get(player).initializeInstinct();
         if (previous == null || previous != managed) {
+            WanderAiController.stopPlayer(player);
             PrimalstinctService.clearPlayer(player.getUuid());
             CurlSleepController.wakeUp(player, "ownership_change");
             SSCAdapter.invalidateInstinctRate(player);

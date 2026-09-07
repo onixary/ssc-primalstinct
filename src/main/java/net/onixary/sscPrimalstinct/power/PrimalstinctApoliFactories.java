@@ -68,6 +68,10 @@ public final class PrimalstinctApoliFactories {
         Registry.register(ApoliRegistries.POWER_FACTORY,
                 net.onixary.sscPrimalstinct.power.factory.CurlSleepPower.getFactory().getSerializerId(),
                 net.onixary.sscPrimalstinct.power.factory.CurlSleepPower.getFactory());
+        // 游荡 AI 接管（无输入时生物 AI 接管移动）
+        Registry.register(ApoliRegistries.POWER_FACTORY,
+                net.onixary.sscPrimalstinct.power.factory.WanderAiPower.getFactory().getSerializerId(),
+                net.onixary.sscPrimalstinct.power.factory.WanderAiPower.getFactory());
         SSCPrimalstinct.LOGGER.info("[primalstinct] apoli factories registered");
     }
 }

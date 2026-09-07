@@ -78,6 +78,7 @@ public class SSCPrimalstinct implements ModInitializer {
 
         // 卡11：蜷缩/睡眠 C2S 接收器
         net.onixary.sscPrimalstinct.network.CurlSleepC2S.registerServer();
+        net.onixary.sscPrimalstinct.network.WanderManualInputC2S.registerServer();
         net.onixary.sscPrimalstinct.sleep.CurlSleepController.init();
 
         // 卡11：切形态退出蜷缩

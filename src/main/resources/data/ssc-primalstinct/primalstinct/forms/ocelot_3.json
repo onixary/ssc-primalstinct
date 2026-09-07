@@ -9,7 +9,8 @@
       "shape-shifter-curse:cat_friendly",
       "ssc-primalstinct:ocelot_3_env_jungle",
       "ssc-primalstinct:ocelot_3_eat_raw_meat",
-      "ssc-primalstinct:ocelot_3_combat_hit"
+      "ssc-primalstinct:ocelot_3_combat_hit",
+      "ssc-primalstinct:ocelot_3_wander_ai"
     ],
     "remove": []
   },

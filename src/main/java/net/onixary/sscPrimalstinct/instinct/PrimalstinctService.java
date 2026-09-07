@@ -104,6 +104,7 @@ public final class PrimalstinctService {
     public static void clearPlayer(UUID uuid) {
         RATE_STATES.remove(uuid);
         PrimalstinctPresentation.clearPlayer(uuid);
+        WanderAiController.clearPlayer(uuid);
     }
 
     /** 每 tick 主循环（END_SERVER_TICK，主线程）。 */
@@ -143,6 +144,8 @@ public final class PrimalstinctService {
             net.onixary.sscPrimalstinct.sleep.CurlSleepController.validate(player);
             // 4) 表现检查（阈值前提示 / 锁定标签倒计时）
             PrimalstinctPresentation.tickPlayer(player);
+            // 5) 游荡 AI 接管检查（instinct_wander_ai Power）
+            WanderAiController.tickPlayer(player);
         }
         RATE_STATES.keySet().removeIf(uuid -> server.getPlayerManager().getPlayer(uuid) == null);
     }

@@ -32,12 +32,19 @@
 | V1 | `Slot.canInsert/canTakeItems`、`ScreenHandler.internalOnSlotClick`、`PlayerInventory.insertStack`×2、`ServerPlayNetworkHandler.onUpdateSelectedSlot` | 卡09：渐进槽位锁定的虚拟占位方案（客户端占位绘制+服务端锁槽规则，不放真实占位物品）。Slot 层闸门挡住所有经 ScreenHandler 的流入/取出；点击级防御覆盖数字键交换/丢弃/创造中键，QUICK_CRAFT 在 stage 1 把锁定槽挡在拖拽集外；insertStack 定向插入覆盖捡物//give/正规 mod 塞物；锁定快捷栏槽拒绝被选中并回发校正 | 标准 refmap | 原版无限制 | **已实施**（4 个 Mixin，mixin/vanilla） | 守恒：升级/降级/死亡/重生往返"库存+暂存+世界掉落"无损（已实测）；give 在受限时正确落地不掉入锁定槽；GUI 交互（点击/拖拽/滚轮/数字键）用户 playtest |
 | V2 | （卡10 落地时补充）装备穿戴/交互入口 | 卡10：装备掉落与交互限制 | 标准 refmap | 原版无限制 | 计划 | 受限形态无法穿戴装备；成功使用工具后掉落 |
 | V3 | （卡11 落地时补充）睡眠/蜷缩相关入口 | 卡11：蜷缩与睡眠玩法 | 标准 refmap | 原版睡眠规则 | 计划 | 蜷缩姿态进入/退出；睡眠恢复可用 |
+| V4 | `ServerPlayerEntity.updateInput(FFZZ)`（HEAD 只读记录） | 游荡 AI 的骑乘输入补充信号。MC 1.20.1 普通步行不发送 PlayerInputC2SPacket；步行/跳跃/潜行/攻击/使用输入由客户端经 C2S 上报，DirectInputTracker 保留 2 tick 容差。鼠标转向不参与 AFK 或退出检测 | 标准 refmap | 无行为改变（只读取） | **已实施**（ServerPlayerEntityInputMixin，mixin/vanilla） | 游荡中按键释放接管；顶墙按键重置 idle 计时 |
+| V5 | `MobEntity.goalSelector`（Accessor） | 仅创建未入世界的游荡代理时移除 TemptGoal，避免代理被重合的持食物玩家吸引而持续停止寻路；普通世界生物不变 | 标准 refmap | 无自动注入行为 | **已实施**（MobEntityGoalSelectorAccessor，mixin/vanilla） | 主/副手持生鱼时仍可游荡 |
 
 ## 复核记录
+
+- 坠落卡顿修复：`LivingEntityWanderJumpMixin` 增加 `LivingEntity.jump` TAIL 只读捕获（仅已标记代理），供一次性起跳指令使用；`getJumpVelocity` 高度倍率保持。旧服务端 move + 完整速度同步已改为 `WanderMotionS2C` 水平意图/起跳指令，客户端保留原版重力与位置上报。26 项测试和打包通过，实机待用户验证。
+
+- 游荡跳跃高度：新增 `LivingEntityWanderJumpMixin`，在 `LivingEntity.getJumpVelocity` RETURN 调整返回值，标准 refmap。每实体倍率默认 1，仅游荡代理创建时设置 `jump_height_multiplier`。普通玩家和世界生物不改变。按原版陆地重力与阻力换算高度倍率，新增数值回归测试；实机跳跃仍受碰撞和玩家同步影响。
 
 - 2026-09-06：建立清单（框架阶段，无已实施 Mixin；两条 mixin 配置均为空数组，先验证配置链路本身）。
 - 2026-09-06：卡01 框架验收通过——附属 0.1.0 与 SSC 1.10.0（本地 remap 产物）在开发客户端与 dedicated server 均启动成功（服务器 58 个模组、双方初始化日志正常，无 Mixin 注入失败）。
 - 2026-09-06（卡04）：旧本能写入路径调用点核查——`addInstinctEffect` 调用方仅 `AddImmediateInstinctPower`/`AddInstinctAction`/`AddSustainedInstinctPower`；`clearInstinct` 仅被 `checkThreshold`（随 serverTick 一并失效）与命令路径引用；`instinct_value` 条件仅被 power 数据引用（蜘蛛系粒子）。SSC `ItemStackMixin` 不直接调用这些方法（只处理变形效果清除/牛奶），故无需注入——金苹果原版效果保留，其旧抑制路径经 S2 废弃自然失效。旧 `playerInstinctLock`（诅咒之月/变身动画临时锁）仅被旧 serverTick 读取，对新资源无影响；旧变身动画继续可用其视觉锁。
 - 2026-09-07（卡15）：S6 落地——注入目标选 `InstinctBarRenderer.render`（SSC 客户端类、单方法）而非 SSC 的 `mixin/InGameHudMixin`：后者还挂法力条与 ItemStorePowerRender 渲染，整方法取消会误伤。旧 `clientTick` 调用点核查：仅 `ShapeShifterCurseFabricClient` END_CLIENT_TICK 一处；切断后 `nowInstinctTick` 停增，`getNowInstinct` 冻结在旧值（旧条已被 S6 取消，无消费者）。新预警粒子改为单处注册 + tick 冷却（高值 2/s、锁定 0.5/s），与 FPS 及重复回调解耦。
 - 2026-09-07（卡16）：S7 落地——注入选 P2 `init()` 的 CodexData 调用重定向而非复制整页布局：`BuildDetailScreenButton` 等 SSC 辅助方法为 private 无法继承覆写，而 @Redirect 一处覆盖主列/详情两读点且天然同源；P1→P2 翻页与附属快捷键直达构造同一 P2 类，单 mixin 覆盖全部入口。SSC 无 V1/V2 调色菜单选择配置，快捷键固定 V2（与 SSC 自身 P1/包路径一致）。
+- 2026-09-08（游荡 AI 修复，含第二轮）：AFK 速度只检测水平分量，速度同步使用包含玩家自身的 `velocityModified`。代理保留重力、每 tick 递增 age 并重置 despawnCounter，补齐未入世界实体缺失的生命周期更新，避免 WanderAroundGoal 在计数达到 100 后永久拒绝启动。V5 仅移除代理的食物吸引 Goal。完全取消镜头同步与鼠标活动检测；按键经 C2S 释放接管。非托管态清理代理，跨世界重建，离线清除输入时间戳。干净编译、现有单元测试及 remapJar 通过，实机行为待用户验证。详见 WANDER_AI_FIX.md。
 - 2026-09-07（卡16 修订）：S7 整体迁移至 SSC 公开扩展点 `CodexInstinctColumnHooks`（SSC 1.10.0 原版本地重建，含 P2 页面侧取数与列底贴图绘制；附属侧为 `PrimalstinctCodexColumnProvider`）。评估结论：该注入点钉在三处精确调用点 + 复刻布局算式 + MC override refmap 坑，属高脆弱注入且 P2 为活跃迭代 UI；官方接口把 SSC 重构风险从运行期崩溃转为编译期可见。其余 SSC mixin（HEAD cancel 类 + getPlayerList 过滤）风险低，维持现状。

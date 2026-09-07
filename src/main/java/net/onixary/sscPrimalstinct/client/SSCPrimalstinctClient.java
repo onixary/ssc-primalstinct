@@ -34,6 +34,10 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
             });
         });
 
+        // 游荡仅接管位移；客户端上报输入，不改写镜头。
+        net.onixary.sscPrimalstinct.client.network.WanderInputClientState.register();
+        net.onixary.sscPrimalstinct.client.network.WanderMotionClientState.register();
+
         // 满值锁定演出：客户端驱动 SSC 变形屏幕叠加层（服务端同时经 SSC noMove/noJump 包限制移动）
         ClientPlayNetworking.registerGlobalReceiver(
                 net.onixary.sscPrimalstinct.network.LockCinematicS2C.ID, (client, handler, buf, rs) -> {
@@ -96,6 +100,7 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
             net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.clear();
             PrimalInstinctHud.clearHint();
             net.onixary.sscPrimalstinct.client.effect.PrimalstinctLockCinematic.clear();
+            net.onixary.sscPrimalstinct.client.network.WanderInputClientState.clear();
         });
 
         SSCPrimalstinct.LOGGER.info("SSC Primalstinct client initialized");
