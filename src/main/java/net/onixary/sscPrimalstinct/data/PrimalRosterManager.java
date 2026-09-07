@@ -81,7 +81,8 @@ public final class PrimalRosterManager {
                 active.revision, active.orderedSelectable.size(), active.levels.maxLevel(),
                 arrayToString(active.levels.thresholds));
 
-        if (active.orderedSelectable.isEmpty()) {
+        if (active.orderedSelectable.isEmpty()
+                && net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.chooseFormOnStart()) {
             SSCPrimalstinct.LOGGER.error("[primalstinct] 启动错误：当前没有任何可选形态（selectable=true）的合法配置。"
                     + "请检查 data/*/primalstinct/forms/ 数据包；选择界面（卡12/13）无法在该状态下工作。");
         }

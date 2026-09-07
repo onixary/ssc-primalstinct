@@ -66,7 +66,7 @@ public final class InventoryLockManager {
 
     /** Mixin 热路径：受限则返回规则，未受限返回 null（含无数据/非玩家情形）。 */
     public static @Nullable InventoryLockRule ruleIfRestricted(@Nullable ServerPlayerEntity player) {
-        if (player == null) {
+        if (player == null || !net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) {
             return null;
         }
         InventoryLockRule rule = RULES.get(player.getUuid());
@@ -81,7 +81,7 @@ public final class InventoryLockManager {
     public static void updateRule(ServerPlayerEntity player) {
         InventoryLockRule newRule = deriveRule(player);
         InventoryLockRule oldRule = RULES.getOrDefault(player.getUuid(), InventoryLockRule.UNRESTRICTED);
-        if (newRule.equals(oldRule)) {
+        if (newRule.equals(oldRule) && RegPrimalstinctComponent.PRIMALSTINCT.get(player).getStash().isEmpty()) {
             RULES.put(player.getUuid(), newRule);
             return;
         }
@@ -101,6 +101,7 @@ public final class InventoryLockManager {
      * 盔甲/副手锁按 OR 合并（任一活跃 lock Power 生效，且只能经等级 remove 显式解除）。
      */
     private static InventoryLockRule deriveRule(ServerPlayerEntity player) {
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return InventoryLockRule.UNRESTRICTED;
         int hotbar = -1;
         int main = -1;
         for (RestrictHotbarPower power : PowerHolderComponent.getPowers(player, RestrictHotbarPower.class)) {
@@ -172,7 +173,13 @@ public final class InventoryLockManager {
         List<PrimalstinctComponent.StashEntry> unresolved = new ArrayList<>();
         while (iterator.hasNext()) {
             PrimalstinctComponent.StashEntry entry = iterator.next();
-            if (entry.slot() < 0 || newRule.isLocked(entry.slot())) {
+            if (entry.slot() < 0) {
+                ItemStack remainder = insertIntoAllowed(inv, newRule, entry.stack());
+                iterator.remove();
+                if (!remainder.isEmpty()) unresolved.add(new PrimalstinctComponent.StashEntry(-1, remainder));
+                continue;
+            }
+            if (newRule.isLocked(entry.slot())) {
                 unresolved.add(entry);
                 iterator.remove();
                 continue;

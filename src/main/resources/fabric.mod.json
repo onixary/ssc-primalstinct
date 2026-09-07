@@ -24,6 +24,9 @@
     "client": [
       "net.onixary.sscPrimalstinct.client.SSCPrimalstinctClient"
     ],
+    "modmenu": [
+      "net.onixary.sscPrimalstinct.client.config.PrimalstinctModMenuIntegration"
+    ],
     "cardinal-components-entity": [
       "net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent"
     ]
@@ -43,5 +46,9 @@
     "fabric-api": "*",
     "minecraft": "1.20.1",
     "shape-shifter-curse": ">=1.10.0"
+  },
+  "suggests": {
+    "modmenu": "*",
+    "cloth-config": "*"
   }
 }

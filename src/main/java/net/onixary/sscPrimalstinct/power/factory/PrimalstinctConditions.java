@@ -84,6 +84,7 @@ public final class PrimalstinctConditions {
                 }
                 return null;
             }
+            if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return null;
             var component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
             return new PlayerState(component.getValue(), component.getLevel(), component.isLocked());
         }

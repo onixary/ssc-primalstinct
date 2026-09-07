@@ -18,18 +18,39 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // 卡15：客户端配置（位置锚点/偏移/状态文本开关），首次运行生成默认文件
-        PrimalstinctClientConfig.get();
+        net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.setClientManaged(
+                player -> player == net.minecraft.client.MinecraftClient.getInstance().player && ClientPrimalstinctState.managed());
+        // 卡15/17：客户端配置（AutoConfig 注册即读文件；ModMenu 保存后 HUD 实时生效）
+        PrimalstinctClientConfig.register();
 
         ClientPlayNetworking.registerGlobalReceiver(PrimalstinctStateS2C.ID, (client, handler, buf, responseSender) -> {
             PrimalstinctStateS2C payload = PrimalstinctStateS2C.read(buf);
-            client.execute(() -> ClientPrimalstinctState.accept(payload, client.player));
+            client.execute(() -> {
+                ClientPrimalstinctState.accept(payload, client.player);
+                if (!payload.selectionPending()) {
+                    net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.clear();
+                    if (client.currentScreen instanceof net.onixary.sscPrimalstinct.client.selection.FormSelectionScreen) client.setScreen(null);
+                }
+            });
         });
+
+        // 满值锁定演出：客户端驱动 SSC 变形屏幕叠加层（服务端同时经 SSC noMove/noJump 包限制移动）
+        ClientPlayNetworking.registerGlobalReceiver(
+                net.onixary.sscPrimalstinct.network.LockCinematicS2C.ID, (client, handler, buf, rs) -> {
+                    net.onixary.sscPrimalstinct.network.LockCinematicS2C payload =
+                            net.onixary.sscPrimalstinct.network.LockCinematicS2C.read(buf);
+                    client.execute(() -> net.onixary.sscPrimalstinct.client.effect.PrimalstinctLockCinematic.start(payload.totalTicks()));
+                });
+        net.onixary.sscPrimalstinct.client.effect.PrimalstinctLockCinematic.register();
 
         // 卡15：正式本能 HUD（替换卡03 的 DebugHudPlaceholder）+ 限频预警粒子
         PrimalInstinctHud.register();
         PrimalstinctWarningParticles.register();
         CurlSleepKeybinding.register();
+        // 卡16：无书快捷访问（调色菜单 / 图鉴页面），默认不绑定；图鉴 INSTINCTS 列扩展注册（SSC 公开接口）
+        BookAccessKeybindings.register();
+        net.onixary.sscPrimalstinct.adapter.ssc.SSCClientAdapter.registerCodexColumnProvider(
+                net.onixary.sscPrimalstinct.client.ui.PrimalstinctCodexColumnProvider.INSTANCE);
 
         // 卡13：选择协议接收器
         ClientPlayNetworking.registerGlobalReceiver(SelectionPackets.LIST_S2C, (client, handler, buf, rs) -> {
@@ -41,9 +62,14 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
             int revision = buf.readVarInt();
             long nonce = buf.readVarLong();
             Identifier defaultForm = buf.readIdentifier();
-            client.execute(() -> net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.accept(
-                    new net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.SelectionList(
-                            forms, revision, nonce, defaultForm)));
+            client.execute(() -> {
+                var list = new net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.SelectionList(
+                        forms, revision, nonce, defaultForm);
+                net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.accept(list);
+                if (client.currentScreen instanceof net.onixary.sscPrimalstinct.client.selection.FormSelectionScreen) {
+                    client.setScreen(new net.onixary.sscPrimalstinct.client.selection.FormSelectionScreen(list));
+                }
+            });
         });
         ClientPlayNetworking.registerGlobalReceiver(SelectionPackets.CONFIRMED_S2C, (client, handler, buf, rs) -> {
             client.execute(() -> {
@@ -54,9 +80,10 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
             });
         });
 
-        // tick：蜷缩键 + pending 时打开选择界面
+        // tick：蜷缩键 + 无书快捷访问键 + pending 时打开选择界面
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
             CurlSleepKeybinding.tick();
+            BookAccessKeybindings.tick(client);
             var sel = net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.current();
             if (sel != null && !net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.isConfirmed()
                     && client.currentScreen == null) {
@@ -68,6 +95,7 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
             ClientPrimalstinctState.clear();
             net.onixary.sscPrimalstinct.client.selection.ClientSelectionState.clear();
             PrimalInstinctHud.clearHint();
+            net.onixary.sscPrimalstinct.client.effect.PrimalstinctLockCinematic.clear();
         });
 
         SSCPrimalstinct.LOGGER.info("SSC Primalstinct client initialized");

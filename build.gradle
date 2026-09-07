@@ -139,6 +139,10 @@ dependencies {
     modRuntimeOnly("com.github.Virtuoel:KanosConfig:${project.kanosconfig_version}") { transitive = false }  // pehkui 的库依赖
     modRuntimeOnly("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") { transitive = false }
     modRuntimeOnly("me.shedaniel.cloth:basic-math:${project.basic_math_version}")   // cloth-config 的库依赖
+    // 卡17：ModMenu 配置界面（AutoConfig 屏幕编译依赖 cloth-config；运行时缺失时入口优雅降级）
+    modCompileOnly("me.shedaniel.cloth:cloth-config-fabric:${project.clothconfig_version}") { transitive = false }
+    modCompileOnly("com.terraformersmc:modmenu:${project.mod_menu_version}") { transitive = false }
+    modRuntimeOnly("com.terraformersmc:modmenu:${project.mod_menu_version}") { transitive = false }
     modRuntimeOnly("com.jamieswhiteshirt:reach-entity-attributes:${project.reach_version}") { transitive = false }
     modImplementation("dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim_version}") { transitive = false }
     // apoli 的编译依赖（生产经 apoli jij 提供；dev 环境 jij 不展开，需平铺）

@@ -1,5 +1,7 @@
 package net.onixary.sscPrimalstinct.selection;
 
+import net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle;
+import net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
@@ -43,21 +45,29 @@ public final class SelectionSessionManager {
     /** 登录后（SSC/Apoli/profile 就绪）调用：未完成选择 → 进入 pending 并下发名单。 */
     public static void onPlayerReady(ServerPlayerEntity player) {
         PrimalstinctComponent component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
-        if (component.isSelectionCompleted()) {
+        if (!net.onixary.sscPrimalstinct.instinct.EntryPolicy.needsSelection(
+                PrimalstinctServerConfig.chooseFormOnStart(), component.isEntryHandled(), component.isSelectionCompleted())) {
+            component.setEntryHandled(true);
+            PENDING.remove(player.getUuid());
+            PrimalstinctLifecycle.refresh(player);
             return;
         }
         PrimalRoster roster = PrimalRosterManager.active();
-        if (roster.orderedSelectable.isEmpty()) {
+        List<Identifier> forms = roster.orderedSelectable.stream().map(p -> p.formId)
+                .filter(id -> {
+                    var form = net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.getForm(id);
+                    return form != null && net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.isFormCanUse(player, form);
+                }).toList();
+        if (forms.isEmpty()) {
             SSCPrimalstinct.LOGGER.error("[primalstinct] 玩家 {} 待选但名单为空", player.getGameProfile().getName());
             return;
         }
         long nonce = NONCE_GEN.incrementAndGet();
-        Identifier defaultForm = roster.orderedSelectable.get(0).formId;
+        Identifier defaultForm = forms.get(0);
         SelectionSession session = new SelectionSession(nonce, roster.revision, defaultForm);
         PENDING.put(player.getUuid(), session);
 
-        List<Identifier> forms = roster.orderedSelectable.stream()
-                .map(p -> p.formId).collect(Collectors.toList());
+        PrimalstinctLifecycle.refresh(player);
         SelectionPackets.sendSelectionList(player, forms, roster.revision, nonce, defaultForm);
         SSCPrimalstinct.LOGGER.info("[primalstinct] 玩家 {} 进入形态选择 pending（{} 个可选）",
                 player.getGameProfile().getName(), forms.size());
@@ -66,7 +76,7 @@ public final class SelectionSessionManager {
     /** C2S confirm 唯一入口。 */
     public static boolean confirm(ServerPlayerEntity player, Identifier formId, int revision, long nonce) {
         SelectionSession session = PENDING.get(player.getUuid());
-        if (session == null) return false;
+        if (!PrimalstinctServerConfig.chooseFormOnStart() || session == null) return false;
         if (session.nonce() != nonce || session.revision() != revision) return false;
         if (formId == null) return false;
 
@@ -81,21 +91,24 @@ public final class SelectionSessionManager {
 
         // 变形
         var form = net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.getForm(formId);
-        if (form == null) return false;
+        if (form == null || !net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.isFormCanUse(player, form)) return false;
         net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form);
 
         // 验证实际最终 FormID
         Identifier actualForm = SSCAdapter.currentFormIdentifier(player);
-        if (!formId.equals(actualForm)) {
-            formId = actualForm;
-        }
+        if (actualForm == null || PrimalRosterManager.resolve(actualForm) == null) return false;
+        formId = actualForm;
 
         PrimalstinctComponent component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
         component.setSelectedFormId(formId);
         component.setSelectionCompleted(true);
-        component.setValue(0.0f);
+        component.setEntryHandled(true);
 
         PENDING.remove(player.getUuid());
+        PrimalstinctLifecycle.refresh(player);
+        net.onixary.sscPrimalstinct.power.PrimalPowerReconciler.reconcile(player);
+        net.onixary.sscPrimalstinct.network.PrimalstinctNetwork.syncNow(player);
+        net.onixary.shapeShifterCurseFabric.ShapeShifterCurseFabric.ON_ENABLE_MOD.trigger(player);
         SelectionPackets.sendSelectionConfirmed(player, formId);
         SSCPrimalstinct.LOGGER.info("[primalstinct] 玩家 {} 选择 {} 完成", player.getGameProfile().getName(), formId);
         return true;
@@ -109,6 +122,8 @@ public final class SelectionSessionManager {
         SelectionSession session = PENDING.get(player.getUuid());
         return session != null && confirm(player, formId, session.revision(), session.nonce());
     }
+
+    public static void clear() { PENDING.clear(); }
 
     public static void init() {
         net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(

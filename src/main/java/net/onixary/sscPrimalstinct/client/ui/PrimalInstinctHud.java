@@ -18,19 +18,19 @@ import org.jetbrains.annotations.Nullable;
 /**
  * 卡15：正式本能 HUD（替换卡03 的 DebugHudPlaceholder）。
  *
+ * 条与外框的绘制逻辑完全复刻 SSC InstinctBarRenderer（含速率分档行选择、两段取图、
+ * 满值锁定行），贴图使用复制到本命名空间的 instinct_bar.png（美术可自行修改区分）；
+ * 数值与锁定来源换成新系统：条长按快照 value + rate 外推并平滑纠正，锁定读快照 locked。
+ * 档位分界叠加线存放在同一贴图未使用的右下角（u=80..160, v=35..40），未锁定时叠加渲染。
+ *
  * 显示规则（隐藏面）：
  * - 无玩家 / hudHidden / 旁观 / 创造（无状态栏）→ 不绘制；
  * - 无快照（服务端未运行本附属）或 managed=false（pending、非名单形态）→ 不绘制；
  * - 名单内形态一律显示——不读 SSC 的 NoInstinct flag（该 flag 仍影响 SSC 其他系统，仅不再决定本条显隐）。
  *
- * 数值规则（权威面）：
- * - 条长 = 快照 value + rate × 经过时间外推，钳制 [0, maxValue]（ClientPrimalstinctState 平滑纠正）；
- * - 跨阶提示、满值锁定覆盖使用快照的 level/locked（服务端状态），客户端预测不得提前解除锁定表现；
- * - 速率分档外框：保留旧 SSC 系统——rate 相对 baseRate 的超出量决定整条（空槽+填充）的分档贴图行，
- *   基础自然增长保持平稳外观，Power 加速增长逐档警示（微增/I/II/III），负向下降为青蓝档。
- *
- * 提示规则：跨阶提示走原版 actionbar 位置（InGameHud.setOverlayMessage，屏幕下方居中、
- * 与其它模组通用的标签表现）：升阶 L1–L4 各自文案、升至满值（锁定）专用文案、降阶共用一条。
+ * 权威与预测分离：跨阶提示、满值锁定样式只读快照 level/locked，客户端预测不得提前解除表现。
+ * 提示走原版 actionbar 位置（InGameHud.setOverlayMessage）：升阶 L1–L4 各自文案、
+ * 升至满值锁定专用文案、降阶共用一条；方向由连续快照 level 对比得出。
  *
  * 位置规则：默认对齐旧 SSC 本能条（中下锚 +100,-9），锚点/偏移见 PrimalstinctClientConfig；
  * 法力条顶替旧本能条位（OverrideInstinctBar）时整体上移 14px 避让，两类资源同屏可见。
@@ -39,25 +39,28 @@ import org.jetbrains.annotations.Nullable;
 @Environment(EnvType.CLIENT)
 public final class PrimalInstinctHud {
 
-    /** 与 tools/gen_primal_bar_texture.py 成对维护：七行 5px，每行左半空槽 + 右半填充。 */
+    /** SSC instinct_bar.png 布局（160x40，8 行 5px；行 10 未使用）：0 下降 / 5 平稳 / 15 微增 / 20 增长I / 25 增长II / 30 增长III / 35 满值锁定。 */
     private static final int BAR_WIDTH = 80;
     private static final int BAR_HEIGHT = 5;
     private static final int TEXTURE_WIDTH = 160;
-    private static final int TEXTURE_HEIGHT = 35;
+    private static final int TEXTURE_HEIGHT = 40;
     private static final int V_DECREASE = 0;
     private static final int V_IDLE = 5;
-    private static final int V_SLIGHT_INCREASE = 10;
-    private static final int V_INCREASE_1 = 15;
-    private static final int V_INCREASE_2 = 20;
-    private static final int V_INCREASE_3 = 25;
-    private static final int V_LOCK = 30;
+    private static final int V_SLIGHT_INCREASE = 15;
+    private static final int V_INCREASE_1 = 20;
+    private static final int V_INCREASE_2 = 25;
+    private static final int V_INCREASE_3 = 30;
+    private static final int V_LOCK = 35;
 
-    /** 分档阈值（点/秒，相对 baseRate 的超出量）——对齐旧 SSC updateBarTextures 的分档节奏。 */
-    private static final float TIER_SLIGHT = 0.005f;
-    private static final float TIER_INCREASE_1 = 0.01f;
-    private static final float TIER_INCREASE_2 = 0.1f;
-    /** 速率死区：|rate| 低于此值按 0 处理（快照浮动噪声）。 */
-    private static final float RATE_EPSILON = 0.0005f;
+    /** 档位分界叠加线存放在贴图未使用的右下角（u=80..160, v=35..40，即锁定行右半）。 */
+    private static final int U_LEVEL_MARKS = 80;
+    private static final int V_LEVEL_MARKS = 35;
+
+    /** SSC updateBarTextures 的分档阈值（点/秒，相对 baseRate 的超出量）。 */
+    private static final float TIER_SLIGHT = 0.0f;
+    private static final float TIER_INCREASE_1 = 0.005f;
+    private static final float TIER_INCREASE_2 = 0.01f;
+    private static final float TIER_INCREASE_3 = 0.1f;
 
     /** 法力条（OverrideInstinctBar 实现）在场时的自动上移量：条高 5 + 数字文本 9。 */
     private static final int MANA_AVOID_SHIFT_Y = -14;
@@ -66,8 +69,8 @@ public final class PrimalInstinctHud {
     private static final int DEV_READOUT_X = 4;
     private static final int DEV_READOUT_Y = 4;
 
-    private static final Identifier TEXTURE =
-            Identifier.of(SSCPrimalstinct.MOD_ID, "textures/gui/primal_instinct_bar.png");
+    private static final Identifier BAR_TEXTURE =
+            Identifier.of(SSCPrimalstinct.MOD_ID, "textures/gui/instinct_bar.png");
 
     // 以下状态仅渲染线程访问
     private static @Nullable PrimalstinctStateS2C lastSnapshot;
@@ -110,89 +113,56 @@ public final class PrimalInstinctHud {
         }
 
         renderBar(context, snapshot, value, x, y);
-        renderStatusText(context, client, snapshot, value, x, y, config);
         renderDevReadout(context, client, snapshot, value);
     }
 
+    /** SSC renderInstinctBar 逐行复刻：空槽左段 + 填充右段（右锚，自右向左增长）+ 锁定行 + 分界叠加线。 */
     private static void renderBar(DrawContext context, PrimalstinctStateS2C snapshot, float value, int x, int y) {
-        int fillWidth = (int) Math.ceil(BAR_WIDTH * (value / snapshot.maxValue()));
-        fillWidth = Math.max(0, Math.min(BAR_WIDTH, fillWidth));
+        int fillWidth = Math.max(0, Math.min(BAR_WIDTH,
+                (int) Math.ceil(BAR_WIDTH * (value / snapshot.maxValue()))));
         int row = rateRow(snapshot);
         RenderSystem.enableBlend();
-        // 原版式左→右填充（左为 0、右为满值）：填充取本行右半自 u=80 起，空槽取左半右侧剩余段
-        if (fillWidth > 0) {
-            context.drawTexture(TEXTURE, x, y, BAR_WIDTH, row, fillWidth, BAR_HEIGHT,
-                    TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        }
         if (fillWidth < BAR_WIDTH) {
-            context.drawTexture(TEXTURE, x + fillWidth, y, fillWidth, row, BAR_WIDTH - fillWidth, BAR_HEIGHT,
+            context.drawTexture(BAR_TEXTURE, x, y, 0, row, BAR_WIDTH - fillWidth, BAR_HEIGHT,
                     TEXTURE_WIDTH, TEXTURE_HEIGHT);
         }
-        // L0–L5 分级刻度：按快照同步的阈值表程序化绘制（适配任意阈值；左 0 右满 → 阈值像素自左端起算）
-        drawLevelTicks(context, snapshot, x, y);
-        // 满值锁定覆盖：以服务端 locked 状态为准，不据客户端预测值推断
-        if (snapshot.locked()) {
-            context.drawTexture(TEXTURE, x, y, 0, V_LOCK, BAR_WIDTH, BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        if (fillWidth > 0) {
+            context.drawTexture(BAR_TEXTURE, x + BAR_WIDTH - fillWidth, y, TEXTURE_WIDTH - fillWidth, row,
+                    fillWidth, BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        }
+        // 满值锁定行：SSC 的 y=35 覆盖行；触发条件换为新系统快照 locked（SSC 旧判定来源已随卡04 失效）
+        boolean locked = snapshot.locked();
+        if (locked) {
+            context.drawTexture(BAR_TEXTURE, x, y, 0, V_LOCK, BAR_WIDTH, BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        }
+        // 档位分界叠加线：取贴图右下角（锁定行右半），叠加在最上层；锁定时不渲染（锁定行整体覆盖即可读）
+        if (!locked) {
+            context.drawTexture(BAR_TEXTURE, x, y, U_LEVEL_MARKS, V_LEVEL_MARKS,
+                    BAR_WIDTH, BAR_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
         }
         RenderSystem.disableBlend();
     }
 
-    /**
-     * 速率分档行选择（保留旧 SSC updateBarTextures 语义）：
-     * 负向 → 下降；正向按超出 baseRate 的量分 微增/I/II/III；基础自然增长（≈baseRate）保持平稳档。
-     */
+    /** SSC updateBarTextures 逐行复刻：rate 相对 baseRate 的超出量选行（基础自然增长=平稳行）。 */
     private static int rateRow(PrimalstinctStateS2C snapshot) {
         float rate = snapshot.rate();
         float base = snapshot.baseRate();
-        if (rate < -RATE_EPSILON) {
-            return V_DECREASE;
-        }
-        if (rate > base + TIER_INCREASE_2) {
+        if (rate > base + TIER_INCREASE_3) {
             return V_INCREASE_3;
         }
-        if (rate > base + TIER_INCREASE_1) {
+        if (rate > base + TIER_INCREASE_2) {
             return V_INCREASE_2;
         }
-        if (rate > base + TIER_SLIGHT) {
+        if (rate > base + TIER_INCREASE_1) {
             return V_INCREASE_1;
         }
-        if (rate > base) {
+        if (rate > base + TIER_SLIGHT) {
             return V_SLIGHT_INCREASE;
         }
+        if (rate < 0.0f) {
+            return V_DECREASE;
+        }
         return V_IDLE;
-    }
-
-    /** 每个阈值（不含 0 与满值右端）在条上画 1px 半透明刻线；左为 0、右为满值。 */
-    private static void drawLevelTicks(DrawContext context, PrimalstinctStateS2C snapshot, int x, int y) {
-        float max = snapshot.maxValue();
-        for (float threshold : snapshot.thresholds()) {
-            if (threshold <= 0.0f || threshold >= max) {
-                continue;
-            }
-            int offset = Math.round(BAR_WIDTH * (threshold / max));
-            int tickX = Math.max(x + 1, Math.min(x + BAR_WIDTH - 2, x + offset));
-            context.fill(tickX, y, tickX + 1, y + BAR_HEIGHT, 0xD9FFFFFF);
-        }
-    }
-
-    private static void renderStatusText(DrawContext context, MinecraftClient client,
-                                         PrimalstinctStateS2C snapshot, float value,
-                                         int x, int y, PrimalstinctClientConfig config) {
-        if (!config.showStatusText) {
-            return;
-        }
-        Text status = null;
-        int color = 0xFFFFFF;
-        if (snapshot.locked()) {
-            status = Text.translatable("hud.ssc-primalstinct.locked");
-            color = 0xFFD75E;  // 金
-        } else if (Math.abs(snapshot.rate()) <= RATE_EPSILON && value > 0.0f) {
-            status = Text.translatable("hud.ssc-primalstinct.paused");
-            color = 0xA9B7C6;  // 灰蓝
-        }
-        if (status != null) {
-            context.drawText(client.textRenderer, status, x + BAR_WIDTH + 4, y - 2, color, false);
-        }
     }
 
     /**
@@ -208,8 +178,11 @@ public final class PrimalInstinctHud {
         int newLevel = snapshot.level();
         if (lastLevel >= 0 && newLevel != lastLevel) {
             boolean levelUp = newLevel > lastLevel;
-            client.inGameHud.setOverlayMessage(
-                    levelChangeMessage(newLevel, levelUp, snapshot.thresholds().length), false);
+            // 满值锁定的提示不在此即时弹出：服务端在锁定演出（SSC 变形屏幕效果）结束后定时发送
+            if (!(levelUp && newLevel >= snapshot.thresholds().length)) {
+                client.inGameHud.setOverlayMessage(
+                        levelChangeMessage(newLevel, levelUp, snapshot.thresholds().length), false);
+            }
         }
         lastSnapshot = snapshot;
         lastLevel = newLevel;

@@ -25,7 +25,7 @@ public record PrimalstinctStateS2C(
         boolean managed,
         float maxValue,
         float baseRate,
-        float[] thresholds) {
+        float[] thresholds, boolean chooseFormOnStart, boolean selectionPending) {
 
     public static final Identifier ID = Identifier.of(SSCPrimalstinct.MOD_ID, "state_s2c");
 
@@ -42,7 +42,7 @@ public record PrimalstinctStateS2C(
                 buf.readBoolean(),
                 buf.readFloat(),
                 buf.readFloat(),
-                readThresholds(buf));
+                readThresholds(buf), buf.readBoolean(), buf.readBoolean());
     }
 
     public void write(PacketByteBuf buf) {
@@ -58,6 +58,8 @@ public record PrimalstinctStateS2C(
         buf.writeFloat(maxValue);
         buf.writeFloat(baseRate);
         writeThresholds(buf, thresholds);
+        buf.writeBoolean(chooseFormOnStart);
+        buf.writeBoolean(selectionPending);
     }
 
     private static float[] readThresholds(PacketByteBuf buf) {

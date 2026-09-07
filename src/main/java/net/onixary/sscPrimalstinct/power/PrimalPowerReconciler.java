@@ -80,7 +80,8 @@ public final class PrimalPowerReconciler {
         PrimalRoster roster = PrimalRosterManager.active();
         PowerPlan plan = PowerPlan.EMPTY;
         Identifier formId = null;
-        if (SSCAdapter.isLoaded()) {
+        net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.refresh(player);
+        if (net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) {
             formId = SSCAdapter.currentFormIdentifier(player);
             if (formId != null) {
                 PrimalFormProfile profile = PrimalRosterManager.resolve(formId);
@@ -94,6 +95,7 @@ public final class PrimalPowerReconciler {
         boolean masked = applyBaselineMasks(player, holder, plan, formId);
         if (changed || masked) {
             PowerHolderComponent.KEY.sync(player);
+            SSCAdapter.refreshFood(player);
         }
         // 卡09/10：库存锁槽规则与交互限制规则随 Power 结算更新（规则变化时搬移/暂存/掉落）
         net.onixary.sscPrimalstinct.inventory.InventoryLockManager.updateRule(player);

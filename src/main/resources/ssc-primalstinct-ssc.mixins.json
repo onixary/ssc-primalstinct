@@ -6,10 +6,13 @@
   "refmap": "ssc-primalstinct-refmap.json",
   "mixins": [
     "InstinctUtilsMixin",
-    "InstinctValueConditionMixin"
+    "InstinctValueConditionMixin",
+    "InstinctUtilsAccessor",
+    "StartBookPacketMixin"
   ],
   "client": [
-    "client.InstinctBarRendererMixin"
+    "client.InstinctBarRendererMixin",
+    "client.InstinctClientTickMixin"
   ],
   "injectors": {
     "defaultRequire": 1

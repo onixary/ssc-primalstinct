@@ -21,6 +21,31 @@ public final class SSCAdapter {
     private SSCAdapter() {
     }
 
+    public static void invalidateInstinctRate(PlayerEntity player) {
+        net.onixary.sscPrimalstinct.mixin.ssc.InstinctUtilsAccessor.primalstinct$rates().put(player.getUuid(), Float.NaN);
+    }
+
+    // ---- 表现复用：SSC 变形屏幕效果的时长常量与叠加层（满值锁定演出借用）----
+
+    /** SSC 变形屏幕效果时长（tick）：入段（恶心渐强至黑屏）。 */
+    public static int transformFxDurationIn() {
+        return net.onixary.shapeShifterCurseFabric.data.StaticParams.TRANSFORM_FX_DURATION_IN;
+    }
+
+    /** SSC 变形屏幕效果时长（tick）：出段（黑屏渐退）。 */
+    public static int transformFxDurationOut() {
+        return net.onixary.shapeShifterCurseFabric.data.StaticParams.TRANSFORM_FX_DURATION_OUT;
+    }
+
+    public static void rebuildCurrentForm(PlayerEntity player) {
+        var form = net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.getPlayerForm(player);
+        net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form);
+    }
+
+    public static void refreshFood(PlayerEntity player) {
+        net.onixary.shapeShifterCurseFabric.util.CustomEdibleUtils.ReloadPlayerCustomEdible(player);
+    }
+
     public static boolean isLoaded() {
         return FabricLoader.getInstance().isModLoaded(SSCPrimalstinct.SSC_MOD_ID);
     }

@@ -33,7 +33,14 @@ public final class ClientPrimalstinctState {
 
     public static void accept(PrimalstinctStateS2C payload, @Nullable PlayerEntity player) {
         boolean playerChanged = player == null || anchorPlayer != player;
+        boolean ownershipChanged = snapshot == null || snapshot.managed() != payload.managed()
+                || snapshot.selectionPending() != payload.selectionPending();
         snapshot = payload;
+        if (ownershipChanged) {
+            resetPrediction();
+            net.onixary.sscPrimalstinct.client.effect.PrimalstinctWarningParticles.reset();
+            net.onixary.sscPrimalstinct.client.ui.PrimalInstinctHud.clearHint();
+        }
         anchorPlayer = player;
         clientTickReceived = player == null ? 0L : player.age;
         if (playerChanged) {
@@ -66,6 +73,10 @@ public final class ClientPrimalstinctState {
     // ---- 卡15 显示查询 ----
 
     /** 当前形态是否受本玩法管理（HUD 显隐；服务端判定，不读 SSC NoInstinct）。 */
+    public static boolean suppressLegacy() {
+        return snapshot != null && (snapshot.managed() || snapshot.selectionPending());
+    }
+
     public static boolean managed() {
         PrimalstinctStateS2C s = snapshot;
         return s != null && s.managed();
@@ -127,12 +138,12 @@ public final class ClientPrimalstinctState {
 
     public static int allowedHotbar() {
         PrimalstinctStateS2C s = snapshot;
-        return s == null ? 9 : s.allowedHotbar();
+        return s == null || !s.managed() ? 9 : s.allowedHotbar();
     }
 
     public static int allowedMain() {
         PrimalstinctStateS2C s = snapshot;
-        return s == null ? 27 : s.allowedMain();
+        return s == null || !s.managed() ? 27 : s.allowedMain();
     }
 
     public static boolean inventoryRestricted() {

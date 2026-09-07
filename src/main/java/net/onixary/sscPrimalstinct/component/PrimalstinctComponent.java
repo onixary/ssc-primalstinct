@@ -23,12 +23,14 @@ import java.util.List;
  */
 public class PrimalstinctComponent implements Component {
 
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
 
     private final PlayerEntity player;
 
     private int schemaVersion = CURRENT_SCHEMA_VERSION;
     private boolean selectionCompleted = false;
+    private boolean entryHandled = false;
+    private boolean instinctInitialized = false;
     private @Nullable Identifier selectedFormId = null;
     private float value = 0.0f;
     private boolean locked = false;
@@ -49,6 +51,16 @@ public class PrimalstinctComponent implements Component {
 
     public int getSchemaVersion() {
         return schemaVersion;
+    }
+
+    public boolean isEntryHandled() { return entryHandled; }
+    public void setEntryHandled(boolean handled) { entryHandled = handled; }
+    public boolean isInstinctInitialized() { return instinctInitialized; }
+    public void initializeInstinct() {
+        if (instinctInitialized) return;
+        value = 0.0f;
+        locked = false;
+        instinctInitialized = true;
     }
 
     public boolean isSelectionCompleted() {
@@ -119,6 +131,11 @@ public class PrimalstinctComponent implements Component {
             value = 0.0f;
         }
         locked = tag.getBoolean("locked");
+        entryHandled = tag.contains("entryHandled") ? tag.getBoolean("entryHandled") : selectionCompleted;
+        instinctInitialized = tag.contains("instinctInitialized") ? tag.getBoolean("instinctInitialized")
+                : net.onixary.sscPrimalstinct.instinct.EntryPolicy.legacyInitialized(
+                        selectionCompleted, value, locked, !tag.getList("stashSlots", 10).isEmpty());
+        schemaVersion = CURRENT_SCHEMA_VERSION;
         stash.clear();
         NbtList stashList = tag.getList("stashSlots", 10);
         for (int i = 0; i < stashList.size(); i++) {
@@ -134,6 +151,8 @@ public class PrimalstinctComponent implements Component {
     public void writeToNbt(NbtCompound tag) {
         tag.putInt("schemaVersion", schemaVersion);
         tag.putBoolean("selectionCompleted", selectionCompleted);
+        tag.putBoolean("entryHandled", entryHandled);
+        tag.putBoolean("instinctInitialized", instinctInitialized);
         if (selectedFormId != null) {
             tag.putString("selectedFormId", selectedFormId.toString());
         }

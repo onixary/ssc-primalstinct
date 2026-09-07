@@ -22,6 +22,7 @@ public final class InteractionRestrictions {
     private InteractionRestrictions() {}
 
     public static boolean blocksInteraction(PlayerEntity player, Hand hand, BlockHitResult hit) {
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return false;
         Block block = player.getWorld().getBlockState(hit.getBlockPos()).getBlock();
         if (block instanceof DoorBlock || block instanceof TrapdoorBlock || block instanceof FenceGateBlock) {
             for (PreventDoorPower power : PowerHolderComponent.getPowers(player, PreventDoorPower.class)) {
@@ -72,6 +73,7 @@ public final class InteractionRestrictions {
     }
 
     public static boolean blocksCrafting(PlayerEntity player, ScreenHandler handler) {
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return false;
         if (!(handler instanceof PlayerScreenHandler) && !(handler instanceof CraftingScreenHandler)) return false;
         for (PreventInventoryCraftingPower power : PowerHolderComponent.getPowers(player, PreventInventoryCraftingPower.class)) {
             if (power.isActive() && (handler instanceof PlayerScreenHandler || power.includesCraftingTable())) return true;

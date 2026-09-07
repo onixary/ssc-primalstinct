@@ -1,5 +1,6 @@
 package net.onixary.sscPrimalstinct;
 
+import net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -33,6 +34,18 @@ public class SSCPrimalstinct implements ModInitializer {
         if (!sscLoaded) {
             LOGGER.error("SSC (shape-shifter-curse) is missing; this addon requires it as a hard dependency.");
         }
+
+        // 卡17：服务端配置（AutoConfig 注册即读文件；ModMenu 修改只落盘，会话值在 SERVER_STARTING 快照）
+        net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.register();
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.snapshotActive();
+            PrimalstinctLifecycle.clear();
+            net.onixary.sscPrimalstinct.selection.SelectionSessionManager.clear();
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            PrimalstinctLifecycle.clear();
+            net.onixary.sscPrimalstinct.selection.SelectionSessionManager.clear();
+        });
 
         // 卡02：形态名单数据包（解析→候选；SERVER_STARTED/热重载后引用校验→原子交换）
         ResourceManagerHelper.get(ResourceType.SERVER_DATA)
@@ -77,7 +90,8 @@ public class SSCPrimalstinct implements ModInitializer {
         // 卡15：形态切换后即时同步快照（managed 标记随名单形态变化，HUD 显隐不等待限频校正）
         SSCEvent.FORM_CHANGE_END.register((player, oldForm, newForm) -> {
             if (!player.getWorld().isClient() && player instanceof ServerPlayerEntity serverPlayer) {
-                serverPlayer.getServer().execute(() -> PrimalstinctNetwork.syncNow(serverPlayer));
+                PrimalstinctLifecycle.refresh(serverPlayer);
+                PrimalstinctNetwork.syncNow(serverPlayer);
             }
         });
 
@@ -108,6 +122,12 @@ public class SSCPrimalstinct implements ModInitializer {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (success) {
                 PrimalRosterManager.validateAndSwap();
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter.rebuildCurrentForm(player);
+                    if (net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(player)) {
+                        net.onixary.sscPrimalstinct.selection.SelectionSessionManager.onPlayerReady(player);
+                    }
+                }
                 PrimalPowerReconciler.requestReconcileAll(server);  // 配置世代更新，强制重建附属来源
             }
         });

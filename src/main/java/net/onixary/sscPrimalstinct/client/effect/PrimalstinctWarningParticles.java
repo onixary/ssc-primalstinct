@@ -27,6 +27,8 @@ public final class PrimalstinctWarningParticles {
     private PrimalstinctWarningParticles() {
     }
 
+    public static void reset() { cooldownTicks = 0; }
+
     public static void register() {
         ClientTickEvents.END_CLIENT_TICK.register(PrimalstinctWarningParticles::tick);
     }

@@ -40,7 +40,7 @@ public final class InteractionRuleManager {
 
     /** Mixin 热路径：无任何交互限制返回 null。 */
     public static @Nullable InteractionRule ruleIfRestricted(@Nullable ServerPlayerEntity player) {
-        if (player == null) {
+        if (player == null || !net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) {
             return null;
         }
         InteractionRule rule = RULES.get(player.getUuid());

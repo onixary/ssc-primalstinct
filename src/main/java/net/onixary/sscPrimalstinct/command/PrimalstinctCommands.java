@@ -108,6 +108,12 @@ public final class PrimalstinctCommands {
         context.getSource().sendFeedback(() -> Text.literal(String.format(
                 "  selection=%s selected=%s schema=%d", component.isSelectionCompleted(),
                 component.getSelectedFormId(), component.getSchemaVersion())), false);
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "  managed=%s initialized=%s entryHandled=%s chooseOnStart=%s pending=%s",
+                net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(target),
+                component.isInstinctInitialized(), component.isEntryHandled(),
+                net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.chooseFormOnStart(),
+                net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(target))), false);
         if (SSCAdapter.isLoaded()) {
             SSCAdapter.SscInstinctSnapshot snapshot = SSCAdapter.readInstinct(target);
             context.getSource().sendFeedback(() -> Text.translatable(

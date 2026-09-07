@@ -33,7 +33,7 @@ public final class PrimalstinctNetwork {
     /** 限频校正间隔（tick）；开发初值，卡05 接入真实速率后按需调整。 */
     private static final int CORRECTION_INTERVAL = 40;
 
-    private record LastSnapshot(float value, int level, boolean locked, float rate, int revision) {
+    private record LastSnapshot(float value, int level, boolean locked, float rate, int revision, boolean managed) {
     }
 
     private static final Map<UUID, LastSnapshot> LAST_SENT = new HashMap<>();
@@ -50,6 +50,7 @@ public final class PrimalstinctNetwork {
                 }));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             LAST_SENT.remove(handler.player.getUuid());
+            net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.forget(handler.player.getUuid());
             PrimalstinctService.clearPlayer(handler.player.getUuid());  // 运行期速率重登重算
         });
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> syncNow(newPlayer));
@@ -77,7 +78,7 @@ public final class PrimalstinctNetwork {
         payload.write(buf);
         ServerPlayNetworking.send(player, PrimalstinctStateS2C.ID, buf);
         LAST_SENT.put(player.getUuid(), new LastSnapshot(
-                component.getValue(), component.getLevel(), component.isLocked(), rate, payload.revision()));
+                component.getValue(), component.getLevel(), component.isLocked(), rate, payload.revision(), payload.managed()));
     }
 
     private static PrimalstinctStateS2C snapshot(MinecraftServer server, ServerPlayerEntity player,
@@ -97,16 +98,14 @@ public final class PrimalstinctNetwork {
                 isManaged(player),
                 roster.levels.maxValue,
                 PrimalstinctService.BASE_GROWTH_PER_SECOND,
-                roster.levels.thresholds);
+                roster.levels.thresholds,
+                net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.chooseFormOnStart(),
+                net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(player));
     }
 
     /** 卡15：当前 SSC 形态是否受本玩法管理（名单内含子形态继承）。HUD 显隐以此为准，不读 NoInstinct。 */
     private static boolean isManaged(ServerPlayerEntity player) {
-        if (!SSCAdapter.isLoaded()) {
-            return false;
-        }
-        String formId = SSCAdapter.readInstinct(player).formId();
-        return formId != null && PrimalRosterManager.resolve(Identifier.tryParse(formId)) != null;
+        return net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player);
     }
 
     private static void tickCorrection(MinecraftServer server) {
@@ -122,7 +121,9 @@ public final class PrimalstinctNetwork {
                     || last.value() != component.getValue()
                     || last.level() != component.getLevel()
                     || last.locked() != component.isLocked()
-                    || last.rate() != currentRate;
+                    || last.rate() != currentRate
+                    || last.revision() != PrimalRosterManager.active().revision
+                    || last.managed() != isManaged(player);
             if (changed) {
                 syncNow(player);
             }

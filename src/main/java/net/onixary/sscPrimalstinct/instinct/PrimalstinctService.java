@@ -41,7 +41,9 @@ public final class PrimalstinctService {
 
     /** 统一即时修改入口；返回是否被接受。 */
     public static boolean modify(ServerPlayerEntity player, PrimalstinctSource source, float delta) {
+        if (!PrimalstinctLifecycle.isManaged(player) && source != PrimalstinctSource.ADMIN) return false;
         PrimalstinctComponent component = component(player);
+        component.initializeInstinct();
         float maxValue = PrimalRosterManager.active().levels.maxValue;
         int levelBefore = component.getLevel();
         PrimalstinctKernel.ModifyResult result = PrimalstinctKernel.modify(
@@ -54,6 +56,8 @@ public final class PrimalstinctService {
         boolean levelCrossed = component.getLevel() != levelBefore;
         if (levelCrossed || result.lockChanged()) {
             onChanged(player);
+            PrimalstinctPresentation.onLevelOrLockChanged(player, levelBefore, component.getLevel(),
+                    result.lockChanged(), component.isLocked());
         }
         return true;
     }
@@ -67,6 +71,7 @@ public final class PrimalstinctService {
     /** 注册/覆盖一个稳定键速率贡献（点/秒）。 */
     public static void setRate(ServerPlayerEntity player, String key, PrimalstinctSource source,
                                float pointsPerSecond) {
+        if (!PrimalstinctLifecycle.isManaged(player)) return;
         if (!Float.isFinite(pointsPerSecond)) {
             SSCPrimalstinct.LOGGER.warn("[primalstinct] 拒绝非有限速率 {}（key={}）", pointsPerSecond, key);
             return;
@@ -89,19 +94,23 @@ public final class PrimalstinctService {
 
     /** 当前合并速率（点/秒），供 S2C 快照与客户端外推。 */
     public static float currentRate(ServerPlayerEntity player) {
+        if (!PrimalstinctLifecycle.isManaged(player)) return 0.0f;
         PrimalstinctComponent component = component(player);
         return PrimalstinctKernel.mergeRate(
                 component.getValue(), component.isLocked(), rateState(player).values());
     }
 
-    /** 断线清理运行期速率（重登后由 tick/Power 重建）。 */
+    /** 断线清理运行期速率与表现状态（重登后由 tick/Power 重建）。 */
     public static void clearPlayer(UUID uuid) {
         RATE_STATES.remove(uuid);
+        PrimalstinctPresentation.clearPlayer(uuid);
     }
 
     /** 每 tick 主循环（END_SERVER_TICK，主线程）。 */
     public static void tick(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            PrimalstinctLifecycle.refresh(player);
+            if (!PrimalstinctLifecycle.isManaged(player)) continue;
             // 1) 基础自然增长：名单内形态自动持有（POWER 来源，满值即停）
             ensureBaseRate(player);
             // 1.5) 速率 Power 扫描：活跃贡献/失活移除（卡07，稳定键 "power:<source_id>"）
@@ -124,14 +133,16 @@ public final class PrimalstinctService {
                     lockChanged = result.lockChanged();
                 }
             }
-            // 3) 边界处理：跨级/锁定变化 → 同步 + Power 结算（与命令路径同一出口）
+            // 3) 边界处理：跨级/锁定变化 → 同步 + Power 结算（与命令路径同一出口）+ 表现编排
             if (component.getLevel() != levelBefore || lockChanged) {
                 onChanged(player);
+                PrimalstinctPresentation.onLevelOrLockChanged(player, levelBefore, component.getLevel(),
+                        lockChanged, component.isLocked());
             }
             // 3.5) 蜷缩校验（位置偏离/死亡/离地面自动退出，卡11）
             net.onixary.sscPrimalstinct.sleep.CurlSleepController.validate(player);
-            // 4) 能力差量结算：卡06 挂载点（等级 Power 的 add/remove 差量在此应用）
-            settleAbilityDelta(player);
+            // 4) 表现检查（阈值前提示 / 锁定标签倒计时）
+            PrimalstinctPresentation.tickPlayer(player);
         }
         RATE_STATES.keySet().removeIf(uuid -> server.getPlayerManager().getPlayer(uuid) == null);
     }
@@ -170,11 +181,6 @@ public final class PrimalstinctService {
                 removeRate(player, key);
             }
         }
-    }
-
-    /** 卡06：等级 Power 差量结算挂载点（跨级时 add/remove 生效集合）。 */
-    private static void settleAbilityDelta(ServerPlayerEntity player) {
-        // 卡06 落地：对比当前等级与上次结算等级，应用累计 add/remove 差量（服务端主线程）
     }
 
     private static LinkedHashMap<String, PrimalstinctKernel.Contribution> rateState(ServerPlayerEntity player) {
