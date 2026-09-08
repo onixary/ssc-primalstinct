@@ -23,6 +23,8 @@ public final class PrimalstinctApoliFactories {
     }
 
     public static void register() {
+        var targetCondition = net.onixary.sscPrimalstinct.power.factory.ProxyAttackTargetCondition.getFactory();
+        Registry.register(ApoliRegistries.ENTITY_CONDITION, targetCondition.getSerializerId(), targetCondition);
         Registry.register(ApoliRegistries.POWER_FACTORY,
                 ModifyPrimalstinctRatePower.getFactory().getSerializerId(),
                 ModifyPrimalstinctRatePower.getFactory());

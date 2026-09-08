@@ -30,6 +30,7 @@ public class SSCPrimalstinct implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect.register();
         boolean sscLoaded = FabricLoader.getInstance().isModLoaded(SSC_MOD_ID);
         if (!sscLoaded) {
             LOGGER.error("SSC (shape-shifter-curse) is missing; this addon requires it as a hard dependency.");

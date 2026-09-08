@@ -61,5 +61,6 @@
   "codex.ssc-primalstinct.instincts.level.3": "L3: Instinct surging - stronger combat boons, restrictions largely lifted.",
   "codex.ssc-primalstinct.instincts.level.4": "L4: Near the limit - high-value warning zone, closing in on the max lock.",
   "codex.ssc-primalstinct.instincts.level.5": "L5: Maxed and locked - instinct changes halt while gained abilities remain; recovery items can lower and unlock it.",
-  "codex.ssc-primalstinct.instincts.level_generic": "L%s: Instinct level %s."
+  "codex.ssc-primalstinct.instincts.level_generic": "L%s: Instinct level %s.",
+  "effect.ssc-primalstinct.instinct_overheating": "Instinct Overheating"
 }

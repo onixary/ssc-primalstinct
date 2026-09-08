@@ -34,6 +34,7 @@ public final class CurlSleepController {
     }
 
     public static void toggle(ServerPlayerEntity player) {
+        if (net.onixary.sscPrimalstinct.instinct.WanderAiController.isForced(player)) return;
         if (isCurlSleeping(player)) {
             wakeUp(player, "key");
             return;

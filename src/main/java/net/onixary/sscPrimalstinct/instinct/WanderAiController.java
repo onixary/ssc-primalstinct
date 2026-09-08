@@ -4,6 +4,10 @@ import io.github.apace100.apoli.component.PowerHolderComponent;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.TemptGoal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
+import net.minecraft.entity.LivingEntity;
+import net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect;
+import net.onixary.sscPrimalstinct.mixin.vanilla.ActiveTargetGoalAccessor;
 import net.minecraft.entity.ai.goal.WanderAroundGoal;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
@@ -30,7 +34,8 @@ import java.util.UUID;
  * 水平移动指令及一次性起跳速度发给玩家客户端，重力和位置上报走原版移动链路，
  * 仅接管位移，不修改玩家视角。
  *
- * 接管条件：Power 活跃 + 托管 + 未锁定 + 非睡眠（原版/蜷缩）+ 无输入持续 afk_ticks。
+ * 接管条件：Power 活跃 + 托管 + 未锁定 + 无输入持续 afk_ticks。
+ * InstinctOverheating 跳过 AFK 等待且输入不能退出；效果结束主动释放。
  * 释放（任一即弃）：直接按键输入（updateInput mixin）、客户端按键上报（C2S）、
  * 疾跑、非站立姿势、Power 失效/锁定/睡眠、断线/接管态变化。
  * 游荡中被驱动的位移/速度/转向不计为“玩家输入”（与 Naturalis 的信号护栏一致）。
@@ -48,6 +53,7 @@ public final class WanderAiController {
         double lastX;
         double lastZ;
         boolean wandering;
+        boolean forced;
         @Nullable MobEntity proxy;
         @Nullable Identifier proxyEntityId;
         @Nullable WanderAiPower proxyPower;
@@ -65,6 +71,13 @@ public final class WanderAiController {
         });
         long now = player.age;
         WanderAiPower power = findActivePower(player);
+        boolean forced = player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE);
+        if (forced && power != null && PrimalstinctLifecycle.isManaged(player)) {
+            // Sleeping is an input action too; it must not become an escape from takeover.
+            if (player.hasVehicle()) player.stopRiding();
+            net.onixary.sscPrimalstinct.sleep.CurlSleepController.wakeUp(player, "instinct_overheating");
+            if (player.isSleeping()) player.wakeUp(true, true);
+        }
         boolean blocked = !player.isAlive() || player.isSpectator() || player.hasVehicle()
                 || player.getAbilities().flying || power == null
                 || !PrimalstinctLifecycle.isManaged(player)
@@ -79,6 +92,14 @@ public final class WanderAiController {
             refreshPositionBaseline(player, state);
             return;
         }
+
+        if (state.forced && !forced) {
+            discard(player, state);
+            state.lastActiveTick = now;
+            refreshPositionBaseline(player, state);
+            return;
+        }
+        state.forced = forced;
 
         // 活动检测：游荡中排除被驱动的位移/速度/转向（护栏同 Naturalis）
         boolean activity = WanderAiController.hasDirectInputSignal(player, now)
@@ -97,12 +118,12 @@ public final class WanderAiController {
         }
 
         if (state.wandering) {
-            if (activity) {
+            if (activity && !forced) {
                 discard(player, state);  // 任意输入立即释放
                 return;
             }
             drive(player, power, state);
-        } else if (now - state.lastActiveTick >= Math.max(1, power.getAfkTicks())) {
+        } else if (forced || now - state.lastActiveTick >= Math.max(1, power.getAfkTicks())) {
             start(player, power, state);
             if (state.wandering) {
                 drive(player, power, state);
@@ -180,7 +201,7 @@ public final class WanderAiController {
         // full velocity makes vanilla client movement disagree, especially during falls.
         Vec3d motion = proxy.getVelocity();
         double jump = ((WanderJumpSettings) proxy).primalstinct$consumeJumpVelocity();
-        new WanderMotionS2C(true, motion.x, motion.z,
+        new WanderMotionS2C(true, player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE), motion.x, motion.z,
                 player.isOnGround() ? jump : Double.NaN).send(player);
 
     }
@@ -246,7 +267,7 @@ public final class WanderAiController {
         State state = STATES.get(player.getUuid());
         if (state != null) {
             state.lastActiveTick = player.age;
-            if (state.wandering) {
+            if (state.wandering && !player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE)) {
                 discard(player, state);
             }
         }
@@ -260,6 +281,7 @@ public final class WanderAiController {
     private static void discard(ServerPlayerEntity player, State state) {
         discardProxyEntity(player, state);
         state.wandering = false;
+        state.forced = false;
         WanderMotionS2C.clear(player);
     }
 
@@ -300,6 +322,37 @@ public final class WanderAiController {
 
     private static double distanceSq2d(double dx, double dz) {
         return dx * dx + dz * dz;
+    }
+
+    /** Native active-target predicates, without running movement/attacks or acquiring a target. */
+    public static boolean hasNearbyAttackTarget(ServerPlayerEntity player, double radius) {
+        if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isSpectator()
+                || !PrimalstinctLifecycle.isManaged(player)) return false;
+        WanderAiPower power = findActivePower(player);
+        if (power == null) return false;
+        double range = Math.min(radius, 128);
+        MobEntity probe = createProxy(player, power);
+        if (probe == null) return false;
+        try {
+            for (var entry : ((MobEntityGoalSelectorAccessor) probe).primalstinct$getTargetSelector().getGoals()) {
+                if (!(entry.getGoal() instanceof ActiveTargetGoal<?> goal)) continue;
+                var access = (ActiveTargetGoalAccessor) goal;
+                for (LivingEntity candidate : player.getServerWorld().getEntitiesByClass(
+                        access.primalstinct$getTargetClass(), player.getBoundingBox().expand(range),
+                        entity -> entity != player && entity.isAlive() && !entity.isSpectator())) {
+                    if (player.squaredDistanceTo(candidate) <= range * range
+                            && access.primalstinct$getTargetPredicate().test(probe, candidate)) return true;
+                }
+            }
+            return false;
+        } finally {
+            probe.discard();
+        }
+    }
+
+    public static boolean isForced(ServerPlayerEntity player) {
+        return player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE)
+                && PrimalstinctLifecycle.isManaged(player) && findActivePower(player) != null;
     }
 
     /** 服务端按键输入标记（updateInput mixin 写入；仅服务线程）。 */

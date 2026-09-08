@@ -61,5 +61,6 @@
   "codex.ssc-primalstinct.instincts.level.3": "L3：本能奔涌——战斗增益增强，限制大幅解除。",
   "codex.ssc-primalstinct.instincts.level.4": "L4：濒临极限——进入高值预警区间，接近满值锁定。",
   "codex.ssc-primalstinct.instincts.level.5": "L5：满值锁定——本能变化停止，已获能力与增益保留；使用恢复手段可降值解锁。",
-  "codex.ssc-primalstinct.instincts.level_generic": "L%s：本能等级 %s。"
+  "codex.ssc-primalstinct.instincts.level_generic": "L%s：本能等级 %s。",
+  "effect.ssc-primalstinct.instinct_overheating": "本能过热"
 }

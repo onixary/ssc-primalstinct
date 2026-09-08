@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "ssc-primalstinct-refmap.json",
   "mixins": [
+    "ActiveTargetGoalAccessor",
     "LivingEntityWanderJumpMixin",
     "MobEntityGoalSelectorAccessor",
     "SlotMixin",
@@ -22,6 +23,7 @@
     "LivingEntityCurlSleepMixin"
   ],
   "client": [
+    "client.KeyboardInputOverheatingMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.InGameHudMixin",
     "client.HandledScreenMixin",

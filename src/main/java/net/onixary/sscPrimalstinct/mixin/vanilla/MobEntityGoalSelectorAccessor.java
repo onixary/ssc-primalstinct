@@ -10,4 +10,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface MobEntityGoalSelectorAccessor {
     @Accessor("goalSelector")
     GoalSelector primalstinct$getGoalSelector();
+    @Accessor("targetSelector")
+    GoalSelector primalstinct$getTargetSelector();
 }
