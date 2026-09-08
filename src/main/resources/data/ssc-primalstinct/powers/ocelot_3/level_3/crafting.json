@@ -1,0 +1,5 @@
+{
+  "type": "ssc-primalstinct:prevent_inventory_crafting",
+  "include_crafting_table": false,
+  "hidden": true
+}

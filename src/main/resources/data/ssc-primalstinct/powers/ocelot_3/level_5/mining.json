@@ -1,0 +1,15 @@
+{
+  "type": "apoli:modify_break_speed",
+  "condition": {
+    "type": "apoli:equipped_item",
+    "equipment_slot": "mainhand",
+    "item_condition": {
+      "type": "apoli:empty"
+    }
+  },
+  "modifier": {
+    "operation": "multiply_base",
+    "value": 9
+  },
+  "hidden": true
+}

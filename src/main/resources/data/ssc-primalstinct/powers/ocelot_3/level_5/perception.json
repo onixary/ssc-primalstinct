@@ -1,0 +1,10 @@
+{
+  "type": "ssc-primalstinct:instinct_perception",
+  "codex_chance": 1,
+  "palette_chance": 1,
+  "sign_chance": 1,
+  "item_text": "\u2026?",
+  "target_radius": 16,
+  "proxy_entity": "minecraft:ocelot",
+  "hidden": true
+}

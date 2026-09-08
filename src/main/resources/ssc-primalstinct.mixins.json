@@ -13,21 +13,29 @@
     "CraftingScreenHandlerMixin",
     "PlayerInventoryMixin",
     "ServerPlayNetworkHandlerMixin",
-    "ServerPlayerEntityMixin",
+    "WeaponHitDropMixin",
     "ServerPlayerEntityInputMixin",
     "ServerPlayerInteractionManagerMixin",
     "ItemStackMixin",
     "PlayerEntityEquipMixin",
     "ServerPlayerDamageWakeMixin",
     "PlayerCurlSleepMixin",
-    "LivingEntityCurlSleepMixin"
+    "LivingEntityCurlSleepMixin",
+    "BowDropMixin",
+    "CrossbowDropMixin"
   ],
   "client": [
     "client.KeyboardInputOverheatingMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.InGameHudMixin",
     "client.HandledScreenMixin",
-    "client.PlayerInventoryClientMixin"
+    "client.PlayerInventoryClientMixin",
+    "client.InstinctTextRendererMixin",
+    "client.InstinctSignRendererMixin",
+    "client.InstinctItemTextMixin",
+    "client.InstinctOutlineMixin",
+    "client.InstinctOutlineColorMixin",
+    "client.FontStorageAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -81,7 +81,7 @@ public final class WanderAiController {
         boolean blocked = !player.isAlive() || player.isCreative() || player.isSpectator() || player.hasVehicle()
                 || player.getAbilities().flying || power == null
                 || !PrimalstinctLifecycle.isManaged(player)
-                || net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent.PRIMALSTINCT.get(player).isLocked()
+                || PrimalstinctPresentation.isLockCinematicActive(player)
                 || player.isSleeping()
                 || net.onixary.sscPrimalstinct.sleep.CurlSleepController.isCurlSleeping(player);
         if (blocked) {
@@ -324,30 +324,35 @@ public final class WanderAiController {
         return dx * dx + dz * dz;
     }
 
-    /** Native active-target predicates, without running movement/attacks or acquiring a target. */
+    /** The same native target predicates feed overheating and local prey outlines. */
     public static boolean hasNearbyAttackTarget(ServerPlayerEntity player, double radius) {
-        if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isCreative() || player.isSpectator()
-                || !PrimalstinctLifecycle.isManaged(player)) return false;
         WanderAiPower power = findActivePower(player);
-        if (power == null) return false;
+        return power != null && !nearbyAttackTargets(player, radius, power, false).isEmpty();
+    }
+
+    public static java.util.Set<Integer> nearbyAttackTargets(ServerPlayerEntity player, double radius,
+                                                             WanderAiPower power, boolean throughWalls) {
+        java.util.Set<Integer> targets = new java.util.HashSet<>();
+        if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isCreative() || player.isSpectator()
+                || !PrimalstinctLifecycle.isManaged(player)) return targets;
         double range = Math.min(radius, 128);
         MobEntity probe = createProxy(player, power);
-        if (probe == null) return false;
+        if (probe == null) return targets;
         try {
             for (var entry : ((MobEntityGoalSelectorAccessor) probe).primalstinct$getTargetSelector().getGoals()) {
                 if (!(entry.getGoal() instanceof ActiveTargetGoal<?> goal)) continue;
                 var access = (ActiveTargetGoalAccessor) goal;
+                var predicate = access.primalstinct$getTargetPredicate().copy().setBaseMaxDistance(range);
+                if (throughWalls) predicate.ignoreVisibility();
                 for (LivingEntity candidate : player.getServerWorld().getEntitiesByClass(
                         access.primalstinct$getTargetClass(), player.getBoundingBox().expand(range),
                         entity -> entity != player && entity.isAlive() && !entity.isSpectator())) {
-                    if (player.squaredDistanceTo(candidate) <= range * range
-                            && access.primalstinct$getTargetPredicate().test(probe, candidate)) return true;
+                    if (player.squaredDistanceTo(candidate) <= range * range && predicate.test(probe, candidate))
+                        targets.add(candidate.getId());
                 }
             }
-            return false;
-        } finally {
-            probe.discard();
-        }
+            return targets;
+        } finally { probe.discard(); }
     }
 
     public static boolean isForced(ServerPlayerEntity player) {

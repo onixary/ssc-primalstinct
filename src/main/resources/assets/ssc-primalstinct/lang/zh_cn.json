@@ -56,11 +56,15 @@
   "key.ssc-primalstinct.codex_page": "图鉴页面",
   "codex.ssc-primalstinct.instincts.desc": "此形态受原始本能系统管理：本能随时间与行为增长，跨越阈值提升本能等级，满值后锁定。",
   "codex.ssc-primalstinct.instincts.level.0": "L0：本能初醒——最受限制的初始状态。",
-  "codex.ssc-primalstinct.instincts.level.1": "L1：初步适应——少量能力与槽位解锁。",
-  "codex.ssc-primalstinct.instincts.level.2": "L2：野性渐显——更多能力与槽位可用。",
-  "codex.ssc-primalstinct.instincts.level.3": "L3：本能奔涌——战斗增益增强，限制大幅解除。",
-  "codex.ssc-primalstinct.instincts.level.4": "L4：濒临极限——进入高值预警区间，接近满值锁定。",
+  "codex.ssc-primalstinct.instincts.level.1": "L1（0–25）：初始阶段，获得此形态的基础本能能力。",
+  "codex.ssc-primalstinct.instincts.level.2": "L2（25–50）：野性渐显，能力与限制随形态变化。",
+  "codex.ssc-primalstinct.instincts.level.3": "L3（50–75）：本能增强，能力与限制进一步变化。",
+  "codex.ssc-primalstinct.instincts.level.4": "L4（75–100）：濒临极限，接近满值锁定。",
   "codex.ssc-primalstinct.instincts.level.5": "L5：满值锁定——本能变化停止，已获能力与增益保留；使用恢复手段可降值解锁。",
   "codex.ssc-primalstinct.instincts.level_generic": "L%s：本能等级 %s。",
-  "effect.ssc-primalstinct.instinct_overheating": "本能过热"
+  "effect.ssc-primalstinct.instinct_overheating": "本能过热",
+  "message.ssc-primalstinct.interaction_random": "本能打断了你的操作。",
+  "message.ssc-primalstinct.interaction_certain": "本能让你无法进行这种操作。",
+  "message.ssc-primalstinct.drop_random": "手中的工具滑落了。",
+  "message.ssc-primalstinct.drop_certain": "本能让你无法继续握住工具。"
 }

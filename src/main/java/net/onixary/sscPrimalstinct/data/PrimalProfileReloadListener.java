@@ -149,7 +149,7 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
             }
         }
         if (defaultFile == null) {
-            SSCPrimalstinct.LOGGER.info("[primalstinct] 未找到 levels/default.json，使用内置默认等级表（20/40/60/80/100）");
+            SSCPrimalstinct.LOGGER.info("[primalstinct] 未找到 levels/default.json，使用内置默认等级表（0/25/50/75/100，L1–L5）");
             return PrimalLevels.defaults();
         }
         JsonObject json = readObject(defaultFile, defaultSource, errors);
@@ -164,7 +164,7 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
             }
             float maxValue = floatField(json, "max_value", 0.01f, Float.MAX_VALUE, defaultSource);
             boolean lockAtMax = boolField(json, "lock_at_max", defaultSource);
-            float[] thresholds = floatArrayField(json, "thresholds", 0.01f, maxValue, defaultSource);
+            float[] thresholds = floatArrayField(json, "thresholds", 0.0f, maxValue, defaultSource);
             PrimalLevels.Builder builder = new PrimalLevels.Builder(maxValue, lockAtMax, thresholds);
             JsonObject levelsObj = objectField(json, "levels", defaultSource);
             for (int level = 1; level <= thresholds.length; level++) {

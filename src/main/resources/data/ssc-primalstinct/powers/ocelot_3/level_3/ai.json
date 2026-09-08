@@ -1,0 +1,9 @@
+{
+  "type": "ssc-primalstinct:instinct_wander_ai",
+  "entity": "minecraft:ocelot",
+  "afk_ticks": 600,
+  "wander_chance": 20,
+  "speed_multiplier": 1.5,
+  "jump_height_multiplier": 2,
+  "hidden": true
+}

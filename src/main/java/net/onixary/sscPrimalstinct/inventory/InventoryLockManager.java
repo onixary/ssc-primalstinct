@@ -14,17 +14,15 @@ import net.onixary.sscPrimalstinct.power.factory.RestrictInventoryPower;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 卡09：锁槽规则的派生、搬移与暂存（全部服务端主线程；搬移只发生在规则变化时，不逐 tick 扫描）。
+ * 锁槽规则派生与掉落（服务端主线程，规则变化时清空锁定槽）。
  * 规则来源：restrict_hotbar / restrict_inventory Power（活跃实例取 max 合并）。
- * 升级/降级守恒：锁定槽内物品先入可用槽、余者按原槽索引暂存；解锁优先还原原槽；
- * 光标持物在收紧前先保存合法状态；绝不覆盖已有物品、绝不自动扔出（死亡除外，见下）。
+ * 锁定槽的真实物品掉落到玩家身边，不搬移或暂存；旧版本暂存物品一次性释放。
  * 死亡规则：keepInventory=false → 暂存于死亡位置掉落一次并清空（禁止免死仓库）；
  * keepInventory=true → 随组件 ALWAYS_COPY 保留。Trinkets 槽不在管理范围，完全保留。
  */
@@ -77,7 +75,7 @@ public final class InventoryLockManager {
         return player == null ? null : RULES.get(player.getUuid());
     }
 
-    /** 由 PrimalPowerReconciler 在 Power 结算后调用：规则变化时执行搬移/暂存/还原。 */
+    /** Power 结算后更新规则并掉落锁定槽和旧暂存区物品。 */
     public static void updateRule(ServerPlayerEntity player) {
         InventoryLockRule newRule = deriveRule(player);
         InventoryLockRule oldRule = RULES.getOrDefault(player.getUuid(), InventoryLockRule.UNRESTRICTED);
@@ -119,88 +117,39 @@ public final class InventoryLockManager {
         return new InventoryLockRule(
                 hotbar < 0 ? InventoryLockRule.HOTBAR_SIZE : hotbar,
                 main < 0 ? InventoryLockRule.MAIN_SIZE : main,
-                false, lockOffhand);
+                PowerHolderComponent.getPowers(player, RestrictInventoryPower.class).stream()
+                        .anyMatch(p -> p.isActive() && p.lockEquipment), lockOffhand);
     }
 
     private static void applyRuleChange(ServerPlayerEntity player, InventoryLockRule oldRule, InventoryLockRule newRule) {
         PlayerInventory inv = player.getInventory();
         PrimalstinctComponent component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
 
-        // 1) 光标持物：收紧前先保存合法状态（可用槽 → 暂存，槽标记 -1）
-        ItemStack cursor = player.currentScreenHandler.getCursorStack();
-        if (!cursor.isEmpty() && !newRule.allowsAnyInsert()) {
-            ItemStack remainder = insertIntoAllowed(inv, newRule, cursor.copy());
-            if (!remainder.isEmpty()) {
-                component.stashItem(-1, remainder);
-            }
+        // Clear the actual stack before spawning it; never copy or hide locked items.
+        if (!newRule.allowsAnyInsert()) {
+            ItemStack cursor = player.currentScreenHandler.getCursorStack();
             player.currentScreenHandler.setCursorStack(ItemStack.EMPTY);
+            dropBesidePlayer(player, cursor);
         }
-
-        // 2) 锁定槽内物品：先入可用槽，余者按原槽索引暂存（不自动扔出）
-        for (int slot = 0; slot < InventoryLockRule.HOTBAR_SIZE + InventoryLockRule.MAIN_SIZE; slot++) {
-            if (!newRule.isLocked(slot)) {
-                continue;
-            }
+        for (int slot = 0; slot <= InventoryLockRule.OFFHAND_SLOT; slot++) {
+            if (!newRule.isLocked(slot)) continue;
             ItemStack stack = inv.getStack(slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
             inv.setStack(slot, ItemStack.EMPTY);
-            ItemStack remainder = insertIntoAllowed(inv, newRule, stack);
-            if (!remainder.isEmpty()) {
-                component.stashItem(slot, remainder);
-            }
+            dropBesidePlayer(player, stack);
         }
+        // Release legacy stashes once, including items hidden before this update.
+        var stored = new ArrayList<>(component.getStash());
+        component.getStash().clear();
+        for (var entry : stored) dropBesidePlayer(player, entry.stack());
+        inv.markDirty();
+        player.playerScreenHandler.syncState();
+        if (player.currentScreenHandler != player.playerScreenHandler) player.currentScreenHandler.syncState();
+    }
 
-        // 2.5) 卡10：新锁定的盔甲/副手——清空原槽与原地掉落成对、只执行一次，短拾取延迟防循环
-        for (int slot = InventoryLockRule.ARMOR_START; slot <= InventoryLockRule.OFFHAND_SLOT; slot++) {
-            if (!newRule.isLocked(slot)) {
-                continue;
-            }
-            ItemStack stack = inv.getStack(slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
-            inv.setStack(slot, ItemStack.EMPTY);
-            net.minecraft.entity.ItemEntity drop = player.dropItem(stack, false, false);
-            if (drop != null) {
-                drop.setPickupDelay(40);
-            }
-        }
-
-        // 3) 解锁还原：优先原槽（空则放回），否则尝试可用槽，仍放不下继续暂存
-        Iterator<PrimalstinctComponent.StashEntry> iterator = component.getStash().iterator();
-        List<PrimalstinctComponent.StashEntry> unresolved = new ArrayList<>();
-        while (iterator.hasNext()) {
-            PrimalstinctComponent.StashEntry entry = iterator.next();
-            if (entry.slot() < 0) {
-                ItemStack remainder = insertIntoAllowed(inv, newRule, entry.stack());
-                iterator.remove();
-                if (!remainder.isEmpty()) unresolved.add(new PrimalstinctComponent.StashEntry(-1, remainder));
-                continue;
-            }
-            if (newRule.isLocked(entry.slot())) {
-                unresolved.add(entry);
-                iterator.remove();
-                continue;
-            }
-            if (inv.getStack(entry.slot()).isEmpty()) {
-                inv.setStack(entry.slot(), entry.stack());
-                iterator.remove();
-            } else {
-                ItemStack remainder = insertIntoAllowed(inv, newRule, entry.stack());
-                if (remainder.isEmpty()) {
-                    iterator.remove();
-                } else {
-                    iterator.remove();
-                    unresolved.add(new PrimalstinctComponent.StashEntry(entry.slot(), remainder));
-                }
-            }
-        }
-        for (PrimalstinctComponent.StashEntry entry : unresolved) {
-            component.stashItem(entry.slot(), entry.stack());
-        }
-        player.currentScreenHandler.sendContentUpdates();
+    private static void dropBesidePlayer(ServerPlayerEntity player, ItemStack stack) {
+        if (stack.isEmpty()) return;
+        var drop = player.dropItem(stack, false, false);
+        if (drop != null) drop.setPickupDelay(40);
     }
 
     /** 允许槽位内的定向插入：先叠加同类未满，再空槽；快捷栏优先于主背包（贴近原版手感）。 */

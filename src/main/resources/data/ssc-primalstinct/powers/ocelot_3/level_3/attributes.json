@@ -1,0 +1,24 @@
+{
+  "type": "apoli:attribute",
+  "modifiers": [
+    {
+      "attribute": "minecraft:generic.movement_speed",
+      "name": "Instinct movement",
+      "operation": "multiply_total",
+      "value": 0.2
+    },
+    {
+      "attribute": "minecraft:generic.armor",
+      "name": "Instinct armor",
+      "operation": "addition",
+      "value": 6
+    },
+    {
+      "attribute": "minecraft:generic.max_health",
+      "name": "Instinct health",
+      "operation": "addition",
+      "value": 4
+    }
+  ],
+  "hidden": true
+}

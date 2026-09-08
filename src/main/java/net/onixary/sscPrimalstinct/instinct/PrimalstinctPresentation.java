@@ -122,6 +122,10 @@ public final class PrimalstinctPresentation {
         }
     }
 
+    public static boolean isLockCinematicActive(ServerPlayerEntity player) {
+        return LOCK_LABEL_COUNTDOWN.containsKey(player.getUuid());
+    }
+
     public static void clearPlayer(UUID uuid) {
         THRESHOLD_WARNED.remove(uuid);
         LOCK_LABEL_COUNTDOWN.remove(uuid);

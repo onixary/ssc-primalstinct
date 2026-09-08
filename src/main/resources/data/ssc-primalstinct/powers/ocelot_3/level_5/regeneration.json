@@ -1,0 +1,14 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 40,
+  "condition": {
+    "type": "apoli:food_level",
+    "comparison": ">",
+    "compare_to": 6
+  },
+  "entity_action": {
+    "type": "apoli:heal",
+    "amount": 1
+  },
+  "hidden": true
+}

@@ -23,6 +23,10 @@ public final class PrimalstinctApoliFactories {
     }
 
     public static void register() {
+        var failure = net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower.getFactory();
+        Registry.register(ApoliRegistries.POWER_FACTORY, failure.getSerializerId(), failure);
+        var perception = net.onixary.sscPrimalstinct.power.factory.InstinctPerceptionPower.getFactory();
+        Registry.register(ApoliRegistries.POWER_FACTORY, perception.getSerializerId(), perception);
         var targetCondition = net.onixary.sscPrimalstinct.power.factory.ProxyAttackTargetCondition.getFactory();
         Registry.register(ApoliRegistries.ENTITY_CONDITION, targetCondition.getSerializerId(), targetCondition);
         Registry.register(ApoliRegistries.POWER_FACTORY,

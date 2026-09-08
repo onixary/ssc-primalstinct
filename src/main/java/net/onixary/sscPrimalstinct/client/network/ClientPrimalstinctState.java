@@ -91,7 +91,7 @@ public final class ClientPrimalstinctState {
     public static float[] thresholds() {
         PrimalstinctStateS2C s = snapshot;
         return s == null || s.thresholds().length == 0
-                ? new float[]{20.0f, 40.0f, 60.0f, 80.0f, 100.0f}
+                ? net.onixary.sscPrimalstinct.data.PrimalLevels.DEFAULT_THRESHOLDS.clone()
                 : s.thresholds();
     }
 

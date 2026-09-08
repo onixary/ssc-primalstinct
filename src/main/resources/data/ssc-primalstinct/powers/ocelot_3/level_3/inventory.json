@@ -1,0 +1,6 @@
+{
+  "type": "ssc-primalstinct:restrict_inventory",
+  "allowed_slots": 12,
+  "lock_equipment": false,
+  "hidden": true
+}

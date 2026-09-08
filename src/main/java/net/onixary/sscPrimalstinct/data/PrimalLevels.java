@@ -10,17 +10,17 @@ import java.util.Set;
 
 /**
  * 卡02：公共等级表（data/&lt;ns&gt;/primalstinct/levels/default.json）。
- * 语义（开发初值，见白板卡00约束）：阈值 20/40/60/80/100，L0=[0,20) … L4=[80,100)，L5=满值且锁定。
+ * 四个普通区间：L1=[0,25)、L2=[25,50)、L3=[50,75)、L4=[75,100)，L5=满值锁定。
  * 每级只声明 add/remove 增量；查询时按 0→当前级顺序累计展开（先 add 后 remove）。
  */
 public final class PrimalLevels {
 
     public static final float DEFAULT_MAX_VALUE = 100.0f;
-    public static final float[] DEFAULT_THRESHOLDS = {20.0f, 40.0f, 60.0f, 80.0f, 100.0f};
+    public static final float[] DEFAULT_THRESHOLDS = {0.0f, 25.0f, 50.0f, 75.0f, 100.0f};
 
     public final float maxValue;
     public final boolean lockAtMax;
-    /** 升序阈值，thresholds[i] 是进入 level i+1 的下界；长度即最高等级-1（L0 无阈值）。 */
+    /** thresholds[i] 是进入 level i+1 的下界；默认第一个阈值为 0，初始阶段就是 L1。 */
     public final float[] thresholds;
 
     /** 每级的增量声明（level 1..N），仅作数据保留；查询走 cumulative*。 */
@@ -45,7 +45,7 @@ public final class PrimalLevels {
     }
 
     public int levelForValue(float value) {
-        int level = 0;
+        int level = 1;
         for (int i = 0; i < thresholds.length; i++) {
             if (value >= thresholds[i]) {
                 level = i + 1;
@@ -135,8 +135,8 @@ public final class PrimalLevels {
                 throw new BuildError("thresholds 不能为空");
             }
             for (int i = 0; i < thresholds.length; i++) {
-                if (thresholds[i] <= 0 || thresholds[i] > maxValue) {
-                    throw new BuildError("thresholds[" + i + "]=" + thresholds[i] + " 超出 (0, max_value]");
+                if (!Float.isFinite(thresholds[i]) || thresholds[i] < 0 || thresholds[i] > maxValue) {
+                    throw new BuildError("thresholds[" + i + "]=" + thresholds[i] + " 超出 [0, max_value]");
                 }
                 if (i > 0 && thresholds[i] <= thresholds[i - 1]) {
                     throw new BuildError("thresholds 必须严格递增");

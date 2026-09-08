@@ -16,10 +16,12 @@ import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 public class RestrictInventoryPower extends Power {
 
     private final int allowedSlots;
+    public final boolean lockEquipment;
 
-    public RestrictInventoryPower(PowerType<?> type, LivingEntity entity, int allowedSlots) {
+    public RestrictInventoryPower(PowerType<?> type, LivingEntity entity, int allowedSlots, boolean lockEquipment) {
         super(type, entity);
         this.allowedSlots = allowedSlots;
+        this.lockEquipment = lockEquipment;
     }
 
     public int getAllowedSlots() {
@@ -31,9 +33,10 @@ public class RestrictInventoryPower extends Power {
         return new PowerFactory<>(
                 Identifier.of(SSCPrimalstinct.MOD_ID, "restrict_inventory"),
                 new SerializableData()
+                        .add("lock_equipment", SerializableDataTypes.BOOLEAN, false)
                         .add("allowed_slots", SerializableDataTypes.INT, 0),
                 data -> (powerType, livingEntity) -> new RestrictInventoryPower(
-                        powerType, livingEntity, Math.max(0, data.getInt("allowed_slots")))
+                        powerType, livingEntity, Math.max(0, data.getInt("allowed_slots")), data.getBoolean("lock_equipment"))
         ).allowCondition();
     }
 }

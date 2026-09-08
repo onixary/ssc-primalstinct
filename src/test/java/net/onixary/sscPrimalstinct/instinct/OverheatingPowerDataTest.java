@@ -18,7 +18,7 @@ public class OverheatingPowerDataTest {
 
     @Test
     public void checksPeriodicallyWithoutIndependentCooldown() throws Exception {
-        var power = read("/data/ssc-primalstinct/powers/ocelot_3_instinct_overheating_test.json");
+        var power = read("/data/ssc-primalstinct/powers/ocelot_3/level_4/overheating.json");
         assertEquals("apoli:action_over_time", power.get("type").getAsString());
         assertTrue(power.get("interval").getAsInt() > 0);
         assertFalse(power.toString().contains("cooldown"));
@@ -39,9 +39,9 @@ public class OverheatingPowerDataTest {
     }
 
     @Test
-    public void testPowerIsGrantedByOcelotForm() throws Exception {
+    public void productionPowersAreGrantedAtTheirLevels() throws Exception {
         var form = read("/data/ssc-primalstinct/primalstinct/forms/ocelot_3.json");
-        assertTrue(form.getAsJsonObject("base_powers").getAsJsonArray("add").toString()
-                .contains("ssc-primalstinct:ocelot_3_instinct_overheating_test"));
+        assertTrue(form.getAsJsonObject("level_overrides").getAsJsonObject("4").getAsJsonObject("powers")
+                .getAsJsonArray("add").toString().contains("ssc-primalstinct:ocelot_3/level_4/overheating"));
     }
 }

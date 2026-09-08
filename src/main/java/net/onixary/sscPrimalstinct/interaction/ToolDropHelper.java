@@ -32,14 +32,32 @@ public final class ToolDropHelper {
 
     /** 行为完成后掉落该手上的真实工具堆栈；空手/非工具/堆栈身份变化则不动作。 */
     public static void dropHeldTool(ServerPlayerEntity player, Hand hand) {
+        dropHeldTool(player, hand, false);
+    }
+
+    public static void dropHeldTool(ServerPlayerEntity player, Hand hand, boolean attackEvent) {
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return;
         ItemStack stack = player.getStackInHand(hand);
         if (stack.isEmpty() || !isToolOrWeapon(stack.getItem())) {
             return;
         }
+        float chance = io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player,
+                net.onixary.sscPrimalstinct.power.factory.DropToolAfterUsePower.class).stream()
+                .filter(p -> p.isActive() && (!attackEvent || p.attack)).map(p -> p.chance).max(Float::compare).orElse(0f);
+        if (chance <= 0 || player.getRandom().nextFloat() >= chance) return;
+        player.sendMessage(net.minecraft.text.Text.translatable(chance >= 1
+                ? "message.ssc-primalstinct.drop_certain" : "message.ssc-primalstinct.drop_random"), true);
         player.setStackInHand(hand, ItemStack.EMPTY);
         var drop = player.dropItem(stack, false, false);
         if (drop != null) {
             drop.setPickupDelay(30);
+        }
+    }
+
+    public static void dropFiredWeapon(net.minecraft.entity.LivingEntity user, ItemStack stack) {
+        if (!(user instanceof ServerPlayerEntity player)) return;
+        for (Hand hand : Hand.values()) {
+            if (player.getStackInHand(hand) == stack) { dropHeldTool(player, hand, true); return; }
         }
     }
 

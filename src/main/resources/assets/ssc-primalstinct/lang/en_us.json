@@ -56,11 +56,15 @@
   "key.ssc-primalstinct.codex_page": "Codex Page",
   "codex.ssc-primalstinct.instincts.desc": "This form is governed by the Primalstinct system: instinct grows over time and through behavior, crossing thresholds raises its level, and it locks at max value.",
   "codex.ssc-primalstinct.instincts.level.0": "L0: Instinct awakened - the most restricted base state.",
-  "codex.ssc-primalstinct.instincts.level.1": "L1: Adapting - a few abilities and slots unlocked.",
-  "codex.ssc-primalstinct.instincts.level.2": "L2: Wildness rising - more abilities and slots available.",
-  "codex.ssc-primalstinct.instincts.level.3": "L3: Instinct surging - stronger combat boons, restrictions largely lifted.",
-  "codex.ssc-primalstinct.instincts.level.4": "L4: Near the limit - high-value warning zone, closing in on the max lock.",
+  "codex.ssc-primalstinct.instincts.level.1": "L1 (0-25): Initial stage.",
+  "codex.ssc-primalstinct.instincts.level.2": "L2 (25-50): Instinct begins to emerge.",
+  "codex.ssc-primalstinct.instincts.level.3": "L3 (50-75): Instinct intensifies.",
+  "codex.ssc-primalstinct.instincts.level.4": "L4 (75-100): Approaching full instinct.",
   "codex.ssc-primalstinct.instincts.level.5": "L5: Maxed and locked - instinct changes halt while gained abilities remain; recovery items can lower and unlock it.",
   "codex.ssc-primalstinct.instincts.level_generic": "L%s: Instinct level %s.",
-  "effect.ssc-primalstinct.instinct_overheating": "Instinct Overheating"
+  "effect.ssc-primalstinct.instinct_overheating": "Instinct Overheating",
+  "message.ssc-primalstinct.interaction_random": "Instinct interrupted your interaction.",
+  "message.ssc-primalstinct.interaction_certain": "Your instinct prevents this interaction.",
+  "message.ssc-primalstinct.drop_random": "Your grip slipped.",
+  "message.ssc-primalstinct.drop_certain": "Your instinct rejects this tool."
 }

@@ -27,7 +27,7 @@ public abstract class ServerPlayerInteractionManagerMixin {
     private void primalstinct$denyInteraction(ServerPlayerEntity player, net.minecraft.world.World world,
             net.minecraft.item.ItemStack stack, Hand hand, net.minecraft.util.hit.BlockHitResult hit,
             CallbackInfoReturnable<net.minecraft.util.ActionResult> cir) {
-        if (net.onixary.sscPrimalstinct.interaction.InteractionRestrictions.blocksInteraction(player, hand, hit)) {
+        if (net.onixary.sscPrimalstinct.interaction.InteractionRestrictions.failsInteraction(player, hand, hit)) {
             // Delta sync sees no server inventory change after a rejected client prediction.
             player.currentScreenHandler.syncState();
             player.playerScreenHandler.syncState();
@@ -35,6 +35,11 @@ public abstract class ServerPlayerInteractionManagerMixin {
         }
     }
 
+    @org.spongepowered.asm.mixin.Unique private net.minecraft.item.ItemStack primalstinct$miningStack;
+    @Inject(method = "tryBreakBlock", at = @At("HEAD"))
+    private void primalstinct$rememberTool(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        primalstinct$miningStack = player.getMainHandStack();
+    }
     @Inject(method = "tryBreakBlock", at = @At("RETURN"))
     private void primalstinct$dropToolAfterBreak(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         if (!cir.getReturnValueZ()) {
@@ -44,6 +49,6 @@ public abstract class ServerPlayerInteractionManagerMixin {
         if (rule == null || !rule.dropToolAfterUse()) {
             return;
         }
-        ToolDropHelper.dropHeldTool(this.player, Hand.MAIN_HAND);
+        ToolDropHelper.dropIfSameInstance(this.player, Hand.MAIN_HAND, primalstinct$miningStack);
     }
 }

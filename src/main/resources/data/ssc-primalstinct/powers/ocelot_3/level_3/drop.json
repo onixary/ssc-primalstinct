@@ -1,0 +1,6 @@
+{
+  "type": "ssc-primalstinct:drop_tool_after_use",
+  "chance": 0.25,
+  "on_attack": false,
+  "hidden": true
+}

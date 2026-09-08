@@ -1,0 +1,6 @@
+{
+  "type": "ssc-primalstinct:interaction_failure",
+  "block_chance": 1,
+  "container_chance": 1,
+  "hidden": true
+}

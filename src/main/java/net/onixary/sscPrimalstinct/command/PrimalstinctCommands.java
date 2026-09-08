@@ -244,7 +244,7 @@ public final class PrimalstinctCommands {
         context.getSource().sendFeedback(() -> Text.translatable(
                 "ssc-primalstinct.debug.roster.header",
                 roster.revision, roster.orderedSelectable.size(), roster.profiles.size()), false);
-        context.getSource().sendFeedback(() -> Text.literal("  levels: L0..L" + roster.levels.maxLevel()
+        context.getSource().sendFeedback(() -> Text.literal("  levels: L1..L" + roster.levels.maxLevel()
                 + " thresholds=[" + thresholds + "] max=" + roster.levels.maxValue
                 + " lockAtMax=" + roster.levels.lockAtMax), false);
         for (PrimalFormProfile profile : roster.orderedSelectable) {

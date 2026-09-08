@@ -58,6 +58,7 @@ public class SSCPrimalstinct implements ModInitializer {
 
         // 卡03：S2C 同步协议（事件钩子 + 限频校正）
         PrimalstinctNetwork.init();
+        net.onixary.sscPrimalstinct.network.PerceptionSync.register();
 
         // 卡04：接管旧 InstinctUtils.serverTick 后的附属服务端 tick（卡05 填充内核）
         PrimalstinctTicker.register();

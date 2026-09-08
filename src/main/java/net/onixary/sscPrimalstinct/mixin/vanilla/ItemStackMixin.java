@@ -41,4 +41,10 @@ public abstract class ItemStackMixin {
             }
         }
     }
+    @Inject(method = "useOnEntity", at = @At("RETURN"))
+    private void primalstinct$dropUsedTool(PlayerEntity player, net.minecraft.entity.LivingEntity target,
+            Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        if (cir.getReturnValue().isAccepted() && player instanceof ServerPlayerEntity serverPlayer)
+            ToolDropHelper.dropIfSameInstance(serverPlayer, hand, (ItemStack)(Object)this);
+    }
 }

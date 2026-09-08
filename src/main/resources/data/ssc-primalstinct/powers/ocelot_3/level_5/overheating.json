@@ -1,0 +1,36 @@
+{
+  "type": "apoli:action_over_time",
+  "interval": 200,
+  "entity_action": {
+    "type": "apoli:if_else",
+    "condition": {
+      "type": "apoli:and",
+      "conditions": [
+        {
+          "type": "apoli:status_effect",
+          "effect": "ssc-primalstinct:instinct_overheating",
+          "inverted": true
+        },
+        {
+          "type": "ssc-primalstinct:proxy_has_nearby_attack_target",
+          "radius": 8
+        }
+      ]
+    },
+    "if_action": {
+      "type": "apoli:chance",
+      "chance": 0.5,
+      "action": {
+        "type": "apoli:apply_effect",
+        "effect": {
+          "effect": "ssc-primalstinct:instinct_overheating",
+          "duration": 400,
+          "amplifier": 0,
+          "show_particles": false,
+          "show_icon": true
+        }
+      }
+    }
+  },
+  "hidden": true
+}

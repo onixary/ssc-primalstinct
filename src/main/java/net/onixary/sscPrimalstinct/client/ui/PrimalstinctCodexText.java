@@ -17,7 +17,7 @@ import net.onixary.sscPrimalstinct.network.PrimalstinctStateS2C;
 @Environment(EnvType.CLIENT)
 public final class PrimalstinctCodexText {
 
-    private static final int PRESET_LEVEL_KEYS = 6;  // level.0 .. level.5（L0–L5）
+    private static final int PRESET_LEVEL_KEYS = 6;  // level.1 .. level.5（L1–L5）
 
     private PrimalstinctCodexText() {
     }
@@ -27,12 +27,12 @@ public final class PrimalstinctCodexText {
         return Text.translatable("codex.ssc-primalstinct.instincts.desc");
     }
 
-    /** 逐级说明（替换 CodexData.getContentText 的 INSTINCTS 位置）：L0–Lmax 每级一条本地化词条。 */
+    /** 逐级说明（替换 CodexData.getContentText 的 INSTINCTS 位置）：L1–Lmax 每级一条本地化词条。 */
     public static Text instinctsContent(PlayerEntity player) {
         int maxLevel = currentMaxLevel();
         MutableText text = Text.empty();
-        for (int level = 0; level <= maxLevel; level++) {
-            if (level > 0) {
+        for (int level = 1; level <= maxLevel; level++) {
+            if (level > 1) {
                 text.append("\n");
             }
             if (level < PRESET_LEVEL_KEYS) {
@@ -45,7 +45,7 @@ public final class PrimalstinctCodexText {
         return text;
     }
 
-    /** 当前等级表最高级（快照同步的阈值数即最高级号，L0–LN；无快照时退回默认 L0–L5）。 */
+    /** 当前等级表最高级（快照同步的阈值数即最高级号，L1–LN；无快照时退回默认 L1–L5）。 */
     private static int currentMaxLevel() {
         PrimalstinctStateS2C snapshot = ClientPrimalstinctState.snapshot();
         if (snapshot == null || snapshot.thresholds().length == 0) {

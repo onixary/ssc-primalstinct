@@ -22,6 +22,7 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
                 player -> player == net.minecraft.client.MinecraftClient.getInstance().player && ClientPrimalstinctState.managed());
         // 卡15/17：客户端配置（AutoConfig 注册即读文件；ModMenu 保存后 HUD 实时生效）
         PrimalstinctClientConfig.register();
+        net.onixary.sscPrimalstinct.client.network.PerceptionClientState.register();
 
         ClientPlayNetworking.registerGlobalReceiver(PrimalstinctStateS2C.ID, (client, handler, buf, responseSender) -> {
             PrimalstinctStateS2C payload = PrimalstinctStateS2C.read(buf);

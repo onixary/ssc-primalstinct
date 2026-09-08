@@ -77,7 +77,7 @@ public final class PrimalRosterManager {
         active = candidate;
         pending = null;
         lastValidationErrors = null;
-        SSCPrimalstinct.LOGGER.info("[primalstinct] 名单已生效: revision {}, 可选形态 {}, 等级 L0..L{}（阈值 {}）",
+        SSCPrimalstinct.LOGGER.info("[primalstinct] 名单已生效: revision {}, 可选形态 {}, 等级 L1..L{}（阈值 {}）",
                 active.revision, active.orderedSelectable.size(), active.levels.maxLevel(),
                 arrayToString(active.levels.thresholds));
 

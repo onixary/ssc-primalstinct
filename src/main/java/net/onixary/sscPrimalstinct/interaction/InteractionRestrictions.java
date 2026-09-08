@@ -49,6 +49,41 @@ public final class InteractionRestrictions {
         return false;
     }
 
+    /** Random decisions run only on the authoritative server, once per tick/position. */
+    private static final java.util.Map<PlayerEntity, Roll> LAST_ROLL = new java.util.WeakHashMap<>();
+    private record Roll(long tick, net.minecraft.util.math.BlockPos pos, boolean denied) {}
+    public static boolean failsInteraction(net.minecraft.server.network.ServerPlayerEntity player, Hand hand, BlockHitResult hit) {
+        if (blocksInteraction(player, hand, hit)) {
+            player.sendMessage(net.minecraft.text.Text.translatable("message.ssc-primalstinct.interaction_certain"), true);
+            return true;
+        }
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return false;
+        if (player.shouldCancelInteraction() && (!player.getMainHandStack().isEmpty() || !player.getOffHandStack().isEmpty())) return false;
+        var state = player.getWorld().getBlockState(hit.getBlockPos());
+        Block block = state.getBlock();
+        boolean container = isContainerBlock(block) || player.getWorld().getBlockEntity(hit.getBlockPos()) instanceof net.minecraft.inventory.Inventory;
+        boolean interactive = container || isProcessingBlock(block) || state.createScreenHandlerFactory(player.getWorld(), hit.getBlockPos()) != null
+                || block instanceof DoorBlock || block instanceof TrapdoorBlock || block instanceof FenceGateBlock
+                || block instanceof ButtonBlock || block instanceof LeverBlock || block instanceof BedBlock
+                || block instanceof AbstractSignBlock || block instanceof JukeboxBlock || block instanceof NoteBlock
+                || block instanceof RepeaterBlock || block instanceof ComparatorBlock || block instanceof BellBlock
+                || block instanceof CakeBlock || block instanceof ComposterBlock || block instanceof RespawnAnchorBlock
+                || block instanceof AbstractCauldronBlock || block instanceof CampfireBlock || block instanceof BeehiveBlock
+                || state.isIn(TagKey.of(RegistryKeys.BLOCK, new net.minecraft.util.Identifier("ssc-primalstinct", "interactive_blocks")));
+        if (!interactive) return false;
+        float chance = PowerHolderComponent.getPowers(player, net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower.class)
+                .stream().filter(p -> p.isActive()).map(p -> container ? p.containerChance : p.blockChance).max(Float::compare).orElse(0f);
+        if (chance <= 0) return false;
+        long tick = player.getWorld().getTime();
+        Roll last = LAST_ROLL.get(player);
+        if (last != null && last.tick == tick && last.pos.equals(hit.getBlockPos())) return last.denied;
+        boolean denied = player.getRandom().nextFloat() < chance;
+        LAST_ROLL.put(player, new Roll(tick, hit.getBlockPos().toImmutable(), denied));
+        if (denied) player.sendMessage(net.minecraft.text.Text.translatable(chance >= 1
+                ? "message.ssc-primalstinct.interaction_certain" : "message.ssc-primalstinct.interaction_random"), true);
+        return denied;
+    }
+
     /** 原版物品加工方块：工作台/熔炉系/酿造台/切石机/织布机/制图台/砂轮/锻造台/铁砧。 */
     private static boolean isProcessingBlock(Block block) {
         return block instanceof CraftingTableBlock
