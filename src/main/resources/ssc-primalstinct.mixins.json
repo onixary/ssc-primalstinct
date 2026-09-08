@@ -22,7 +22,8 @@
     "PlayerCurlSleepMixin",
     "LivingEntityCurlSleepMixin",
     "BowDropMixin",
-    "CrossbowDropMixin"
+    "CrossbowDropMixin",
+    "TargetPredicateMixin"
   ],
   "client": [
     "client.KeyboardInputOverheatingMixin",

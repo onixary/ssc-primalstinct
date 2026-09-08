@@ -78,6 +78,14 @@ public final class PrimalstinctApoliFactories {
         Registry.register(ApoliRegistries.POWER_FACTORY,
                 net.onixary.sscPrimalstinct.power.factory.WanderAiPower.getFactory().getSerializerId(),
                 net.onixary.sscPrimalstinct.power.factory.WanderAiPower.getFactory());
+        // 敌对生物不主动仇恨，受击后才仇恨反击
+        Registry.register(ApoliRegistries.POWER_FACTORY,
+                net.onixary.sscPrimalstinct.power.factory.PassiveUntilProvokedPower.getFactory().getSerializerId(),
+                net.onixary.sscPrimalstinct.power.factory.PassiveUntilProvokedPower.getFactory());
+        // 本能过热触发计量条（0-100，按目标数增长，满值触发过热 Buff）
+        Registry.register(ApoliRegistries.POWER_FACTORY,
+                net.onixary.sscPrimalstinct.power.factory.InstinctOverheatPower.getFactory().getSerializerId(),
+                net.onixary.sscPrimalstinct.power.factory.InstinctOverheatPower.getFactory());
         SSCPrimalstinct.LOGGER.info("[primalstinct] apoli factories registered");
     }
 }

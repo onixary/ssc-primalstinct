@@ -49,10 +49,10 @@ public class OcelotStageDataTest {
             if (level >= 3) assertEquals(new int[]{600,300,160}[level-3], read(path + "ai").get("afk_ticks").getAsInt());
             if (level >= 4) {
                 var heat = read(path + "overheating");
-                assertEquals(level == 4 ? 400 : 200, heat.get("interval").getAsInt());
-                var action = heat.getAsJsonObject("entity_action").getAsJsonObject("if_action");
-                assertEquals(.5, action.get("chance").getAsDouble(), 0);
-                assertEquals(level == 4 ? 100 : 400, action.getAsJsonObject("action").getAsJsonObject("effect").get("duration").getAsInt());
+                assertEquals(10, heat.get("check_interval").getAsInt());
+                assertEquals(level == 4 ? 2.5 : 5.0, heat.get("growth_per_target").getAsDouble(), 0);
+                assertEquals(level == 4 ? 2.5 : 5.0, heat.get("decay_per_second").getAsDouble(), 0);
+                assertEquals(level == 4 ? 5 : 20, heat.get("duration_seconds").getAsInt());
             }
         }
     }

@@ -214,6 +214,14 @@ public final class PrimalInstinctHud {
         String line = String.format("%.2f/%.0f L%d rate%+.5f%s rev%d", value, snapshot.maxValue(),
                 snapshot.level(), snapshot.rate(), snapshot.locked() ? " [LOCKED]" : "", snapshot.revision());
         context.drawTextWithShadow(client.textRenderer, line, DEV_READOUT_X, DEV_READOUT_Y, 0xFFFFFFAA);
+        // 第二行：过热计量条（t=检测目标数，[BUFF]=Buff 期间冻结）
+        if (net.onixary.sscPrimalstinct.client.network.PerceptionClientState.heatPresent()) {
+            String heat = String.format("heat %.1f/100 t%d%s",
+                    net.onixary.sscPrimalstinct.client.network.PerceptionClientState.heatMeter(),
+                    net.onixary.sscPrimalstinct.client.network.PerceptionClientState.heatTargets(),
+                    net.onixary.sscPrimalstinct.client.network.PerceptionClientState.heatFrozen() ? " [BUFF]" : "");
+            context.drawTextWithShadow(client.textRenderer, heat, DEV_READOUT_X, DEV_READOUT_Y + 10, 0xFFFFFFAA);
+        }
     }
 
     /** 九宫格锚点（与 SSC UIPositionUtils 同布局；不复用其客户端类，避免 UI 包直接依赖 SSC）。 */
