@@ -23,6 +23,11 @@ public abstract class InGameHudMixin {
 
     private static final Identifier PRIMALSTINCT_WIDGETS = new Identifier("textures/gui/widgets.png");
 
+    @Inject(method = "render", at = @At("HEAD"))
+    private void primalstinct$renderTakeoverOverlay(DrawContext context, float tickDelta, CallbackInfo ci) {
+        net.onixary.sscPrimalstinct.client.effect.WanderTakeoverOverlay.render(context);
+    }
+
     @Shadow
     private void renderHotbarItem(DrawContext context, int x, int y, float tickDelta,
                                    PlayerEntity player, ItemStack stack, int seed) {

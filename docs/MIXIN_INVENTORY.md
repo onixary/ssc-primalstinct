@@ -37,6 +37,8 @@
 
 ## 复核记录
 
+- 接管反馈：现有 `InGameHudMixin` 增加 `render` HEAD 注入，在 HUD 内容前绘制黄色原版 nausea 纹理，使用原版加色混合，无镜头扭曲。绑定客户端实际接管状态，释放/断线清理；创造模式在客户端渲染和输入、服务端接管与触发检测入口均排除。
+
 - 本能过热：新增 `ActiveTargetGoalAccessor` 读取 targetClass/targetPredicate，并扩展 `MobEntityGoalSelectorAccessor` 读取 targetSelector，仅供短生命周期探测代理使用。新增客户端 `KeyboardInputOverheatingMixin` 在 tick TAIL 清空手动移动输入，只有服务端下发 forced 接管期间启用，其他玩家输入不变。标准 refmap；测试覆盖强制/普通控制转换，实机验证见 `INSTINCT_OVERHEATING.md`。
 
 - 坠落卡顿修复：`LivingEntityWanderJumpMixin` 增加 `LivingEntity.jump` TAIL 只读捕获（仅已标记代理），供一次性起跳指令使用；`getJumpVelocity` 高度倍率保持。旧服务端 move + 完整速度同步已改为 `WanderMotionS2C` 水平意图/起跳指令，客户端保留原版重力与位置上报。26 项测试和打包通过，实机待用户验证。

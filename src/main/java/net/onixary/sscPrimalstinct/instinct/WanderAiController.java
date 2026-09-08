@@ -72,13 +72,13 @@ public final class WanderAiController {
         long now = player.age;
         WanderAiPower power = findActivePower(player);
         boolean forced = player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE);
-        if (forced && power != null && PrimalstinctLifecycle.isManaged(player)) {
+        if (forced && !player.isCreative() && power != null && PrimalstinctLifecycle.isManaged(player)) {
             // Sleeping is an input action too; it must not become an escape from takeover.
             if (player.hasVehicle()) player.stopRiding();
             net.onixary.sscPrimalstinct.sleep.CurlSleepController.wakeUp(player, "instinct_overheating");
             if (player.isSleeping()) player.wakeUp(true, true);
         }
-        boolean blocked = !player.isAlive() || player.isSpectator() || player.hasVehicle()
+        boolean blocked = !player.isAlive() || player.isCreative() || player.isSpectator() || player.hasVehicle()
                 || player.getAbilities().flying || power == null
                 || !PrimalstinctLifecycle.isManaged(player)
                 || net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent.PRIMALSTINCT.get(player).isLocked()
@@ -326,7 +326,7 @@ public final class WanderAiController {
 
     /** Native active-target predicates, without running movement/attacks or acquiring a target. */
     public static boolean hasNearbyAttackTarget(ServerPlayerEntity player, double radius) {
-        if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isSpectator()
+        if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isCreative() || player.isSpectator()
                 || !PrimalstinctLifecycle.isManaged(player)) return false;
         WanderAiPower power = findActivePower(player);
         if (power == null) return false;
@@ -351,7 +351,7 @@ public final class WanderAiController {
     }
 
     public static boolean isForced(ServerPlayerEntity player) {
-        return player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE)
+        return !player.isCreative() && player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE)
                 && PrimalstinctLifecycle.isManaged(player) && findActivePower(player) != null;
     }
 

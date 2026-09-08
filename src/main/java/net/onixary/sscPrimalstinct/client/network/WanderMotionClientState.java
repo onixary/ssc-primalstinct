@@ -31,6 +31,11 @@ public final class WanderMotionClientState {
     }
 
     private static void accept(WanderMotionS2C motion) {
+        var player = MinecraftClient.getInstance().player;
+        if (player == null || player.isCreative()) {
+            clear();
+            return;
+        }
         if (!motion.active()) {
             clear();
             return;
@@ -54,11 +59,17 @@ public final class WanderMotionClientState {
     }
 
     public static boolean isForced() {
-        return CONTROL.isForced();
+        return isActive() && CONTROL.isForced();
+    }
+
+    public static boolean isActive() {
+        var player = MinecraftClient.getInstance().player;
+        return CONTROL.isActive() && player != null && player.isAlive()
+                && !player.isCreative() && !player.isSpectator();
     }
 
     private static void tick(MinecraftClient client) {
-        if (client.player == null) {
+        if (client.player == null || client.player.isCreative()) {
             clear();
             return;
         }
