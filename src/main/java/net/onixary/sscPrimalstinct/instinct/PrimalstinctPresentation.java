@@ -9,6 +9,7 @@ import net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter;
 import net.onixary.sscPrimalstinct.component.PrimalstinctComponent;
 import net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent;
 import net.onixary.sscPrimalstinct.data.PrimalRosterManager;
+import net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect;
 import net.onixary.sscPrimalstinct.network.LockCinematicS2C;
 
 import java.util.HashMap;
@@ -36,6 +37,7 @@ public final class PrimalstinctPresentation {
     private static final int LOCK_NAUSEA_TICKS = 200;     // 锁定演出：10s
     private static final int LOCK_SLOWNESS_TICKS = 120;   // 锁定演出：6s 缓慢 III（不做完全输入锁）
     private static final int LOCK_SLOWNESS_AMPLIFIER = 4;
+    private static final int LOCK_OVERHEATING_TICKS = 30 * 20;
 
     private static final Map<UUID, Float> THRESHOLD_WARNED = new HashMap<>();
     private static final Map<UUID, Integer> LOCK_LABEL_COUNTDOWN = new HashMap<>();
@@ -53,6 +55,11 @@ public final class PrimalstinctPresentation {
                     NAUSEA_TICKS, 0, false, false, true));
         }
         if (lockChanged && lockedNow) {
+            // Apply once on entry into L5 lock, including jumps across multiple levels.
+            if (levelAfter == 5 && PrimalstinctLifecycle.isManaged(player)) {
+                player.addStatusEffect(new StatusEffectInstance(InstinctOverheatingEffect.INSTANCE,
+                        LOCK_OVERHEATING_TICKS, 0, false, false, true));
+            }
             startLockCinematic(player);
         }
     }

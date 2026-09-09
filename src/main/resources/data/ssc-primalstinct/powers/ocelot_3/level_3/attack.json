@@ -1,15 +1,35 @@
 {
-  "type": "apoli:modify_damage_dealt",
+  "type": "apoli:conditioned_attribute",
   "condition": {
-    "type": "apoli:equipped_item",
-    "equipment_slot": "mainhand",
-    "item_condition": {
-      "type": "apoli:empty"
-    }
+    "type": "apoli:or",
+    "conditions": [
+      {
+        "type": "apoli:inventory",
+        "process_mode": "items",
+        "item_condition": {
+          "type": "shape-shifter-curse:is_weapon"
+        },
+        "slots": [
+          "weapon.mainhand"
+        ],
+        "inverted": true
+      },
+      {
+        "type": "apoli:inventory",
+        "process_mode": "items",
+        "comparison": "==",
+        "compare_to": 0,
+        "slots": [
+          "weapon.mainhand"
+        ]
+      }
+    ]
   },
   "modifier": {
+    "attribute": "minecraft:generic.attack_damage",
+    "name": "Extra Attack Damage",
     "operation": "addition",
-    "value": 4
+    "value": 4.0
   },
-  "hidden": true
+  "tick_rate": 1
 }

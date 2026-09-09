@@ -14,27 +14,23 @@ import java.util.Map;
  */
 public final class PrimalRoster {
 
-    public static final PrimalRoster EMPTY = new PrimalRoster(0, PrimalLevels.defaults(), Map.of(), Map.of(), List.of());
+    public static final PrimalRoster EMPTY = new PrimalRoster(0, PrimalLevels.defaults(), Map.of(), List.of());
 
     public final int revision;
     public final PrimalLevels levels;
     public final Map<Identifier, PrimalFormProfile> profiles;
-    /** 食性档案（卡08），key 为 diet_profile 引用的 id。 */
-    public final Map<Identifier, PrimalDiet> diets;
     /** 有序可选名单：按 (order, formId) 排序，顺序确定。 */
     public final List<PrimalFormProfile> orderedSelectable;
 
-    public PrimalRoster(int revision, PrimalLevels levels, Map<Identifier, PrimalFormProfile> profiles,
-                        Map<Identifier, PrimalDiet> diets) {
-        this(revision, levels, profiles, diets, buildOrderedSelectable(profiles));
+    public PrimalRoster(int revision, PrimalLevels levels, Map<Identifier, PrimalFormProfile> profiles) {
+        this(revision, levels, profiles, buildOrderedSelectable(profiles));
     }
 
     private PrimalRoster(int revision, PrimalLevels levels, Map<Identifier, PrimalFormProfile> profiles,
-                         Map<Identifier, PrimalDiet> diets, List<PrimalFormProfile> orderedSelectable) {
+                         List<PrimalFormProfile> orderedSelectable) {
         this.revision = revision;
         this.levels = levels;
         this.profiles = profiles;
-        this.diets = diets;
         this.orderedSelectable = orderedSelectable;
     }
 

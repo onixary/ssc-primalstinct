@@ -42,7 +42,7 @@ public final class InteractionRestrictions {
         var stack = player.getStackInHand(hand);
         if (stack.getItem() instanceof BlockItem) {
             for (PreventBlockPlacePower power : PowerHolderComponent.getPowers(player, PreventBlockPlacePower.class)) {
-                if (power.isActive() && (power.getItemTag() == null
+                if (power.isActive() && power.prevents() && (power.getItemTag() == null
                         || stack.isIn(TagKey.of(RegistryKeys.ITEM, power.getItemTag())))) return true;
             }
         }
@@ -79,6 +79,13 @@ public final class InteractionRestrictions {
         if (last != null && last.tick == tick && last.pos.equals(hit.getBlockPos())) return last.denied;
         boolean denied = player.getRandom().nextFloat() < chance;
         LAST_ROLL.put(player, new Roll(tick, hit.getBlockPos().toImmutable(), denied));
+        // 白板"本能设计"：掷骰结果触发 success/failure 动作（仅新鲜掷骰，同 tick 同位复用不重复触发）
+        for (net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower power :
+                PowerHolderComponent.getPowers(player, net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower.class)) {
+            if (!power.isActive()) continue;
+            var action = denied ? power.failureAction : power.successAction;
+            if (action != null) action.accept(player);
+        }
         if (denied) player.sendMessage(net.minecraft.text.Text.translatable(chance >= 1
                 ? "message.ssc-primalstinct.interaction_certain" : "message.ssc-primalstinct.interaction_random"), true);
         return denied;

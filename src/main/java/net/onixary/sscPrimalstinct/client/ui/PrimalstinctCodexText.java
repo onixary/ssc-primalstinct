@@ -1,56 +1,36 @@
 package net.onixary.sscPrimalstinct.client.ui;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
 import net.onixary.sscPrimalstinct.client.network.ClientPrimalstinctState;
-import net.onixary.sscPrimalstinct.network.PrimalstinctStateS2C;
 
-/**
- * 卡16：图鉴第二页 INSTINCTS 列的受上下文限制文本替换（仅管理形态生效，
- * 由 BookOfShapeShifterScreenV2_P2Mixin 重定向 CodexData 请求时调用）。
- * 主列滚动文本与"+"详情按钮读同一构建源（mixin 对两处调用返回相同内容），
- * 保证主列与详情一致；数值/来源信息不写入静态 CodexData，其他图鉴页面不受影响。
- */
-@Environment(EnvType.CLIENT)
+/** Resource-pack text, resolved independently for each form, stage and column. */
 public final class PrimalstinctCodexText {
+    public static final String PREFIX = "codex.ssc-primalstinct.page.";
+    private PrimalstinctCodexText() {}
 
-    private static final int PRESET_LEVEL_KEYS = 6;  // level.1 .. level.5（L1–L5）
-
-    private PrimalstinctCodexText() {
+    public static Text section(Identifier form, int level, String section) {
+        String key = PREFIX + "form." + form.getNamespace() + "." + form.getPath()
+                + ".level." + level + "." + section;
+        if (Language.getInstance().hasTranslation(key)) return Text.translatable(key);
+        String fallback = PREFIX + "level." + level + "." + section;
+        if (Language.getInstance().hasTranslation(fallback)) return Text.translatable(fallback);
+        return Text.translatable(PREFIX + section + ".fallback", level);
     }
 
-    /** 固定说明行（替换 CodexData.getDescText 的 INSTINCTS 位置）。 */
-    public static Text instinctsDesc(PlayerEntity player) {
-        return Text.translatable("codex.ssc-primalstinct.instincts.desc");
+    public static Text formName(Identifier form) {
+        String key = "ssc-primalstinct.form." + form.getNamespace() + "." + form.getPath() + ".name";
+        return Language.getInstance().hasTranslation(key) ? Text.translatable(key) : Text.literal(form.toString());
     }
 
-    /** 逐级说明（替换 CodexData.getContentText 的 INSTINCTS 位置）：L1–Lmax 每级一条本地化词条。 */
-    public static Text instinctsContent(PlayerEntity player) {
-        int maxLevel = currentMaxLevel();
-        MutableText text = Text.empty();
-        for (int level = 1; level <= maxLevel; level++) {
-            if (level > 1) {
-                text.append("\n");
-            }
-            if (level < PRESET_LEVEL_KEYS) {
-                text.append(Text.translatable("codex.ssc-primalstinct.instincts.level." + level));
-            } else {
-                // 自定义等级表超出预设词条：回退通用词条（带等级号）
-                text.append(Text.translatable("codex.ssc-primalstinct.instincts.level_generic", level));
-            }
-        }
-        return text;
+    public static int maxLevel() {
+        var snapshot = ClientPrimalstinctState.snapshot();
+        return snapshot == null || snapshot.thresholds().length == 0 ? 5 : snapshot.thresholds().length;
     }
 
-    /** 当前等级表最高级（快照同步的阈值数即最高级号，L1–LN；无快照时退回默认 L1–L5）。 */
-    private static int currentMaxLevel() {
-        PrimalstinctStateS2C snapshot = ClientPrimalstinctState.snapshot();
-        if (snapshot == null || snapshot.thresholds().length == 0) {
-            return 5;
-        }
-        return snapshot.thresholds().length;
+    public static int currentLevel() {
+        var snapshot = ClientPrimalstinctState.snapshot();
+        return snapshot == null ? 1 : Math.max(1, Math.min(maxLevel(), snapshot.level()));
     }
 }

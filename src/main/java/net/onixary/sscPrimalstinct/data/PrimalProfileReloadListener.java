@@ -31,16 +31,13 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
 
     public static final String FORMS_DIR = "primalstinct/forms";
     public static final String LEVELS_DIR = "primalstinct/levels";
-    public static final String DIETS_DIR = "primalstinct/diets";
     public static final String LEVELS_DEFAULT_FILE = "default.json";
 
     private static final Set<String> FORM_KEYS = Set.of(
             "schema_version", "form_id", "selectable", "order", "fallback_form",
-            "base_powers", "level_overrides", "instinct_powers", "diet_profile", "sleep_profile");
+            "base_powers", "level_overrides");
     private static final Set<String> LEVELS_KEYS = Set.of(
             "schema_version", "max_value", "lock_at_max", "thresholds", "levels");
-    private static final Set<String> DIET_KEYS = Set.of("schema_version", "normal", "unsuitable", "forbidden");
-    private static final Set<String> DIET_CATEGORY_KEYS = Set.of("instinct_delta", "item_tag");
     private static final Set<String> POWER_LIST_KEYS = Set.of("add", "remove");
     private static final Set<String> LEVEL_OBJECT_KEYS = Set.of("powers");
 
@@ -76,23 +73,6 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
             profiles.put(profile.formId, profile);
         }
 
-        // 卡08：食性档案
-        Map<Identifier, PrimalDiet> diets = new LinkedHashMap<>();
-        Map<Identifier, Resource> dietFiles = new TreeMap<>(manager.findResources(
-                DIETS_DIR, id -> id.getPath().endsWith(".json")));
-        for (Map.Entry<Identifier, Resource> entry : dietFiles.entrySet()) {
-            String sourceFile = entry.getKey().toString();
-            JsonObject json = readObject(entry.getValue(), sourceFile, errors);
-            if (json == null) {
-                continue;
-            }
-            PrimalDiet diet = parseDiet(json, sourceFile, errors);
-            if (diet == null) {
-                continue;
-            }
-            diets.put(diet.id(), diet);
-        }
-
         if (!errors.isEmpty()) {
             for (String error : errors) {
                 SSCPrimalstinct.LOGGER.error("[primalstinct] 配置解析失败，保留上一版: {}", error);
@@ -100,39 +80,7 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
             PrimalRosterManager.onParseFailed(errors);
             return;
         }
-        PrimalRosterManager.onParsed(levels, profiles, diets);
-    }
-
-    private @Nullable PrimalDiet parseDiet(JsonObject json, String sourceFile, List<String> errors) {
-        try {
-            checkKeys(json, DIET_KEYS, sourceFile);
-            int schema = intField(json, "schema_version", sourceFile);
-            if (schema != PrimalFormProfile.SCHEMA_VERSION) {
-                throw new IllegalArgumentException("schema_version 必须为 " + PrimalFormProfile.SCHEMA_VERSION + "，收到 " + schema);
-            }
-            // diet id 由文件名派生：primalstinct/diets/<id>.json
-            String path = sourceFile.substring(sourceFile.indexOf(':') + 1);
-            String rawId = path.substring(path.lastIndexOf('/') + 1).replace(".json", "");
-            Identifier dietId = Identifier.tryParse(sourceFile.substring(0, sourceFile.indexOf(':')) + ":" + rawId);
-            if (dietId == null) {
-                throw new IllegalArgumentException("文件名无法派生合法 diet id: " + rawId);
-            }
-            JsonObject normal = asObject(json.get("normal"), sourceFile + " normal");
-            JsonObject unsuitable = asObject(json.get("unsuitable"), sourceFile + " unsuitable");
-            JsonObject forbidden = json.has("forbidden") && json.get("forbidden").isJsonObject()
-                    ? asObject(json.get("forbidden"), sourceFile + " forbidden") : null;
-            return new PrimalDiet(
-                    dietId,
-                    floatField(normal, "instinct_delta", -Float.MAX_VALUE, Float.MAX_VALUE, sourceFile + " normal"),
-                    idField(normal, "item_tag", sourceFile + " normal"),
-                    floatField(unsuitable, "instinct_delta", -Float.MAX_VALUE, Float.MAX_VALUE, sourceFile + " unsuitable"),
-                    idField(unsuitable, "item_tag", sourceFile + " unsuitable"),
-                    forbidden != null ? idField(forbidden, "item_tag", sourceFile + " forbidden") : null,
-                    sourceFile);
-        } catch (RuntimeException e) {
-            errors.add(sourceFile + ": " + e.getMessage());
-            return null;
-        }
+        PrimalRosterManager.onParsed(levels, profiles);
     }
 
     private PrimalLevels parseLevels(ResourceManager manager, List<String> errors) {
@@ -220,15 +168,9 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
                 throw new IllegalArgumentException("level_overrides 必须是对象");
             }
 
-            List<Identifier> instinctPowers = idListField(json, "instinct_powers", sourceFile);
-            Identifier dietProfile = json.has("diet_profile") && !json.get("diet_profile").isJsonNull()
-                    ? idField(json, "diet_profile", sourceFile) : null;
-            Identifier sleepProfile = json.has("sleep_profile") && !json.get("sleep_profile").isJsonNull()
-                    ? idField(json, "sleep_profile", sourceFile) : null;
-
             return new PrimalFormProfile(formId, selectable, order, fallbackForm,
                     List.copyOf(basePowers.add), List.copyOf(basePowers.remove),
-                    levelOverrides, instinctPowers, dietProfile, sleepProfile, sourceFile);
+                    levelOverrides, sourceFile);
         } catch (RuntimeException e) {
             errors.add(sourceFile + ": " + e.getMessage());
             return null;
@@ -332,25 +274,6 @@ public final class PrimalProfileReloadListener implements SimpleSynchronousResou
             throw new IllegalArgumentException(key + " 是非法 Identifier: " + json.get(key).getAsString() + "（" + context + "）");
         }
         return id;
-    }
-
-    private static List<Identifier> idListField(JsonObject json, String key, String context) {
-        if (!json.has(key)) {
-            return List.of();
-        }
-        JsonArray array = asArray(json.get(key), context + "." + key);
-        List<Identifier> result = new ArrayList<>();
-        for (JsonElement element : array) {
-            if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isString()) {
-                throw new IllegalArgumentException(context + "." + key + " 的元素必须是字符串");
-            }
-            Identifier id = Identifier.tryParse(element.getAsString());
-            if (id == null) {
-                throw new IllegalArgumentException(context + "." + key + " 存在非法 Identifier: " + element.getAsString());
-            }
-            result.add(id);
-        }
-        return result;
     }
 
     private static float[] floatArrayField(JsonObject json, String key, float min, float max, String context) {

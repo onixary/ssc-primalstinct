@@ -41,16 +41,27 @@ public final class ToolDropHelper {
         if (stack.isEmpty() || !isToolOrWeapon(stack.getItem())) {
             return;
         }
-        float chance = io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player,
-                net.onixary.sscPrimalstinct.power.factory.DropToolAfterUsePower.class).stream()
+        var powers = io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player,
+                net.onixary.sscPrimalstinct.power.factory.DropToolAfterUsePower.class);
+        float chance = powers.stream()
                 .filter(p -> p.isActive() && (!attackEvent || p.attack)).map(p -> p.chance).max(Float::compare).orElse(0f);
-        if (chance <= 0 || player.getRandom().nextFloat() >= chance) return;
+        if (chance <= 0) return;
+        if (player.getRandom().nextFloat() >= chance) {
+            // 成功行为但掷骰未掉落：触发 on_keep_action（白板"本能设计"）
+            for (var power : powers) {
+                if (power.isActive() && power.onKeepAction != null) power.onKeepAction.accept(player);
+            }
+            return;
+        }
         player.sendMessage(net.minecraft.text.Text.translatable(chance >= 1
                 ? "message.ssc-primalstinct.drop_certain" : "message.ssc-primalstinct.drop_random"), true);
         player.setStackInHand(hand, ItemStack.EMPTY);
         var drop = player.dropItem(stack, false, false);
         if (drop != null) {
             drop.setPickupDelay(30);
+        }
+        for (var power : powers) {
+            if (power.isActive() && power.onDropAction != null) power.onDropAction.accept(player);
         }
     }
 

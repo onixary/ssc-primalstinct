@@ -1,0 +1,37 @@
+{
+  "type": "apoli:self_action_on_hit",
+  "entity_action": {
+    "type": "ssc-primalstinct:add_primalstinct",
+    "amount": 0.2
+  },
+  "target_condition": {
+    "type": "apoli:in_tag",
+    "tag": "ssc-primalstinct:livestock"
+  },
+  "hidden": true,
+  "condition": {
+    "type": "apoli:or",
+    "conditions": [
+      {
+        "type": "apoli:inventory",
+        "process_mode": "items",
+        "item_condition": {
+          "type": "shape-shifter-curse:is_weapon"
+        },
+        "slots": [
+          "weapon.mainhand"
+        ],
+        "inverted": true
+      },
+      {
+        "type": "apoli:inventory",
+        "process_mode": "items",
+        "comparison": "==",
+        "compare_to": 0,
+        "slots": [
+          "weapon.mainhand"
+        ]
+      }
+    ]
+  }
+}

@@ -40,7 +40,7 @@ public class PowerPlanResolverTest {
         return new PrimalFormProfile(
                 id("form"), true, 1, null,
                 List.of(id("base_power")), List.of(id("origin_power_to_mask")),
-                overrides, List.of(), id("diet"), id("sleep"), "test.json");
+                overrides, "test.json");
     }
 
     @Test

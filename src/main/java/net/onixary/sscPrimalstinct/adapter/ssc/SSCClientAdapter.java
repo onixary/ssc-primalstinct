@@ -87,5 +87,22 @@ public final class SSCClientAdapter {
     /** 卡16：注册图鉴第二页 INSTINCTS 列扩展（SSC 1.10.0 公开扩展点，替代原 S7 mixin）。 */
     public static void registerCodexColumnProvider(net.onixary.sscPrimalstinct.client.ui.PrimalstinctCodexColumnProvider provider) {
         net.onixary.shapeShifterCurseFabric.custom_ui.CodexInstinctColumnHooks.register(provider);
+        net.fabricmc.fabric.api.client.screen.v1.ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
+            if (!(screen instanceof BookOfShapeShifterScreenV2_P2 book) || book.currentPlayer == null
+                    || !net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(book.currentPlayer)) return;
+            int scale = net.onixary.shapeShifterCurseFabric.ShapeShifterCurseFabric.clientConfig.newStartBookForBiggerScreen ? 2 : 1;
+            int left = width / 2 - BookOfShapeShifterScreenV2_P2.BookSizeX * scale / 2;
+            int top = height / 2 - BookOfShapeShifterScreenV2_P2.BookSizeY * scale / 2;
+            var buttons = net.fabricmc.fabric.api.client.screen.v1.Screens.getButtons(screen);
+            // Replace only the INSTINCTS detail button; the other two '+' buttons remain SSC-owned.
+            buttons.removeIf(button -> button.getX() == left + 308 * scale
+                    && button.getY() == top + 13 * scale && button.getMessage().getString().equals("+"));
+            buttons.add(new net.onixary.sscPrimalstinct.client.ui.InstinctPageButton(
+                    left + 272 * scale, top + 90 * scale, scale, button -> {
+                        if (client.player != null && net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(client.player)) {
+                            client.setScreen(new net.onixary.sscPrimalstinct.client.ui.PrimalstinctScreen(book));
+                        }
+                    }));
+        });
     }
 }

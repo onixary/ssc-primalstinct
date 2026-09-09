@@ -22,7 +22,7 @@ import net.onixary.sscPrimalstinct.instinct.WanderAiController;
  * 由 WanderAiController 读取）；Buff 存在期间计量冻结（不增不衰），延续"存在时不刷新"语义。
  * 计量状态仅存于 Power 实例：重进世界/等级切换重建即清零，符合短时表现向定位。
  * 字段：radius、check_interval、growth_per_target、max_growth_per_second、decay_per_second、
- * duration_seconds、proxy_entity。
+ * duration_seconds、proxy_entity、target_rate_per_second（检测到目标期间向本能条贡献的速率，0=不贡献）。
  */
 public class InstinctOverheatPower extends Power {
 
@@ -34,6 +34,7 @@ public class InstinctOverheatPower extends Power {
     private final float maxGrowthPerSecond;
     private final float decayPerSecond;
     private final int durationSeconds;
+    private final float targetRatePerSecond;
     private final WanderAiPower sensor;
 
     private float meter;
@@ -43,7 +44,7 @@ public class InstinctOverheatPower extends Power {
 
     public InstinctOverheatPower(PowerType<?> type, LivingEntity entity, float radius, int checkInterval,
                                  float growthPerTarget, float maxGrowthPerSecond, float decayPerSecond,
-                                 int durationSeconds, Identifier proxyEntity) {
+                                 int durationSeconds, float targetRatePerSecond, Identifier proxyEntity) {
         super(type, entity);
         // Apoli 默认不 tick Power：不开启则计量条永不结算（首次实现即踩此坑）
         this.setTicking();
@@ -53,6 +54,7 @@ public class InstinctOverheatPower extends Power {
         this.maxGrowthPerSecond = Math.max(0.0f, maxGrowthPerSecond);
         this.decayPerSecond = Math.max(0.0f, decayPerSecond);
         this.durationSeconds = Math.max(1, durationSeconds);
+        this.targetRatePerSecond = Float.isFinite(targetRatePerSecond) ? targetRatePerSecond : 0.0f;
         this.sensor = new WanderAiPower(type, entity, proxyEntity, 600);
     }
 
@@ -91,6 +93,15 @@ public class InstinctOverheatPower extends Power {
         return lastFrozen;
     }
 
+    /** 检测到攻击目标期间是否应贡献本能速率（Buff 冻结期间检测暂停，速率同步暂停）。 */
+    public boolean shouldContributeTargetRate() {
+        return targetRatePerSecond != 0.0f && lastTargets > 0 && !lastFrozen;
+    }
+
+    public float getTargetRatePerSecond() {
+        return targetRatePerSecond;
+    }
+
     @SuppressWarnings("rawtypes")
     public static PowerFactory getFactory() {
         return new PowerFactory<>(
@@ -102,6 +113,7 @@ public class InstinctOverheatPower extends Power {
                         .add("max_growth_per_second", SerializableDataTypes.FLOAT, 20.0f)
                         .add("decay_per_second", SerializableDataTypes.FLOAT, 5.0f)
                         .add("duration_seconds", SerializableDataTypes.INT, 5)
+                        .add("target_rate_per_second", SerializableDataTypes.FLOAT, 0.0f)
                         .add("proxy_entity", SerializableDataTypes.IDENTIFIER, new Identifier("minecraft", "ocelot")),
                 data -> (type, entity) -> new InstinctOverheatPower(
                         type, entity,
@@ -111,6 +123,7 @@ public class InstinctOverheatPower extends Power {
                         data.getFloat("max_growth_per_second"),
                         data.getFloat("decay_per_second"),
                         data.getInt("duration_seconds"),
+                        data.getFloat("target_rate_per_second"),
                         data.getId("proxy_entity"))
         ).allowCondition();
     }

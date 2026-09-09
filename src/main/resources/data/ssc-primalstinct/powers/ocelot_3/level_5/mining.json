@@ -1,15 +1,10 @@
 {
   "type": "apoli:modify_break_speed",
   "condition": {
-    "type": "apoli:equipped_item",
-    "equipment_slot": "mainhand",
-    "item_condition": {
-      "type": "apoli:empty"
-    }
+    "type": "shape-shifter-curse:barehand_digging"
   },
   "modifier": {
     "operation": "multiply_base",
-    "value": 9
-  },
-  "hidden": true
+    "value": 8.5
+  }
 }

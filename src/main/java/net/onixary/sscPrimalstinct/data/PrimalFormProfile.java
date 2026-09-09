@@ -11,7 +11,7 @@ import java.util.Set;
 /**
  * 卡02：单个形态的 Primalstinct 配置（data/&lt;ns&gt;/primalstinct/forms/*.json 的解析结果）。
  * 字段与白板卡02一致：schema_version/form_id/selectable/order/fallback_form/
- * base_powers{add,remove}/level_overrides/instinct_powers/diet_profile/sleep_profile。
+ * base_powers{add,remove}/level_overrides。
  */
 public final class PrimalFormProfile {
 
@@ -26,11 +26,6 @@ public final class PrimalFormProfile {
     public final List<Identifier> basePowersRemove;
     /** form 级每级增量，叠加在公共等级表之上；键为等级 1..N。 */
     public final Map<Integer, PrimalLevels.LevelPowers> levelOverrides;
-    /** 卡06/07 的本能条件 power；当前仅保存 ID 列表。 */
-    public final List<Identifier> instinctPowers;
-    /** 食性/睡眠档案引用（卡07/08、卡11 落地目标文件；本卡只做格式校验）。 */
-    public final @Nullable Identifier dietProfile;
-    public final @Nullable Identifier sleepProfile;
     /** 用于错误输出回溯源文件。 */
     public final String sourceFile;
 
@@ -38,8 +33,6 @@ public final class PrimalFormProfile {
                              @Nullable Identifier fallbackForm,
                              List<Identifier> basePowersAdd, List<Identifier> basePowersRemove,
                              Map<Integer, PrimalLevels.LevelPowers> levelOverrides,
-                             List<Identifier> instinctPowers,
-                             @Nullable Identifier dietProfile, @Nullable Identifier sleepProfile,
                              String sourceFile) {
         this.formId = formId;
         this.selectable = selectable;
@@ -48,9 +41,6 @@ public final class PrimalFormProfile {
         this.basePowersAdd = Collections.unmodifiableList(basePowersAdd);
         this.basePowersRemove = Collections.unmodifiableList(basePowersRemove);
         this.levelOverrides = Collections.unmodifiableMap(levelOverrides);
-        this.instinctPowers = Collections.unmodifiableList(instinctPowers);
-        this.dietProfile = dietProfile;
-        this.sleepProfile = sleepProfile;
         this.sourceFile = sourceFile;
     }
 

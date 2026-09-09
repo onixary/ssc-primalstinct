@@ -1,0 +1,26 @@
+{
+  "type": "apoli:action_on_entity_use",
+  "bientity_action": {
+    "type": "apoli:actor_action",
+    "action": {
+      "type": "ssc-primalstinct:add_primalstinct",
+      "amount": 0.3
+    }
+  },
+  "bientity_condition": {
+    "type": "apoli:target_condition",
+    "condition": {
+      "type": "apoli:entity_type",
+      "entity_type": "minecraft:ocelot"
+    }
+  },
+  "item_condition": {
+    "type": "apoli:ingredient",
+    "ingredient": [
+      { "item": "minecraft:cod" },
+      { "item": "minecraft:salmon" }
+    ]
+  },
+  "action_result": "pass",
+  "hidden": true
+}

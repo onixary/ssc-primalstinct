@@ -7,20 +7,9 @@
   "base_powers": {
     "add": [
       "shape-shifter-curse:cat_friendly",
-      "ssc-primalstinct:ocelot_3_env_jungle",
-      "ssc-primalstinct:ocelot_3_eat_raw_meat",
-      "ssc-primalstinct:ocelot_3_combat_hit"
+      "ssc-primalstinct:curl_sleep"
     ],
-    "remove": [
-      "shape-shifter-curse:barehand_attack_up",
-      "shape-shifter-curse:form_ocelot_2_health",
-      "shape-shifter-curse:form_raw_meat_food_up",
-      "shape-shifter-curse:form_disable_chest_armor",
-      "shape-shifter-curse:form_disable_feet_armor",
-      "shape-shifter-curse:form_disable_leg_armor",
-      "shape-shifter-curse:form_ocelot_3_jump_high",
-      "shape-shifter-curse:no_shield"
-    ]
+    "remove": []
   },
   "level_overrides": {
     "1": {
@@ -30,12 +19,16 @@
           "ssc-primalstinct:ocelot_3/level_1/inventory",
           "ssc-primalstinct:ocelot_3/level_1/attributes",
           "ssc-primalstinct:ocelot_3/level_1/jump",
-          "ssc-primalstinct:ocelot_3/level_1/food"
+          "ssc-primalstinct:ocelot_3/level_1/food",
+          "ssc-primalstinct:ocelot_3/instinct/eat_raw_meat",
+          "ssc-primalstinct:ocelot_3/instinct/jungle_rate",
+          "ssc-primalstinct:ocelot_3/instinct/water_rate",
+          "ssc-primalstinct:ocelot_3/instinct/villager_nearby",
+          "ssc-primalstinct:ocelot_3/instinct/arrow_damage",
+          "ssc-primalstinct:ocelot_3/instinct/barehand_livestock",
+          "ssc-primalstinct:ocelot_3/instinct/feed_ocelot"
         ],
-        "remove": [
-          "shape-shifter-curse:barehand_digging_speed_up",
-          "shape-shifter-curse:barehand_attack_up"
-        ]
+        "remove": []
       }
     },
     "2": {
@@ -49,16 +42,22 @@
           "ssc-primalstinct:ocelot_3/level_2/mining",
           "ssc-primalstinct:ocelot_3/level_2/attack",
           "ssc-primalstinct:ocelot_3/level_2/interaction",
-          "ssc-primalstinct:ocelot_3/level_2/perception"
+          "ssc-primalstinct:ocelot_3/level_2/perception",
+          "ssc-primalstinct:ocelot_3/level_2/harvest",
+          "ssc-primalstinct:ocelot_3/instinct/eat_raw_meat",
+          "ssc-primalstinct:ocelot_3/instinct/jungle_rate",
+          "ssc-primalstinct:ocelot_3/instinct/water_rate",
+          "ssc-primalstinct:ocelot_3/instinct/villager_nearby",
+          "ssc-primalstinct:ocelot_3/instinct/arrow_damage",
+          "ssc-primalstinct:ocelot_3/instinct/barehand_livestock",
+          "ssc-primalstinct:ocelot_3/instinct/feed_ocelot"
         ],
         "remove": [
           "ssc-primalstinct:ocelot_3/level_1/hotbar",
           "ssc-primalstinct:ocelot_3/level_1/inventory",
           "ssc-primalstinct:ocelot_3/level_1/attributes",
           "ssc-primalstinct:ocelot_3/level_1/jump",
-          "ssc-primalstinct:ocelot_3/level_1/food",
-          "shape-shifter-curse:barehand_digging_speed_up",
-          "shape-shifter-curse:barehand_attack_up"
+          "ssc-primalstinct:ocelot_3/level_1/food"
         ]
       }
     },
@@ -77,7 +76,16 @@
           "ssc-primalstinct:ocelot_3/level_3/offhand",
           "ssc-primalstinct:ocelot_3/level_3/crafting",
           "ssc-primalstinct:ocelot_3/level_3/drop",
-          "ssc-primalstinct:ocelot_3/level_3/ai"
+          "ssc-primalstinct:ocelot_3/level_3/ai",
+          "ssc-primalstinct:ocelot_3/level_3/harvest",
+          "ssc-primalstinct:ocelot_3/instinct/eat_raw_meat",
+          "ssc-primalstinct:ocelot_3/instinct/jungle_rate",
+          "ssc-primalstinct:ocelot_3/instinct/water_rate",
+          "ssc-primalstinct:ocelot_3/instinct/villager_nearby",
+          "ssc-primalstinct:ocelot_3/instinct/arrow_damage",
+          "ssc-primalstinct:ocelot_3/instinct/barehand_livestock",
+          "ssc-primalstinct:ocelot_3/instinct/feed_ocelot",
+          "ssc-primalstinct:ocelot_3/level_3/placement"
         ],
         "remove": [
           "ssc-primalstinct:ocelot_3/level_2/hotbar",
@@ -89,8 +97,7 @@
           "ssc-primalstinct:ocelot_3/level_2/attack",
           "ssc-primalstinct:ocelot_3/level_2/interaction",
           "ssc-primalstinct:ocelot_3/level_2/perception",
-          "shape-shifter-curse:barehand_digging_speed_up",
-          "shape-shifter-curse:barehand_attack_up"
+          "ssc-primalstinct:ocelot_3/level_2/harvest"
         ]
       }
     },
@@ -110,7 +117,16 @@
           "ssc-primalstinct:ocelot_3/level_4/crafting",
           "ssc-primalstinct:ocelot_3/level_4/drop",
           "ssc-primalstinct:ocelot_3/level_4/ai",
-          "ssc-primalstinct:ocelot_3/level_4/overheating"
+          "ssc-primalstinct:ocelot_3/level_4/overheating",
+          "ssc-primalstinct:ocelot_3/level_4/harvest",
+          "ssc-primalstinct:ocelot_3/instinct/eat_raw_meat",
+          "ssc-primalstinct:ocelot_3/instinct/jungle_rate",
+          "ssc-primalstinct:ocelot_3/instinct/water_rate",
+          "ssc-primalstinct:ocelot_3/instinct/villager_nearby",
+          "ssc-primalstinct:ocelot_3/instinct/arrow_damage",
+          "ssc-primalstinct:ocelot_3/instinct/barehand_livestock",
+          "ssc-primalstinct:ocelot_3/instinct/feed_ocelot",
+          "ssc-primalstinct:ocelot_3/level_4/placement"
         ],
         "remove": [
           "ssc-primalstinct:ocelot_3/level_3/hotbar",
@@ -126,8 +142,8 @@
           "ssc-primalstinct:ocelot_3/level_3/crafting",
           "ssc-primalstinct:ocelot_3/level_3/drop",
           "ssc-primalstinct:ocelot_3/level_3/ai",
-          "shape-shifter-curse:barehand_digging_speed_up",
-          "shape-shifter-curse:barehand_attack_up"
+          "ssc-primalstinct:ocelot_3/level_3/harvest",
+          "ssc-primalstinct:ocelot_3/level_3/placement"
         ]
       }
     },
@@ -150,7 +166,15 @@
           "ssc-primalstinct:ocelot_3/level_5/overheating",
           "ssc-primalstinct:ocelot_3/level_5/placement",
           "ssc-primalstinct:ocelot_3/level_5/regeneration",
-          "ssc-primalstinct:ocelot_3/level_5/aggro"
+          "ssc-primalstinct:ocelot_3/level_5/aggro",
+          "ssc-primalstinct:ocelot_3/level_5/harvest",
+          "ssc-primalstinct:ocelot_3/instinct/eat_raw_meat",
+          "ssc-primalstinct:ocelot_3/instinct/jungle_rate",
+          "ssc-primalstinct:ocelot_3/instinct/water_rate",
+          "ssc-primalstinct:ocelot_3/instinct/villager_nearby",
+          "ssc-primalstinct:ocelot_3/instinct/arrow_damage",
+          "ssc-primalstinct:ocelot_3/instinct/barehand_livestock",
+          "ssc-primalstinct:ocelot_3/instinct/feed_ocelot"
         ],
         "remove": [
           "ssc-primalstinct:ocelot_3/level_4/hotbar",
@@ -167,13 +191,10 @@
           "ssc-primalstinct:ocelot_3/level_4/drop",
           "ssc-primalstinct:ocelot_3/level_4/ai",
           "ssc-primalstinct:ocelot_3/level_4/overheating",
-          "shape-shifter-curse:barehand_digging_speed_up",
-          "shape-shifter-curse:barehand_attack_up"
+          "ssc-primalstinct:ocelot_3/level_4/harvest",
+          "ssc-primalstinct:ocelot_3/level_4/placement"
         ]
       }
     }
-  },
-  "instinct_powers": [],
-  "diet_profile": "ssc-primalstinct:carnivore",
-  "sleep_profile": "ssc-primalstinct:curl"
+  }
 }

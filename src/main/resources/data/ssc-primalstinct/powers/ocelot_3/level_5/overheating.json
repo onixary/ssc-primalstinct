@@ -6,5 +6,6 @@
   "max_growth_per_second": 20,
   "decay_per_second": 5,
   "duration_seconds": 20,
-  "hidden": true
+  "hidden": true,
+  "target_rate_per_second": 0.055556
 }

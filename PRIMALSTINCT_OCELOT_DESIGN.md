@@ -73,3 +73,12 @@ L2 起，16 格内符合代理攻击类型的实体显示红色穿墙轮廓。�
 ### Static obfuscation (2026-09-09)
 
 Instinct scrambling now selects a stable replacement from the active font's vanilla `charactersByWidth` obfuscation pool. Character position and original code point determine the selection; shadow and normal passes use the same glyph. This overrides the earlier animated `obfuscated` behavior for instinct text only. Font resource reloads may change the available glyphs. Original text, styles, and glyph advances remain intact.
+
+## 本能速率/事件 Power（白板"Ocelot_3 本能设计"卡，2026-09-09）
+
+常驻本能 Power 位于 `powers/ocelot_3/instinct/`，注册进各级 `level_overrides`（每级 add 重复列出以保持常驻）；依赖宿主 Power 判定的本能变化直接挂在宿主字段上，不另开 Power。速率口径：单 Power 独立从 0 到 100（或反向）的时间换算，多 Power 按 source_id 叠加。基础自然增长改为 180 分钟满（原 150）。
+
+- 常驻 JSON（instinct/）：`eat_raw_meat`（吃完生肉 +0.3，raw_meat 标签不含腐肉）、`jungle_rate`（丛林三群系 +100/3600/s）、`water_rate`（水中 −100/2700/s）、`villager_nearby`（8 格有村民 −100/1800/s，新条件 `ssc-primalstinct:nearby_entity`）、`arrow_damage`（被箭伤害 −0.8，`apoli:projectile` 伤害条件）、`barehand_livestock`（空手攻击牲畜 +0.2，`ssc-primalstinct:livestock` 实体标签）、`feed_ocelot`（对豹猫使用生鱼 +0.3，`apoli:actor_action` 作用于玩家；语义为"喂食交互"近似，非严格喂食成功）。
+- 宿主字段：`instinct_wander_ai` 新增 `takeover_rate_per_second`（L3-5：+100/1200/s，接管生效期间）；`instinct_overheat` 新增 `target_rate_per_second`（L4-5：+100/1800/s，检测到目标且非 Buff 冻结期间）；`instinct_perception` 新增注视组 `watch_entity/watch_radius/watch_require_visibility/watch_rate_per_second`（L2-5：豹猫 16 格可见 +100/1800/s，命中实体绿色描边，服务端 10 tick 刷新）。
+- 动作钩子：`interaction_failure` 新增 `failure_action`/`success_action`（L3-5：失败 +0.1 / 成功 −0.2，仅新鲜掷骰触发）；`drop_tool_after_use` 新增 `on_drop_action`/`on_keep_action`（L3-5：掉落 +0.1 / 成功使用未掉落 −0.25）；`prevent_block_place` 新增 `prevent`（默认 true）与 `on_place_action`（L3/L4 挂 `prevent=false` 的放置计数 −0.05，经新 `BlockItemPlaceMixin` 在服务端放置成功时触发；L5 全禁放置自然不触发）。
+- 基础速率：`PrimalstinctService.BASE_GROWTH_PER_SECOND` = 100/10800（180 分钟）。速率贡献统一走 `power:` 前缀稳定键，由服务端每 tick 扫描（含宿主 Power 的条件速率：接管/过热/注视）。

@@ -18,6 +18,7 @@ public final class PerceptionSync {
                 java.util.Set<Identifier> tags = new java.util.HashSet<>();
                 java.util.Set<Integer> targets = new java.util.HashSet<>();
                 boolean hasHeat = false; float heatMeter = 0; int heatTargets = 0; boolean heatFrozen = false;
+                java.util.Set<Integer> watch = new java.util.HashSet<>();
                 if (player.isAlive() && PrimalstinctLifecycle.isManaged(player)) {
                     for (var power : PowerHolderComponent.getPowers(player, InstinctPerceptionPower.class)) {
                         if (!power.isActive()) continue;
@@ -25,6 +26,20 @@ public final class PerceptionSync {
                         signs = Math.max(signs, power.signs);
                         if (!power.itemText.isEmpty()) { itemText = power.itemText; tags.add(power.exemptTag); }
                         if (power.radius > 0) targets.addAll(WanderAiController.nearbyAttackTargets(player, power.radius, power.sensor, true));
+                        // 注视组：指定实体在半径内（可要求可见）→ 客户端绿色描边 + watchPresent 供速率扫描
+                        if (power.watchEntity != null && power.watchRadius > 0) {
+                            var type = net.minecraft.registry.Registries.ENTITY_TYPE.getOrEmpty(power.watchEntity).orElse(null);
+                            if (type != null) {
+                                for (var target : player.getServerWorld().getEntitiesByType(type,
+                                        player.getBoundingBox().expand(power.watchRadius),
+                                        e -> e.isAlive() && !e.isSpectator() && e != player)) {
+                                    if (player.squaredDistanceTo(target) > power.watchRadius * power.watchRadius) continue;
+                                    if (power.watchRequireVisibility && !player.canSee(target)) continue;
+                                    watch.add(target.getId());
+                                }
+                            }
+                            power.watchPresent = !watch.isEmpty();
+                        }
                     }
                     // 过热计量条开发读数（dev HUD 第二行）
                     for (var heat : PowerHolderComponent.getPowers(player, InstinctOverheatPower.class)) {
@@ -41,6 +56,7 @@ public final class PerceptionSync {
                 buf.writeVarInt(targets.size()); for (int id : targets) buf.writeVarInt(id);
                 buf.writeBoolean(hasHeat); buf.writeFloat(heatMeter);
                 buf.writeVarInt(heatTargets); buf.writeBoolean(heatFrozen);
+                buf.writeVarInt(watch.size()); for (int id : watch) buf.writeVarInt(id);
                 ServerPlayNetworking.send(player, ID, buf);
             }
         });

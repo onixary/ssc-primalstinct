@@ -415,21 +415,10 @@ public final class PrimalstinctCommands {
         context.getSource().sendFeedback(() -> Text.translatable(
                 "ssc-primalstinct.debug.resolve.header", formId), false);
         context.getSource().sendFeedback(() -> Text.literal(String.format(
-                "  profileForm=%s selectable=%s order=%d fallback=%s diet=%s sleep=%s source=%s",
+                "  profileForm=%s selectable=%s order=%d fallback=%s source=%s",
                 profile.formId, profile.selectable, profile.order,
                 profile.fallbackForm != null ? profile.fallbackForm : "(dynamic)",
-                profile.dietProfile, profile.sleepProfile, profile.sourceFile)), false);
-        if (profile.dietProfile != null) {
-            var diet = PrimalRosterManager.active().diets.get(profile.dietProfile);
-            String dietLine = diet == null
-                    ? "  diet: " + profile.dietProfile + " (无档案，行为由 Power 决定)"
-                    : String.format("  diet: %s normal=%.1f(%s) unsuitable=%.1f(%s) forbidden=%s [%s]",
-                    diet.id(), diet.normalDelta(), diet.normalTag(),
-                    diet.unsuitableDelta(), diet.unsuitableTag(),
-                    diet.forbiddenTag() == null ? "(无)" : diet.forbiddenTag(), diet.sourceFile());
-            String finalLine = dietLine;
-            context.getSource().sendFeedback(() -> Text.literal(finalLine), false);
-        }
+                profile.sourceFile)), false);
         return 1;
     }
 }

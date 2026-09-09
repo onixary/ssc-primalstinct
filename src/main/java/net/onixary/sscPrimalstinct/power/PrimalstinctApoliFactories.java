@@ -29,6 +29,9 @@ public final class PrimalstinctApoliFactories {
         Registry.register(ApoliRegistries.POWER_FACTORY, perception.getSerializerId(), perception);
         var targetCondition = net.onixary.sscPrimalstinct.power.factory.ProxyAttackTargetCondition.getFactory();
         Registry.register(ApoliRegistries.ENTITY_CONDITION, targetCondition.getSerializerId(), targetCondition);
+        // 半径内存在指定类型实体（白板"本能设计"：村民/豹猫附近判定）
+        var nearbyEntity = net.onixary.sscPrimalstinct.power.factory.NearbyEntityCondition.getFactory();
+        Registry.register(ApoliRegistries.ENTITY_CONDITION, nearbyEntity.getSerializerId(), nearbyEntity);
         Registry.register(ApoliRegistries.POWER_FACTORY,
                 ModifyPrimalstinctRatePower.getFactory().getSerializerId(),
                 ModifyPrimalstinctRatePower.getFactory());

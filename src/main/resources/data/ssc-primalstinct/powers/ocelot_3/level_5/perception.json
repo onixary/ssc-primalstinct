@@ -3,8 +3,12 @@
   "codex_chance": 1,
   "palette_chance": 1,
   "sign_chance": 1,
-  "item_text": "\u2026?",
+  "item_text": "…?",
   "target_radius": 16,
   "proxy_entity": "minecraft:ocelot",
-  "hidden": true
+  "hidden": true,
+  "watch_entity": "minecraft:ocelot",
+  "watch_radius": 16,
+  "watch_require_visibility": true,
+  "watch_rate_per_second": 0.055556
 }

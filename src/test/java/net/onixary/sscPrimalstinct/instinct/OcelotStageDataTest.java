@@ -31,12 +31,14 @@ public class OcelotStageDataTest {
             for (var id : ids(powers.getAsJsonArray("add"))) read("powers/" + id.getPath());
         }
         var profile = new PrimalFormProfile(new Identifier("shape-shifter-curse:ocelot_3"), true, 10, null,
-                List.of(), List.of(), overrides, List.of(), null, null, "test");
+                List.of(), List.of(), overrides, "test");
         var levels = PrimalLevels.defaults();
         for (int stage : new int[]{1, 2, 3, 4, 5, 3, 1, 5}) {
             var plan = PowerPlanResolver.resolve(profile, stage, levels);
             assertEquals(overrides.get(stage).add, plan.grants.keySet());
-            assertTrue(plan.grants.keySet().stream().allMatch(id -> id.getPath().contains("/level_" + stage + "/")));
+            // 等级专属能力须来自本级目录；跨级常驻的本能 Power（白板"本能设计"）位于 /instinct/
+            assertTrue(plan.grants.keySet().stream().allMatch(id ->
+                    id.getPath().contains("/level_" + stage + "/") || id.getPath().contains("/instinct/")));
         }
     }
     @Test public void schedulesAndInventoryMatchWhiteboard() throws Exception {

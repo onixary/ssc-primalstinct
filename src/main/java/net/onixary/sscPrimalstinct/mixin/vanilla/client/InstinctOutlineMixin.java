@@ -9,6 +9,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class InstinctOutlineMixin {
     @Inject(method = "hasOutline", at = @At("RETURN"), cancellable = true)
     private void primalstinct$outline(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        if (PerceptionClientState.outlined(entity.getId())) cir.setReturnValue(true);
+        if (PerceptionClientState.outlined(entity.getId()) || PerceptionClientState.watched(entity.getId())) {
+            cir.setReturnValue(true);
+        }
     }
 }

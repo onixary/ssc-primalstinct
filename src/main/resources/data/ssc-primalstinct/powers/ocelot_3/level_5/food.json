@@ -8,7 +8,7 @@
   },
   "food_modifier": {
     "operation": "addition",
-    "value": 6
+    "value": 8
   },
   "saturation_modifier": {
     "operation": "addition",

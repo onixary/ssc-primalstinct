@@ -25,8 +25,8 @@ import java.util.UUID;
  */
 public final class PrimalstinctService {
 
-    /** 开发初值：空条到满 150 分钟（对齐旧 SSC 9000 秒节奏；卡18 试玩后调整）。 */
-    public static final float BASE_GROWTH_PER_SECOND = 100.0f / 9000.0f;
+    /** 白板：空条到满 180 分钟（基础本能提升，单 Power 口径）。 */
+    public static final float BASE_GROWTH_PER_SECOND = 100.0f / 10800.0f;
     public static final String BASE_RATE_KEY = "primalstinct:base";
 
     /** 每玩家运行期速率贡献（稳定键 → 贡献）。 */
@@ -168,6 +168,8 @@ public final class PrimalstinctService {
     /**
      * 卡07：modify_primalstinct_rate Power 扫描——活跃时贡献、失活/撤销移除；
      * 重挂载不产生一次性改值（无"获得即加值"路径）。
+     * 附带扫描宿主 Power 的条件速率（白板"本能设计"：AI 接管 / 过热检测有目标 / 注视组命中），
+     * 共用 "power:" 前缀稳定键，统一走同一套移除清理。
      */
     private static void scanRatePowers(ServerPlayerEntity player) {
         java.util.Set<String> activeKeys = new java.util.HashSet<>();
@@ -176,6 +178,37 @@ public final class PrimalstinctService {
             if (power.isActive()) {
                 activeKeys.add(power.contributionKey());
                 setRate(player, power.contributionKey(), PrimalstinctSource.POWER, power.getRatePerSecond());
+            }
+        }
+        // 游荡接管生效期间（takeover_rate_per_second）
+        for (net.onixary.sscPrimalstinct.power.factory.WanderAiPower power :
+                io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player, net.onixary.sscPrimalstinct.power.factory.WanderAiPower.class)) {
+            if (power.isActive() && power.getTakeoverRatePerSecond() != 0.0f
+                    && WanderAiController.isTakeoverActive(player)) {
+                String key = net.onixary.sscPrimalstinct.power.factory.ModifyPrimalstinctRatePower.CONTRIBUTION_KEY_PREFIX
+                        + "wander_ai_takeover";
+                activeKeys.add(key);
+                setRate(player, key, PrimalstinctSource.POWER, power.getTakeoverRatePerSecond());
+            }
+        }
+        // 过热检测到攻击目标期间（target_rate_per_second）
+        for (net.onixary.sscPrimalstinct.power.factory.InstinctOverheatPower power :
+                io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player, net.onixary.sscPrimalstinct.power.factory.InstinctOverheatPower.class)) {
+            if (power.shouldContributeTargetRate()) {
+                String key = net.onixary.sscPrimalstinct.power.factory.ModifyPrimalstinctRatePower.CONTRIBUTION_KEY_PREFIX
+                        + "overheat_targets";
+                activeKeys.add(key);
+                setRate(player, key, PrimalstinctSource.POWER, power.getTargetRatePerSecond());
+            }
+        }
+        // 感知注视组命中期间（watch_rate_per_second，watchPresent 由 PerceptionSync 周期刷新）
+        for (net.onixary.sscPrimalstinct.power.factory.InstinctPerceptionPower power :
+                io.github.apace100.apoli.component.PowerHolderComponent.getPowers(player, net.onixary.sscPrimalstinct.power.factory.InstinctPerceptionPower.class)) {
+            if (power.isActive() && power.watchRatePerSecond != 0.0f && power.watchPresent) {
+                String key = net.onixary.sscPrimalstinct.power.factory.ModifyPrimalstinctRatePower.CONTRIBUTION_KEY_PREFIX
+                        + "perception_watch";
+                activeKeys.add(key);
+                setRate(player, key, PrimalstinctSource.POWER, power.watchRatePerSecond);
             }
         }
         for (String key : new java.util.HashSet<>(rateState(player).keySet())) {

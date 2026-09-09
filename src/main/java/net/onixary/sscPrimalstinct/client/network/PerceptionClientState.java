@@ -19,6 +19,7 @@ public final class PerceptionClientState {
     private static float heatMeter;
     private static int heatTargets;
     private static boolean heatFrozen;
+    private static Set<Integer> watchTargets = Set.of();
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(PerceptionSync.ID, (client, handler, buf, sender) -> {
             Identifier world = buf.readIdentifier();
@@ -29,9 +30,12 @@ public final class PerceptionClientState {
             for (int i = 0; i < count; i++) ids.add(buf.readVarInt());
             boolean hasHeat = buf.readBoolean(); float meter = buf.readFloat();
             int heatCount = buf.readVarInt(); boolean frozen = buf.readBoolean();
+            Set<Integer> watchedIds = new HashSet<>(); count = buf.readVarInt();
+            for (int i = 0; i < count; i++) watchedIds.add(buf.readVarInt());
             client.execute(() -> { dimension = world; codex = c; palette = p; signs = s;
                 itemText = text; tags = exemptions; targets = ids;
-                heatPresent = hasHeat; heatMeter = meter; heatTargets = heatCount; heatFrozen = frozen; });
+                heatPresent = hasHeat; heatMeter = meter; heatTargets = heatCount; heatFrozen = frozen;
+                watchTargets = watchedIds; });
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> clear());
     }
@@ -47,6 +51,8 @@ public final class PerceptionClientState {
                 && client.world.getRegistryKey().getValue().equals(dimension);
     }
     public static boolean outlined(int id) { return active() && targets.contains(id); }
+    /** 感知注视组命中（绿色描边）。 */
+    public static boolean watched(int id) { return active() && watchTargets.contains(id); }
     public static String replacement(ItemStack stack) {
         if (!active() || itemText.isEmpty() || stack.isOf(net.onixary.sscPrimalstinct.items.RegPrimalstinctItems.SEDATIVE_FRAGMENT)) return null;
         for (var tag : tags) if (stack.isIn(TagKey.of(RegistryKeys.ITEM, tag))) return null;
@@ -56,6 +62,8 @@ public final class PerceptionClientState {
         if (!active()) return 0;
         var screen = MinecraftClient.getInstance().currentScreen;
         if (screen == null) return 0;
+        // The addon page is another codex view and uses the same synchronized Power chance.
+        if (screen instanceof net.onixary.sscPrimalstinct.client.ui.PrimalstinctScreen) return codex;
         String name = screen.getClass().getName();
         if (!name.startsWith("net.onixary.shapeShifterCurseFabric.custom_ui.")) return 0;
         if (name.contains("BookOfShapeShifter") || name.contains("Codex") || name.endsWith(".DetailScreen")) return codex;
@@ -83,5 +91,5 @@ public final class PerceptionClientState {
         seed ^= seed >>> 16; seed *= 0x7feb352d; return seed ^ (seed >>> 15);
     }
     public static void clear() { dimension = null; codex = palette = signs = 0; itemText = ""; tags = Set.of(); targets = Set.of();
-        heatPresent = false; heatMeter = 0; heatTargets = 0; heatFrozen = false; }
+        heatPresent = false; heatMeter = 0; heatTargets = 0; heatFrozen = false; watchTargets = Set.of(); }
 }

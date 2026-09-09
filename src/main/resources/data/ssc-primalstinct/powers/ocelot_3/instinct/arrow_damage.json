@@ -1,0 +1,11 @@
+{
+  "type": "apoli:self_action_when_hit",
+  "entity_action": {
+    "type": "ssc-primalstinct:add_primalstinct",
+    "amount": -0.8
+  },
+  "damage_condition": {
+    "type": "apoli:projectile"
+  },
+  "hidden": true
+}

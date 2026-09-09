@@ -58,7 +58,7 @@ public final class InteractionRuleManager {
             }
         }
         for (PreventBlockPlacePower power : PowerHolderComponent.getPowers(player, PreventBlockPlacePower.class)) {
-            if (power.isActive()) {
+            if (power.isActive() && power.prevents()) {
                 preventPlace = true;
                 if (power.getItemTag() != null) {
                     placeTag = power.getItemTag();

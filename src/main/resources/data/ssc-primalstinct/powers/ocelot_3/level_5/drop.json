@@ -2,5 +2,13 @@
   "type": "ssc-primalstinct:drop_tool_after_use",
   "chance": 1,
   "on_attack": true,
-  "hidden": true
+  "hidden": true,
+  "on_drop_action": {
+    "type": "ssc-primalstinct:add_primalstinct",
+    "amount": 0.1
+  },
+  "on_keep_action": {
+    "type": "ssc-primalstinct:add_primalstinct",
+    "amount": -0.25
+  }
 }

@@ -43,12 +43,11 @@ public final class PrimalRosterManager {
     }
 
     /** 由 PrimalProfileReloadListener 调用：结构解析全部成功。 */
-    static void onParsed(PrimalLevels levels, Map<Identifier, PrimalFormProfile> profiles,
-                         Map<Identifier, PrimalDiet> diets) {
-        pending = new PrimalRoster(active.revision + 1, levels, PrimalRoster.linkedCopy(profiles), Map.copyOf(diets));
+    static void onParsed(PrimalLevels levels, Map<Identifier, PrimalFormProfile> profiles) {
+        pending = new PrimalRoster(active.revision + 1, levels, PrimalRoster.linkedCopy(profiles));
         lastParseErrors = null;
-        SSCPrimalstinct.LOGGER.info("[primalstinct] 已解析 {} 个形态配置、{} 个食性档案（revision {} 候选，待引用校验）",
-                profiles.size(), diets.size(), pending.revision);
+        SSCPrimalstinct.LOGGER.info("[primalstinct] Parsed {} form profiles (candidate revision {}, awaiting validation)",
+                profiles.size(), pending.revision);
     }
 
     /** 由 PrimalProfileReloadListener 调用：结构解析失败。 */
@@ -102,12 +101,7 @@ public final class PrimalRosterManager {
                 validatePowers("level_overrides." + entry.getKey() + ".add", List.copyOf(entry.getValue().add), profile, errors);
                 validatePowers("level_overrides." + entry.getKey() + ".remove", List.copyOf(entry.getValue().remove), profile, errors);
             }
-            validatePowers("instinct_powers", profile.instinctPowers, profile, errors);
-            // 卡08：diet 引用软校验——缺失告警不阻断（旧样本档案逐步补齐）
-            if (profile.dietProfile != null && !roster.diets.containsKey(profile.dietProfile)) {
-                SSCPrimalstinct.LOGGER.warn("[primalstinct] {} 的 diet_profile {} 尚无对应档案（{}），食性行为由 Power 决定",
-                        profile.formId, profile.dietProfile, profile.sourceFile);
-            }
+
         }
         validatePowers("levels/default.json levels.add",
                 collectLevelPowers(roster.levels, true), null, errors);
@@ -180,11 +174,11 @@ public final class PrimalRosterManager {
         if (own == null) {
             return null;
         }
-        // 子形态覆盖：仅补全未显式声明的继承字段（fallback/食性/睡眠）
+        // Inherit the subform fallback when it was not explicitly configured.
         if (!own.formId.equals(formId)) {
             SSCAdapter.SscFormInfo info = SSCAdapter.formInfo(formId);
             boolean needsMasterFallback = own.fallbackForm == null && info != null && info.subForm();
-            if (needsMasterFallback || own.dietProfile == null || own.sleepProfile == null) {
+            if (needsMasterFallback) {
                 return inheritMissing(own, formId);
             }
         }
@@ -200,9 +194,6 @@ public final class PrimalRosterManager {
                 masterProfile.basePowersAdd,
                 masterProfile.basePowersRemove,
                 masterProfile.levelOverrides,
-                masterProfile.instinctPowers,
-                masterProfile.dietProfile,
-                masterProfile.sleepProfile,
                 masterProfile.sourceFile + " → 继承至 " + subFormId);
     }
 

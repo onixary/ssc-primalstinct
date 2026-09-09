@@ -310,6 +310,12 @@ public final class WanderAiController {
         }
     }
 
+    /** 游荡接管当前是否对该玩家生效（速率扫描等周期查询用）。 */
+    public static boolean isTakeoverActive(ServerPlayerEntity player) {
+        State state = STATES.get(player.getUuid());
+        return state != null && state.wandering;
+    }
+
     @Nullable
     private static WanderAiPower findActivePower(ServerPlayerEntity player) {
         for (WanderAiPower power : PowerHolderComponent.getPowers(player, WanderAiPower.class)) {

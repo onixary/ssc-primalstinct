@@ -19,7 +19,7 @@
       "shape-shifter-curse:form_disable_feet_armor",
       "ssc-primalstinct:snow_fox_3_prevent_l0_processing",
       "ssc-primalstinct:snow_fox_3_prevent_l0_containers",
-      "ssc-primalstinct:snow_fox_3_curl_sleep"
+      "ssc-primalstinct:curl_sleep"
     ],
     "remove": []
   },
@@ -44,8 +44,5 @@
         ]
       }
     }
-  },
-  "instinct_powers": [],
-  "diet_profile": "ssc-primalstinct:snow_fox_3",
-  "sleep_profile": "ssc-primalstinct:curl"
+  }
 }

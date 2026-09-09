@@ -1,0 +1,12 @@
+{
+  "type": "ssc-primalstinct:modify_primalstinct_rate",
+  "source_id": "villager_nearby",
+  "rate_per_second": -0.055556,
+  "condition": {
+    "type": "ssc-primalstinct:nearby_entity",
+    "entity": "minecraft:villager",
+    "radius": 8,
+    "require_visibility": false
+  },
+  "hidden": true
+}

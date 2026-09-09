@@ -87,7 +87,7 @@ python tools/rcon.py "primalstinct debug roster" "primalstinct debug resolve sha
 
 ### 卡02：形态名单与数据包契约
 
-- 数据目录 `data/<ns>/primalstinct/{forms/*.json, levels/default.json}`；字段：schema_version/form_id/selectable/order/fallback_form/base_powers/level_overrides/instinct_powers/diet_profile/sleep_profile
+- 数据目录 `data/<ns>/primalstinct/{forms/*.json, levels/default.json}`；字段：schema_version/form_id/selectable/order/fallback_form/base_powers/level_overrides
 - 公共等级表（开发初值）：阈值 20/40/60/80/100，L0..L5，L5=满值锁定；每级仅声明 add/remove 增量，查询时累计展开，同级冲突报错
 - 两阶段加载：reload 时结构解析（未知字段/类型错误/等级约束，错误带文件路径）→ SERVER_STARTED 与热重载后引用校验（FormID 存在、兜底链到普通主形态、power 在 Apoli 注册表）→ 全部成功才原子替换运行快照（revision 递增）；失败保留上一版
 - 子形态按自身 FormID 查配置，缺省继承 master 链（`PrimalRosterManager.resolve`）
@@ -149,7 +149,6 @@ python tools/rcon.py "primalstinct debug roster" "primalstinct debug resolve sha
   - unsuitable（可吃但本能上升）：同结构 `+1.0`，面包/作物/苹果系
   - forbidden（**可吃但无营养**，与 SSC 原版 raw_meat_only 同语义）：`apoli:modify_food` set_total 0——按用户决定不做成完全不可食用
   - 标签：`data/ssc-primalstinct/tags/items/snow_fox_diet_{normal,unsuitable,forbidden}.json`；禁止档仅真正有毒食物（生肉保留在 normal，避免同物品跨档冲突）
-- **diet 数据契约落地**（`primalstinct/diets/*.json`）：normal/unsuitable/forbidden 各含 instinct_delta + item_tag；加载器并入名单管线（结构校验+原子交换）；diet 引用软校验（缺失告警不阻断，旧样本档案逐步补齐）；`debug resolve` 展示档案解析结果
 - **实测**：名单 [15] snow_fox_3 就位；resolve 显示三档档案；set_form 后 form_base 挂载 always_harvest + 三食性 power；基础增长源激活；三份软校验告警按预期输出
 - **待 playtest**：吃正常/不适/禁止食物的实际三档行为、L0 裸爪采集掉落、多玩家食性隔离（Power 按玩家授予，结构上已隔离）；SSC CustomEdibleUtils 缓存刷新在实体捕食（卡18）接入时处理
 
@@ -215,4 +214,4 @@ python tools/rcon.py "primalstinct debug roster" "primalstinct debug resolve sha
 | `client.ui` | HUD、选择界面、预警表现 | 13/15/16 |
 | `mixin.ssc` / `mixin.vanilla` | SSC 目标 / 原版目标注入 | 04/09/10/11/15/17 |
 
-数据目录（卡02 建立）：`data/ssc-primalstinct/primalstinct/{forms,levels,diets}`；Apoli 能力仍在 `data/<namespace>/powers`。贴图与本地化在 `assets/ssc-primalstinct/`。
+数据目录（卡02 建立）：`data/ssc-primalstinct/primalstinct/{forms,levels}`；Apoli 能力仍在 `data/<namespace>/powers`。贴图与本地化在 `assets/ssc-primalstinct/`。

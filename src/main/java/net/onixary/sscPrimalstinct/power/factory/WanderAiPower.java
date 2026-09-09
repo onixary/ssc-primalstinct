@@ -19,6 +19,7 @@ import net.onixary.sscPrimalstinct.SSCPrimalstinct;
  * speed_multiplier：代理移动属性倍率，默认 1；非正数或非有限值回退到 1。
  * jump_height_multiplier：代理陆地跳跃高度倍率，默认 1；按原版重力/阻力换算起跳速度。
  * 激活/门槛由 Apoli condition 表达（如本能等级条件）。
+ * takeover_rate_per_second：游荡接管生效期间向本能条贡献的速率（点/秒，0=不贡献）。
  */
 public class WanderAiPower extends Power {
 
@@ -27,6 +28,7 @@ public class WanderAiPower extends Power {
     private final int wanderChance;
     private final float speedMultiplier;
     private final float jumpHeightMultiplier;
+    private final float takeoverRatePerSecond;
 
     public WanderAiPower(PowerType<?> type, LivingEntity entity, Identifier proxyEntity, int afkTicks) {
         this(type, entity, proxyEntity, afkTicks, 120, 1.0f);
@@ -39,6 +41,12 @@ public class WanderAiPower extends Power {
 
     public WanderAiPower(PowerType<?> type, LivingEntity entity, Identifier proxyEntity, int afkTicks,
                          int wanderChance, float speedMultiplier, float jumpHeightMultiplier) {
+        this(type, entity, proxyEntity, afkTicks, wanderChance, speedMultiplier, jumpHeightMultiplier, 0.0f);
+    }
+
+    public WanderAiPower(PowerType<?> type, LivingEntity entity, Identifier proxyEntity, int afkTicks,
+                         int wanderChance, float speedMultiplier, float jumpHeightMultiplier,
+                         float takeoverRatePerSecond) {
         super(type, entity);
         this.proxyEntity = proxyEntity;
         this.afkTicks = afkTicks;
@@ -47,6 +55,7 @@ public class WanderAiPower extends Power {
                 ? speedMultiplier : 1.0f;
         this.jumpHeightMultiplier = Float.isFinite(jumpHeightMultiplier) && jumpHeightMultiplier > 0
                 ? jumpHeightMultiplier : 1.0f;
+        this.takeoverRatePerSecond = Float.isFinite(takeoverRatePerSecond) ? takeoverRatePerSecond : 0.0f;
     }
 
     public Identifier getProxyEntity() {
@@ -69,6 +78,10 @@ public class WanderAiPower extends Power {
         return jumpHeightMultiplier;
     }
 
+    public float getTakeoverRatePerSecond() {
+        return takeoverRatePerSecond;
+    }
+
     @SuppressWarnings("rawtypes")
     public static PowerFactory getFactory() {
         return new PowerFactory<>(
@@ -78,14 +91,16 @@ public class WanderAiPower extends Power {
                         .add("afk_ticks", SerializableDataTypes.INT, 200)
                         .add("wander_chance", SerializableDataTypes.INT, 120)
                         .add("speed_multiplier", SerializableDataTypes.FLOAT, 1.0f)
-                        .add("jump_height_multiplier", SerializableDataTypes.FLOAT, 1.0f),
-                data -> (powerType, livingEntity) -> new WanderAiPower(
-                        powerType, livingEntity,
+                        .add("jump_height_multiplier", SerializableDataTypes.FLOAT, 1.0f)
+                        .add("takeover_rate_per_second", SerializableDataTypes.FLOAT, 0.0f),
+                data -> (type, livingEntity) -> new WanderAiPower(
+                        type, livingEntity,
                         data.getId("entity"),
                         data.getInt("afk_ticks"),
                         data.getInt("wander_chance"),
                         data.getFloat("speed_multiplier"),
-                        data.getFloat("jump_height_multiplier"))
+                        data.getFloat("jump_height_multiplier"),
+                        data.getFloat("takeover_rate_per_second"))
         ).allowCondition();
     }
 }
