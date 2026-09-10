@@ -1,0 +1,12 @@
+{
+  "type": "ssc-primalstinct:primal_avatar",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "layers": [],
+      "biome": "minecraft:the_void",
+      "features": [],
+      "lakes": false
+    }
+  }
+}

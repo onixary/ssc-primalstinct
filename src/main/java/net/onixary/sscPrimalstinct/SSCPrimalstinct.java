@@ -36,6 +36,9 @@ public class SSCPrimalstinct implements ModInitializer {
             LOGGER.error("SSC (shape-shifter-curse) is missing; this addon requires it as a hard dependency.");
         }
 
+        // 眷属实现12：SSC 独立原始变体形态注册（先于名单/终局配置的引用校验）
+        net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.registerAll();
+
         // 卡17：服务端配置（AutoConfig 注册即读文件；ModMenu 修改只落盘，会话值在 SERVER_STARTING 快照）
         net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.register();
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
@@ -56,6 +59,12 @@ public class SSCPrimalstinct implements ModInitializer {
             PrimalPowerReconciler.requestReconcileAll(server);
         });
 
+        // 眷属实现02：终局数据包（endgame/rituals + endgame/variants，同一加载流程）
+        ResourceManagerHelper.get(ResourceType.SERVER_DATA)
+                .registerReloadListener(new net.onixary.sscPrimalstinct.endgame.data.EndgameReloadListener());
+        ServerLifecycleEvents.SERVER_STARTED.register(server ->
+                net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.validateAndSwap());
+
         // 卡03：S2C 同步协议（事件钩子 + 限频校正）
         PrimalstinctNetwork.init();
         net.onixary.sscPrimalstinct.network.PerceptionSync.register();
@@ -65,6 +74,30 @@ public class SSCPrimalstinct implements ModInitializer {
 
         // 卡14：物品注册（含创造模式标签页）
         net.onixary.sscPrimalstinct.items.RegPrimalstinctItems.registerAll();
+
+        // 眷属实现03：终局方块/方块实体注册（方块物品追加进创造标签页）
+        net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks.registerAll();
+
+        // 眷属实现04：原初祭坛世界生成结构注册（STRUCTURE_TYPE / STRUCTURE_PIECE）
+        net.onixary.sscPrimalstinct.endgame.worldgen.RegEndgameWorldgen.registerAll();
+
+        // 眷属实现05：投掷献祭扫描与消耗事务（服务端 tick + BE 加载追踪）
+        net.onixary.sscPrimalstinct.endgame.service.RitualOfferingService.register();
+
+        // 眷属实现08：5×5 门框检测与碎片开门（玩家锚定扫描）
+        net.onixary.sscPrimalstinct.endgame.service.RitualPortalService.register();
+
+        // 眷属实现10：跨维度传送（固定化身维度 + 个人返回锚点；含跌出边界守卫）
+        net.onixary.sscPrimalstinct.endgame.service.EndgameTeleportService.register();
+
+        // 眷属实现13：转化会话对账（登录兜底）+ 完成结算钩子（实际 FormID 生效为准）
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+                server.execute(() -> net.onixary.sscPrimalstinct.endgame.service.TransformationService
+                        .reconcileOnJoin(handler.player)));
+        SSCEvent.FORM_CHANGE_END.register((player, oldForm, newForm) ->
+                net.onixary.sscPrimalstinct.endgame.service.TransformationService
+                        .onFormChangeEnd(player, oldForm == null ? null : oldForm.getFormID(),
+                                newForm == null ? null : newForm.getFormID()));
 
         // 卡07：Apoli 工厂注册（速率 Power / 即时 Action / 三条件）
         net.onixary.sscPrimalstinct.power.PrimalstinctApoliFactories.register();
@@ -125,6 +158,7 @@ public class SSCPrimalstinct implements ModInitializer {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
             if (success) {
                 PrimalRosterManager.validateAndSwap();
+                net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.validateAndSwap();
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                     net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter.rebuildCurrentForm(player);
                     if (net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(player)) {

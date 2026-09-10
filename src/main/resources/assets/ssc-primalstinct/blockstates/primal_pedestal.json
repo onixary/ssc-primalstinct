@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=north,fulfilled=false": {
+      "model": "ssc-primalstinct:block/primal_pedestal"
+    },
+    "facing=north,fulfilled=true": {
+      "model": "ssc-primalstinct:block/primal_pedestal_fulfilled"
+    },
+    "facing=east,fulfilled=false": {
+      "model": "ssc-primalstinct:block/primal_pedestal",
+      "y": 90
+    },
+    "facing=east,fulfilled=true": {
+      "model": "ssc-primalstinct:block/primal_pedestal_fulfilled",
+      "y": 90
+    },
+    "facing=south,fulfilled=false": {
+      "model": "ssc-primalstinct:block/primal_pedestal",
+      "y": 180
+    },
+    "facing=south,fulfilled=true": {
+      "model": "ssc-primalstinct:block/primal_pedestal_fulfilled",
+      "y": 180
+    },
+    "facing=west,fulfilled=false": {
+      "model": "ssc-primalstinct:block/primal_pedestal",
+      "y": 270
+    },
+    "facing=west,fulfilled=true": {
+      "model": "ssc-primalstinct:block/primal_pedestal_fulfilled",
+      "y": 270
+    }
+  }
+}

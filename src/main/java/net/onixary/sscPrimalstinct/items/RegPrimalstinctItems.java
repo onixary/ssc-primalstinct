@@ -20,6 +20,11 @@ public final class RegPrimalstinctItems {
 
     private static final List<Item> GROUP_ITEMS = new ArrayList<>();
 
+    /** 眷属实现03：终局方块物品在方块注册时追加进本组（entries 回调惰性读取，注册期追加即生效）。 */
+    public static void appendEndgameItems(List<Item> items) {
+        GROUP_ITEMS.addAll(items);
+    }
+
     public static final Item SEDATIVE_FRAGMENT = register("sedative_fragment",
             new SedativeFragmentItem(new Item.Settings()));
 

@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -87,7 +88,19 @@ public final class PrimalstinctCommands {
                                                 .executes(PrimalstinctCommands::executeAdminSelect))))
                         .then(CommandManager.literal("resolve")
                                 .then(CommandManager.argument("form_id", StringArgumentType.greedyString())
-                                        .executes(PrimalstinctCommands::executeResolve)))));
+                                        .executes(PrimalstinctCommands::executeResolve)))
+                        .then(CommandManager.literal("endgame")
+                                .executes(context -> executeEndgameStatus(context, context.getSource().getPlayer()))
+                                .then(CommandManager.argument("target", EntityArgumentType.player())
+                                        .executes(context -> executeEndgameStatus(context, EntityArgumentType.getPlayer(context, "target"))))
+                                .then(CommandManager.literal("variants")
+                                        .executes(PrimalstinctCommands::executeEndgameVariants))
+                                .then(CommandManager.literal("bind-ritual")
+                                        .executes(PrimalstinctCommands::executeBindRitual))
+                                .then(CommandManager.literal("scan")
+                                        .executes(PrimalstinctCommands::executeEndgameScan))
+                                .then(CommandManager.literal("sanctum")
+                                        .executes(PrimalstinctCommands::executeSanctumInit)))));
     }
 
     private static int executeGet(CommandContext<ServerCommandSource> context, ServerPlayerEntity target) {
@@ -420,5 +433,155 @@ public final class PrimalstinctCommands {
                 profile.fallbackForm != null ? profile.fallbackForm : "(dynamic)",
                 profile.sourceFile)), false);
         return 1;
+    }
+
+    // ---------- 眷属实现15：终局诊断命令 ----------
+
+    private static int executeEndgameStatus(CommandContext<ServerCommandSource> context, ServerPlayerEntity target) {
+        if (target == null) {
+            context.getSource().sendError(Text.translatable("ssc-primalstinct.debug.needs_player"));
+            return 0;
+        }
+        var endgame = net.onixary.sscPrimalstinct.endgame.state.RegEndgameComponent.ENDGAME.get(target);
+        Identifier formId = SSCAdapter.currentFormIdentifier(target);
+        var mapping = formId == null ? null
+                : net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.variantFor(formId);
+        boolean variant = formId != null
+                && net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.isVariant(formId);
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "  form=%s variant=%s mapping=%s phase=%s session=%s",
+                formId, variant,
+                mapping == null ? "(none)" : mapping.sourceForm + "->" + mapping.targetForm,
+                endgame.getTransformPhase(),
+                endgame.getTransformSessionId() == null ? "-" : endgame.getTransformSessionId())), false);
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "  eligible: sacrifice=%s claim=%s transform=%s",
+                net.onixary.sscPrimalstinct.endgame.service.EndgameEligibility.canSacrifice(target),
+                net.onixary.sscPrimalstinct.endgame.service.EndgameEligibility.canClaimReward(target),
+                net.onixary.sscPrimalstinct.endgame.service.EndgameEligibility.canTransform(target).ok())), false);
+        return 1;
+    }
+
+    private static int executeEndgameVariants(CommandContext<ServerCommandSource> context) {
+        var config = net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.active();
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "endgame config: ritual=%s structure=%s offerings=%d remnantChance=%.2f variants=%d",
+                config.ritualId, config.structureId, config.offerings.size(),
+                config.remnantDropChance, config.variants.size())), false);
+        for (var mapping : config.variants.values()) {
+            context.getSource().sendFeedback(() -> Text.literal(String.format(
+                    "  %s -> %s (%s)", mapping.sourceForm, mapping.targetForm, mapping.sourceFile)), false);
+        }
+        return config.variants.size();
+    }
+
+    /** 管理员调试：为注视的基座写入当前配置中的随机供物并绑定最近祭坛（眷属实现15 spawn-test-ritual 的最小版）。 */
+    /** 眷属实现09/15：管理员强制初始化/检视化身圣所场景（幂等）。 */
+    private static int executeSanctumInit(CommandContext<ServerCommandSource> context) {
+        MinecraftServer server = context.getSource().getServer();
+        var world = net.onixary.sscPrimalstinct.util.AvatarDimension.world(server);
+        if (world == null) {
+            context.getSource().sendError(Text.literal("原始化身维度未注册"));
+            return 0;
+        }
+        boolean ready = net.onixary.sscPrimalstinct.endgame.worldgen.AvatarSanctum.ensureReady(server);
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "sanctum: ready=%s spawn=%s returnPortal=%s conversion=%s avatarAnchor=%s",
+                ready, net.onixary.sscPrimalstinct.endgame.worldgen.AvatarSanctum.SPAWN,
+                net.onixary.sscPrimalstinct.endgame.worldgen.AvatarSanctum.RETURN_PORTAL_CENTER,
+                net.onixary.sscPrimalstinct.endgame.worldgen.AvatarSanctum.CONVERSION_PLATFORM,
+                net.onixary.sscPrimalstinct.endgame.worldgen.AvatarSanctum.AVATAR_ANCHOR)), false);
+        return ready ? 1 : 0;
+    }
+
+    /** 眷属实现15诊断：注视基座报告献祭接收区实时状态（登记/需求/区域物品/投掷者资格）。 */
+    private static int executeEndgameScan(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+        var hit = player.raycast(6.0, 1.0f, false);
+        if (!(hit instanceof net.minecraft.util.hit.BlockHitResult blockHit)
+                || !(player.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld)
+                || !(serverWorld.getBlockEntity(blockHit.getBlockPos())
+                        instanceof net.onixary.sscPrimalstinct.endgame.block.PrimalPedestalBlockEntity pedestal)) {
+            context.getSource().sendError(Text.literal("未注视原初基座"));
+            return 0;
+        }
+        context.getSource().sendFeedback(() -> Text.literal(
+                net.onixary.sscPrimalstinct.endgame.service.RitualOfferingService.describe(serverWorld, pedestal)), false);
+        context.getSource().sendFeedback(() -> Text.literal(String.format(
+                "you: level=%d/%d managed=%s sacrifice=%s",
+                net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent.PRIMALSTINCT.get(player).getLevel(),
+                net.onixary.sscPrimalstinct.endgame.EndgameRules.maxInstinctLevel(),
+                net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player),
+                net.onixary.sscPrimalstinct.endgame.service.EndgameEligibility.canSacrifice(player))), false);
+        return 1;
+    }
+
+    private static int executeBindRitual(CommandContext<ServerCommandSource> context) throws CommandSyntaxException {
+        ServerPlayerEntity player = context.getSource().getPlayerOrThrow();
+        var hit = player.raycast(6.0, 1.0f, false);
+        if (!(hit instanceof net.minecraft.util.hit.BlockHitResult blockHit)) {
+            context.getSource().sendError(Text.literal("未指向方块"));
+            return 0;
+        }
+        var pos = blockHit.getBlockPos();
+        var world = player.getWorld();
+        if (world.getBlockEntity(pos) instanceof net.onixary.sscPrimalstinct.endgame.block.PrimalPedestalBlockEntity pedestal) {
+            var config = net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.active();
+            if (config.offerings.isEmpty()) {
+                context.getSource().sendError(Text.literal("终局配置无供物候选（检查 endgame/rituals/default.json）"));
+                return 0;
+            }
+            var entry = config.offerings.get(player.getRandom().nextInt(config.offerings.size()));
+            // 控制器指向最近的已绑定祭坛（献祭完成后据此触发三路重算）
+            net.minecraft.util.math.BlockPos searched = pos.up(2);
+            for (var candidate : net.minecraft.util.math.BlockPos.iterateOutwards(pos, 8, 4, 8)) {
+                if (world.getBlockEntity(candidate) instanceof net.onixary.sscPrimalstinct.endgame.block.PrimalAltarBlockEntity nearAltar
+                        && nearAltar.getRitualId() != null) {
+                    searched = candidate.toImmutable();
+                    break;
+                }
+            }
+            final net.minecraft.util.math.BlockPos controller = searched;
+            pedestal.bind(config.ritualId, controller, entry.item(), entry.count());
+            context.getSource().sendFeedback(() -> Text.literal(String.format(
+                    "基座 %s 已绑定供物 %s x%d（ritual=%s，控制器=%s）",
+                    pos, entry.item(), entry.count(), config.ritualId, controller)), false);
+            return 1;
+        }
+        if (world.getBlockEntity(pos) instanceof net.onixary.sscPrimalstinct.endgame.block.PrimalAltarBlockEntity altar) {
+            var config = net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.active();
+            // 标准三路布局（与结构 piece 一致，rotation=NONE）：自动补放基座与导线并绑定实例
+            int[][] pedestalOffsets = {{-4, 0}, {4, 0}, {0, 4}};
+            net.minecraft.util.math.Direction[] facings = {
+                    net.minecraft.util.math.Direction.WEST, net.minecraft.util.math.Direction.EAST,
+                    net.minecraft.util.math.Direction.SOUTH};
+            int[][][] wireOffsets = {
+                    {{-1, 0}, {-2, 0}, {-3, 0}},
+                    {{1, 0}, {2, 0}, {3, 0}},
+                    {{0, 1}, {0, 2}, {0, 3}}};
+            java.util.List<net.minecraft.util.math.BlockPos> pedestals = new java.util.ArrayList<>();
+            java.util.List<java.util.List<net.minecraft.util.math.BlockPos>> paths = new java.util.ArrayList<>();
+            for (int i = 0; i < 3; i++) {
+                net.minecraft.util.math.BlockPos pedestalPos = pos.add(pedestalOffsets[i][0], 0, pedestalOffsets[i][1]);
+                world.setBlockState(pedestalPos, net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks.PRIMAL_PEDESTAL
+                        .getDefaultState().with(net.onixary.sscPrimalstinct.endgame.block.PrimalPedestalBlock.FACING, facings[i]));
+                java.util.List<net.minecraft.util.math.BlockPos> path = new java.util.ArrayList<>();
+                for (int[] wireOffset : wireOffsets[i]) {
+                    net.minecraft.util.math.BlockPos wirePos = pos.add(wireOffset[0], 0, wireOffset[1]);
+                    world.setBlockState(wirePos, net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks.PRIMAL_ENERGY_WIRE.getDefaultState());
+                    path.add(wirePos);
+                }
+                pedestals.add(pedestalPos);
+                paths.add(path);
+            }
+            altar.bind(config.ritualId, pedestals, paths);
+            context.getSource().sendFeedback(() -> Text.literal(String.format(
+                    "祭坛 %s 已绑定标准调试布局（3 基座 + 3 路导线已补放，ritual=%s）", pos, config.ritualId)), false);
+            context.getSource().sendFeedback(() -> Text.literal(
+                    "用 /primalstinct debug endgame bind-ritual 逐个注视基座绑定供物"), false);
+            return 1;
+        }
+        context.getSource().sendError(Text.literal("注视目标不是原初基座/原初祭坛"));
+        return 0;
     }
 }

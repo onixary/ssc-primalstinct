@@ -1,0 +1,7 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "ssc-primalstinct:block/primal_pedestal_top",
+    "side": "ssc-primalstinct:block/primal_pedestal_side"
+  }
+}

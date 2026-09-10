@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "ritual_id": "ssc-primalstinct:default",
+  "structure_id": "ssc-primalstinct:primal_altar",
+  "offerings": [
+    {
+      "item": "minecraft:rotten_flesh",
+      "count": 1,
+      "weight": 10
+    },
+    {
+      "item": "minecraft:bone",
+      "count": 1,
+      "weight": 10
+    },
+    {
+      "item": "minecraft:string",
+      "count": 1,
+      "weight": 8
+    },
+    {
+      "item": "minecraft:spider_eye",
+      "count": 1,
+      "weight": 6
+    },
+    {
+      "item": "minecraft:gunpowder",
+      "count": 1,
+      "weight": 6
+    },
+    {
+      "item": "minecraft:slime_ball",
+      "count": 1,
+      "weight": 5
+    },
+    {
+      "item": "minecraft:feather",
+      "count": 1,
+      "weight": 8
+    },
+    {
+      "item": "minecraft:leather",
+      "count": 1,
+      "weight": 6
+    }
+  ],
+  "remnant_drop_chance": 0.25,
+  "remnant_target_tag": "c:hostiles"
+}

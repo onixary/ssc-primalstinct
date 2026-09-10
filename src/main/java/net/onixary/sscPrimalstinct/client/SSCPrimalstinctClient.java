@@ -52,6 +52,15 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
         PrimalInstinctHud.register();
         PrimalstinctWarningParticles.register();
         CurlSleepKeybinding.register();
+
+        // 眷属实现03：终局方块实体渲染器（基座供物图标；专用服务器不加载）
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_PEDESTAL,
+                net.onixary.sscPrimalstinct.endgame.client.PrimalPedestalRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_ALTAR,
+                net.onixary.sscPrimalstinct.endgame.client.PrimalAltarRenderer::new);
+
         // 卡16：无书快捷访问（调色菜单 / 图鉴页面），默认不绑定；图鉴 INSTINCTS 列扩展注册（SSC 公开接口）
         BookAccessKeybindings.register();
         net.onixary.sscPrimalstinct.adapter.ssc.SSCClientAdapter.registerCodexColumnProvider(

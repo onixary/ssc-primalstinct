@@ -1,0 +1,185 @@
+{
+  "template": "ssc-primalstinct:avatar_sanctum",
+  "version": 3,
+  "origin": [
+    -72,
+    0,
+    -24
+  ],
+  "size": [
+    145,
+    152,
+    145
+  ],
+  "spawn": [
+    0,
+    96,
+    0
+  ],
+  "spawn_yaw": 0,
+  "return_portal": [
+    0,
+    96,
+    -5
+  ],
+  "conversion_platform": [
+    0,
+    108,
+    52
+  ],
+  "avatar_model_anchor": [
+    8,
+    125,
+    53
+  ],
+  "stone_tentacle_tips": [
+    [
+      6,
+      117,
+      44
+    ],
+    [
+      8,
+      119,
+      56
+    ],
+    [
+      12,
+      114,
+      64
+    ]
+  ],
+  "animation_clearance": {
+    "min": [
+      3,
+      125,
+      40
+    ],
+    "max": [
+      16,
+      144,
+      67
+    ]
+  },
+  "central_column": [
+    0,
+    52,
+    19,
+    107
+  ],
+  "pillars": [
+    [
+      0,
+      0,
+      10,
+      95,
+      null
+    ],
+    [
+      -31,
+      20,
+      7,
+      102,
+      "z"
+    ],
+    [
+      31,
+      16,
+      6,
+      92,
+      "x"
+    ],
+    [
+      -49,
+      47,
+      9,
+      111,
+      "x"
+    ],
+    [
+      48,
+      45,
+      8,
+      99,
+      "z"
+    ],
+    [
+      -34,
+      79,
+      7,
+      100,
+      "z"
+    ],
+    [
+      34,
+      87,
+      10,
+      110,
+      "x"
+    ],
+    [
+      -4,
+      99,
+      8,
+      103,
+      "x"
+    ],
+    [
+      -57,
+      91,
+      4,
+      94,
+      null
+    ],
+    [
+      61,
+      76,
+      5,
+      105,
+      "z"
+    ],
+    [
+      -57,
+      9,
+      4,
+      91,
+      null
+    ],
+    [
+      54,
+      -7,
+      5,
+      101,
+      "x"
+    ]
+  ],
+  "blocks": 325040,
+  "palette_size": 26,
+  "seed": 20260911,
+  "entities": 0,
+  "materials": {
+    "minecraft:stone_bricks": 32229,
+    "minecraft:stone": 150661,
+    "minecraft:cracked_stone_bricks": 27134,
+    "minecraft:andesite": 42962,
+    "minecraft:tuff": 42489,
+    "minecraft:stone_brick_slab": 381,
+    "minecraft:sea_lantern": 10,
+    "minecraft:mossy_stone_bricks": 8267,
+    "minecraft:polished_andesite": 279,
+    "ssc-primalstinct:primal_portal_frame": 16,
+    "minecraft:moss_block": 38,
+    "minecraft:azalea_leaves": 126,
+    "minecraft:cracked_deepslate_tiles": 5,
+    "minecraft:deepslate_tiles": 10085,
+    "minecraft:stone_brick_stairs": 59,
+    "minecraft:polished_basalt": 2487,
+    "minecraft:dark_prismarine": 1037,
+    "minecraft:polished_blackstone": 1083,
+    "minecraft:moss_carpet": 146,
+    "minecraft:fern": 11,
+    "minecraft:vine": 5525,
+    "ssc-primalstinct:primal_portal": 9,
+    "ssc-primalstinct:primal_conversion_platform": 1
+  }
+}

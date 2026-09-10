@@ -104,4 +104,24 @@ public final class SSCAdapter {
         IForm form = RegPlayerForms.getPlayerForm(formId);
         return form == null ? null : form.getFormLayer().getRight();
     }
+
+    /**
+     * 眷属实现13：启动 SSC 变形演出（TransformManager.startTransform 的受控封装）。
+     * 返回 false 表示 SSC isFormCanUse 拒绝或玩家已是目标形态；
+     * SSC 配置 immediatelyTransform=true 时回调同步触发（onTargetFormApplied 幂等，可安全重入）。
+     */
+    public static boolean startPrimalTransformation(net.minecraft.server.network.ServerPlayerEntity player,
+                                                    Identifier targetFormId, Runnable onComplete) {
+        IForm targetForm = RegPlayerForms.getPlayerForm(targetFormId);
+        if (targetForm == null) {
+            SSCPrimalstinct.LOGGER.error("[primalstinct] 目标形态 {} 未注册，无法启动变形", targetFormId);
+            return false;
+        }
+        return net.onixary.shapeShifterCurseFabric.player_form.utils.TransformManager.startTransform(
+                player, targetForm, data -> {
+                    if (onComplete != null) {
+                        onComplete.run();
+                    }
+                });
+    }
 }

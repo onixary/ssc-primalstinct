@@ -28,7 +28,8 @@
       "net.onixary.sscPrimalstinct.client.config.PrimalstinctModMenuIntegration"
     ],
     "cardinal-components-entity": [
-      "net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent"
+      "net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent",
+      "net.onixary.sscPrimalstinct.endgame.state.RegEndgameComponent"
     ]
   },
   "mixins": [
@@ -37,7 +38,8 @@
   ],
   "custom": {
     "cardinal-components": [
-      "ssc-primalstinct:primalstinct"
+      "ssc-primalstinct:primalstinct",
+      "ssc-primalstinct:endgame"
     ]
   },
   "depends": {

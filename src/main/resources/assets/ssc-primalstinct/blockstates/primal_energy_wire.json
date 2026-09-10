@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "ssc-primalstinct:block/primal_energy_wire"
+    },
+    "lit=true": {
+      "model": "ssc-primalstinct:block/primal_energy_wire_lit"
+    }
+  }
+}

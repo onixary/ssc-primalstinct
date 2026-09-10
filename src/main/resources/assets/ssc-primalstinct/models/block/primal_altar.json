@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "ssc-primalstinct:block/primal_altar_top",
+    "bottom": "ssc-primalstinct:block/primal_pedestal_side",
+    "side": "ssc-primalstinct:block/primal_altar_side"
+  }
+}
