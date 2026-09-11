@@ -53,13 +53,27 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
         PrimalstinctWarningParticles.register();
         CurlSleepKeybinding.register();
 
-        // 眷属实现03：终局方块实体渲染器（基座供物图标；专用服务器不加载）
+        // GeckoLib 场景模型、局部发光和附加图标；仅客户端注册。
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_PEDESTAL,
                 net.onixary.sscPrimalstinct.endgame.client.PrimalPedestalRenderer::new);
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_ALTAR,
                 net.onixary.sscPrimalstinct.endgame.client.PrimalAltarRenderer::new);
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_CONVERSION_PLATFORM,
+                context -> new net.onixary.sscPrimalstinct.endgame.client.EndgameGeoBlockRenderer<>());
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.ENDGAME_MODEL,
+                context -> new net.onixary.sscPrimalstinct.endgame.client.EndgameGeoBlockRenderer<>());
+        // 眷属实现11：原始化身实体渲染（GeckoLib；无阴影）
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.entity.RegEndgameEntities.PRIMAL_AVATAR,
+                net.onixary.sscPrimalstinct.endgame.client.PrimalAvatarRenderer::new);
+        // 门面：原版末地门渲染器子类（星野着色器动画 + 表面下移至一半高度）
+        net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_PORTAL,
+                net.onixary.sscPrimalstinct.endgame.client.PrimalPortalRenderer::new);
 
         // 卡16：无书快捷访问（调色菜单 / 图鉴页面），默认不绑定；图鉴 INSTINCTS 列扩展注册（SSC 公开接口）
         BookAccessKeybindings.register();

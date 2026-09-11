@@ -1,7 +1,6 @@
 package net.onixary.sscPrimalstinct.endgame.block;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +15,7 @@ import org.jetbrains.annotations.Nullable;
  * 需求物在结构生成期由确定性随机写入（眷属实现04），reload 不重抽。
  * 供物投掷扫描（眷属实现05，RitualOfferingService）只查询未完成的基座。
  */
-public class PrimalPedestalBlockEntity extends BlockEntity {
+public class PrimalPedestalBlockEntity extends EndgameGeoBlockEntity {
 
     public static final Identifier BLOCK_ENTITY_ID = EndgameRules.id("primal_pedestal");
 

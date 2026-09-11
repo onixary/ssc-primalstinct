@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
@@ -22,11 +23,19 @@ import net.minecraft.world.World;
  */
 public class PrimalConversionPlatformBlock extends Block implements BlockEntityProvider {
 
-    /** 台面略低（12px），站上去像站在台座上。 */
-    private static final VoxelShape SHAPE = Block.createCuboidShape(1.0, 0.0, 1.0, 15.0, 12.0, 15.0);
+    /**
+     * 半砖：轮廓与碰撞都取原版下半砖的 16×8×16。
+     * 台面上方悬浮的符文阵半径 1 格、比方块边界各挑出半格，纯粹是装饰，不参与碰撞。
+     */
+    private static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 8.0, 16.0);
 
     public PrimalConversionPlatformBlock(Settings settings) {
         super(settings);
+    }
+
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package net.onixary.sscPrimalstinct.endgame.block;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
@@ -21,7 +20,7 @@ import java.util.List;
  * <p>A 阶段（眷属实现03）供能判定为“三基座 fulfilled”最简实现；
  * 眷属实现06 落地时升级为“三条固定路径全是自有导线且无缺块”的路径校验。</p>
  */
-public class PrimalAltarBlockEntity extends BlockEntity {
+public class PrimalAltarBlockEntity extends EndgameGeoBlockEntity {
 
     public static final Identifier BLOCK_ENTITY_ID = EndgameRules.id("primal_altar");
 

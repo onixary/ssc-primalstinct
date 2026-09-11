@@ -18,7 +18,7 @@ import net.minecraft.world.BlockView;
  * 首版仅支持模板中的水平路径（眷属实现06 的三条固定路径方案）；
  * 能量来自所属基座的 fulfilled 状态，由祭坛控制器重算时驱动。
  */
-public class PrimalEnergyWireBlock extends Block {
+public class PrimalEnergyWireBlock extends EndgameModelBlock {
 
     public static final BooleanProperty LIT = BooleanProperty.of("lit");
 

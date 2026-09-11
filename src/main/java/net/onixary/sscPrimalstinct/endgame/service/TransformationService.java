@@ -72,6 +72,8 @@ public final class TransformationService {
             player.sendMessage(Text.translatable("ssc-primalstinct.endgame.transform.start_failed"), true);
             return;
         }
+        // 启动同 tick 尝试触发化身 Interact（无化身/异维度静默跳过，不阻断——眷属实现11/13）
+        net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.tryPlayInteract(player, sessionId, platformPos);
         SSCPrimalstinct.LOGGER.info("[primalstinct] 转化会话启动：{} → {}（session={}，玩家 {}）",
                 mapping.sourceForm, mapping.targetForm, sessionId, player.getGameProfile().getName());
     }

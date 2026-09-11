@@ -20,7 +20,9 @@ SIZE = (145, 152, 145)
 SPAWN = (0, 96, 0)
 PORTAL = (0, 96, -5)
 PLATFORM = (0, 108, 52)
-AVATAR = (8, 125, 53)  # Small animated tentacles above the fixed stone roots.
+AVATAR = (PLATFORM[0], PLATFORM[1] - 1, PLATFORM[2])  # Avatar entity: one block below the conversion platform.
+# 与 AvatarSanctum.TEMPLATE_VERSION 保持一致；改动几何时要一起 +1。
+TEMPLATE_VERSION = 4
 SEED = 20260911
 blocks = {}
 palette = []
@@ -56,6 +58,20 @@ CRACKED = state('cracked_stone_bricks')
 MOSSY = state('mossy_stone_bricks')
 DEEP = state('deepslate_tiles')
 DEEP_CRACKED = state('cracked_deepslate_tiles')
+
+# 中央仪式环的红色系。整体压暗，只有 R_CONCRETE 和 FOCUS 用来做聚焦亮线。
+R_NETHER = state('red_nether_bricks')
+NETHER = state('nether_bricks')
+R_TERRA = state('red_terracotta')
+R_CONCRETE = state('red_concrete')
+CRIMSON = state('crimson_planks')
+POL_BLACK = state('polished_blackstone')
+BLACKSTONE = state('blackstone')
+CHISELED = state('polished_blackstone_bricks')
+# 焦点不能用岩浆块：那正是玩家走向转化台的必经之路，站上去会持续掉血。
+# 红石灯同样暖红发光，而且不伤人。
+FOCUS = state('redstone_lamp', lit='true')
+CRY_OBS = state('crying_obsidian')
 MOSS = state('moss_block')
 CARPET = state('moss_carpet')
 LIGHT = state('sea_lantern')
@@ -170,6 +186,120 @@ def central_ruin():
                 for y in range(cy-r,cy+r+1):
                     if abs(x-cx)+abs(y-cy)+abs(z-cz) <= r+1:
                         put(x,y,z,masonry(x,y,z))
+
+
+# ---------------------------------------------------------------------------
+# 中央仪式环：以转化台为圆心的一圈圈红色调铺装。
+# 东半侧柱体是塌的，原来只有半个圆盘能站人；这里把缺掉的那部分补成"重建过的
+# 台面"（深色石砖打底，跟原有石地面区分得开），仪式环才能闭合成整圆。
+RITUAL_CX, RITUAL_CZ, RITUAL_FLOOR = 0, 52, 107
+RITUAL_RADIUS = 18.6
+# (内径, 外径, 材质, 杂色比例)。环要细、环之间要留够深色石底，
+# 否则一圈圈挨在一起会糊成整块红。
+RITUAL_BANDS = [
+    (2.0, 3.2, R_NETHER, 0.00),
+    (5.2, 6.4, R_CONCRETE, 0.00),
+    (8.4, 9.6, R_TERRA, 0.16),
+    (11.6, 12.8, R_NETHER, 0.20),
+    (15.0, 17.4, R_NETHER, 0.26),
+]
+RITUAL_SPOKES = 8
+RITUAL_FOCUS_R = 16.2
+
+
+def ritual_decay(x, z, d):
+    """侵蚀强度 0~1：越靠外、越贴近东侧塌口，被废墟吃回去得越多。"""
+    patch = math.sin(x * .21 + z * .13) + math.cos(x * .09 - z * .24) + math.sin((x + z) * .06)
+    patch = max(0.0, patch / 3.0)
+    mouth = max(0.0, (x - 1.5) / 15.0)
+    return min(.78, .10 + patch * .70 + mouth * .45 + (d / RITUAL_RADIUS) ** 2 * .22)
+
+
+def ritual_worn(x, z, d, bias=1.0):
+    """这一格有没有被废墟吃回去。用平滑场切出成片的缺口；纯用白噪声会变成椒盐点，
+    看不出"被啃掉一块"的感觉。bias 大的元素侵蚀得更狠。"""
+    if d < 5.5:
+        return False  # 阵法核心留给阵本身
+    wear = (math.sin(x * .37 + z * .19) + math.sin(x * .13 - z * .41 + 1.7)
+            + math.cos((x - z) * .29)) / 3.0
+    return wear + (noise(x, 9, z) - .5) * .20 > 1.25 - ritual_decay(x, z, d) * 1.6 * bias
+
+
+def ritual_ring():
+    cx, cz, top = RITUAL_CX, RITUAL_CZ, RITUAL_FLOOR
+    span = int(RITUAL_RADIUS) + 2
+
+    def cells():
+        for x in range(cx-span, cx+span+1):
+            for z in range(cz-span, cz+span+1):
+                d = math.hypot(x-cx, z-cz)
+                if d <= RITUAL_RADIUS:
+                    yield x, z, d
+
+    # 1) 整块圆盘统一铺深色石底：既补上塌掉的东半边，也让仪式区与外面
+    #    长满苔的废墟地面明显分开。被啃掉的部分直接铺回废墟石材。
+    for x, z, d in cells():
+        if ritual_worn(x, z, d, 1.05):
+            put(x, top, z, masonry(x, top, z, floor=True))
+        else:
+            n = noise(x, 1, z)
+            put(x, top, z, CHISELED if n > .78 else (BLACKSTONE if n < .16 else POL_BLACK))
+
+    # 2) 同心环带。环被啃掉的地方露出底下的石头。
+    for x, z, d in cells():
+        for lo, hi, material, speckle in RITUAL_BANDS:
+            if lo <= d < hi:
+                if ritual_worn(x, z, d, 1.35):
+                    material = masonry(x, top, z, floor=True)
+                elif speckle and noise(x, 2, z) < speckle:
+                    material = POL_BLACK
+                put(x, top, z, material)
+                break
+
+    # 3) 外圈每 45° 压一道深色分隔，把环带切成八段。
+    for x, z, d in cells():
+        if 15.0 <= d <= 17.4:
+            wedge = (math.degrees(math.atan2(z-cz, x-cx)) + 360) % 45
+            if (wedge < 3.6 or wedge > 41.4) and not ritual_worn(x, z, d, .90):
+                put(x, top, z, POL_BLACK)
+
+    # 4) 八条细辐条把各环串起来，角度对齐转化台自身符文阵的八个顶点。
+    for k in range(RITUAL_SPOKES):
+        a = math.radians(360.0 / RITUAL_SPOKES * k)
+        ux, uz = math.cos(a), math.sin(a)
+        r = 3.4
+        while r < 15.0:
+            x, z = round(cx + ux*r), round(cz + uz*r)
+            d = math.hypot(x-cx, z-cz)
+            if d <= RITUAL_RADIUS and not ritual_worn(x, z, d, .90):
+                put(x, top, z, R_CONCRETE if int(r) % 6 == 0 else R_NETHER)
+            r += 0.4
+
+    # 5) 八个方位的发光焦点：红石灯做芯，四角压哭曜石。侵蚀基本放过它，
+    #    毕竟是整块阵法的落点。
+    for k in range(RITUAL_SPOKES):
+        a = math.radians(22.5 + 360.0 / RITUAL_SPOKES * k)
+        fx = round(cx + math.cos(a) * RITUAL_FOCUS_R)
+        fz = round(cz + math.sin(a) * RITUAL_FOCUS_R)
+        for ox in (-1, 0, 1):
+            for oz in (-1, 0, 1):
+                if noise(fx+ox, 7, fz+oz) < .16:
+                    continue
+                material = CRY_OBS if abs(ox) + abs(oz) == 2 else FOCUS
+                put(fx+ox, top, fz+oz, material)
+
+    # 6) 外缘一圈齐平的矮沿，给整块台面收个边。
+    for x, z, d in cells():
+        if 17.7 <= d <= 18.3 and not ritual_worn(x, z, d, .95):
+            put(x, top, z, SLAB)
+
+    # 7) 侵蚀重的地方散落碎块，让台面高低不齐。
+    for x, z, d in cells():
+        if not ritual_worn(x, z, d, 1.45) or noise(x, 5, z) > .30:
+            continue
+        if (x, top + 1, z) in blocks or (x, top, z) not in blocks:
+            continue
+        put(x, top + 1, z, SLAB if noise(x, 6, z) > .40 else masonry(x, top+1, z))
 
 
 def main_bridge():
@@ -372,7 +502,7 @@ def export():
     OUT.parent.mkdir(parents=True,exist_ok=True)
     OUT.write_bytes(gzip.compress(b'\x0a\x00\x00'+payload(10,doc),mtime=0))
     # Authoring metadata is documentation, not a second runtime world generator.
-    meta={'template':'ssc-primalstinct:avatar_sanctum','version':3,'origin':ORIGIN,'size':SIZE,
+    meta={'template':'ssc-primalstinct:avatar_sanctum','version':TEMPLATE_VERSION,'origin':ORIGIN,'size':SIZE,
           'spawn':SPAWN,'spawn_yaw':0,'return_portal':PORTAL,'conversion_platform':PLATFORM,
           'avatar_model_anchor':AVATAR,'stone_tentacle_tips':TENTACLE_TIPS,
           'animation_clearance':{'min':[3,125,40],'max':[16,144,67]},
@@ -386,6 +516,15 @@ def export():
 def color(p):
     name=palette[p][0]
     if 'sea_lantern' in name: return (172,246,228)
+    # 仪式环的红色系。带 nether_brick / blackstone 的判断必须排在通用项前面。
+    if 'redstone_lamp' in name: return (214,124,52)
+    if 'crying_obsidian' in name: return (36,20,60)
+    if 'red_concrete' in name: return (196,44,40)
+    if 'red_nether_brick' in name: return (100,28,28)
+    if 'nether_brick' in name: return (58,26,32)
+    if 'red_terracotta' in name: return (150,66,48)
+    if 'crimson' in name: return (118,42,64)
+    if 'polished_blackstone_brick' in name: return (58,52,62)
     if 'portal' in name: return (115,155,188)
     if 'conversion' in name: return (94,206,198)
     if 'moss' in name: return (81,103,66)
@@ -419,6 +558,17 @@ def preview():
         d.ellipse((px-3,py-3,px+3,py+3),fill=(248,221,136))
         d.text((px+10,py),label,fill=(248,221,136))
     im.save(out/'plan.png')
+    # 中央仪式环特写。格子画大一点并描边，否则 1 格宽的红环在缩略图上糊成一片。
+    zoom=22; half=22; size=zoom*half*2+2
+    im=Image.new('RGB',(size,size),(12,17,20)); d=ImageDraw.Draw(im)
+    for (x,z),(y,p) in highest.items():
+        if abs(x-RITUAL_CX)>half or abs(z-RITUAL_CZ)>half: continue
+        px,py=(x-RITUAL_CX+half)*zoom+1,(z-RITUAL_CZ+half)*zoom+1
+        c=tuple(int(v*(.5+.5*y/125)) for v in color(p))
+        d.rectangle((px,py,px+zoom-1,py+zoom-1),fill=c)
+    d.text((14,14),'CONVERSION PLATFORM / RITUAL RING',fill=(217,226,211))
+    d.text((14,34),'TOP PLAN - 1 CELL = 1 BLOCK',fill=(135,165,167))
+    im.save(out/'ritual.png')
     # Exposed voxel faces, depth-sorted orthographic architectural view.
     im=Image.new('RGB',(1600,1350),(17,23,29)); d=ImageDraw.Draw(im)
     def project(v):
@@ -442,12 +592,22 @@ def preview():
 
 
 def main():
-    parser=argparse.ArgumentParser(); parser.add_argument('--preview',action='store_true'); args=parser.parse_args()
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--preview',action='store_true')
+    parser.add_argument('--no-write',action='store_true',dest='no_write',
+                        help='只算不写：跳过 NBT 与 layout.json 的输出，方便先看预览')
+    args=parser.parse_args()
     for values in PILLARS: pillar(*values)
     central_ruin(); broken_bridges(); main_bridge(); stone_tentacles(); vegetation(); gameplay()
-    reachable=validate(); export()
+    ritual_ring()
+    reachable=validate()
     if args.preview: preview()
-    print(json.dumps({'file':str(OUT),'blocks':len(blocks),'palette':len(palette),
+    if args.no_write:
+        print(json.dumps({'written':False,'blocks':len(blocks),'palette':len(palette),
+                          'reachable_surface_cells':reachable,'size':SIZE}))
+        return
+    export()
+    print(json.dumps({'file':str(OUT),'written':True,'blocks':len(blocks),'palette':len(palette),
                       'bytes':OUT.stat().st_size,'reachable_surface_cells':reachable,'size':SIZE}))
 
 

@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.entity.BlockEntity;
@@ -19,6 +20,9 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.onixary.sscPrimalstinct.endgame.service.RitualClaimService;
 import org.jetbrains.annotations.Nullable;
@@ -35,9 +39,32 @@ public class PrimalAltarBlock extends HorizontalFacingBlock implements BlockEnti
     public static final DirectionProperty FACING = HorizontalFacingBlock.FACING;
     public static final BooleanProperty ACTIVE = BooleanProperty.of("active");
 
+    /**
+     * 祭坛外轮廓的剔除形状，失效态几何同源，直接复用同一个常量。
+     *
+     * 默认的整格形状会让相邻方块把贴着祭坛的那一面整个剔掉，而祭坛下面大半段只有 8~13 格宽，
+     * 边上留得出空，剔掉就露洞。只需要两段：塔身最宽处是外扩那一层（13 格），顶部碗体才占满整格。
+     * 比模型略大是安全的——剔除判定问的是"邻居的面有没有被完全盖住"，形状偏小只是少剔几面，
+     * 形状偏大才会错误地把邻居的面吃掉。
+     */
+    protected static final VoxelShape ALTAR_CULL_SHAPE = VoxelShapes.union(
+            Block.createCuboidShape(1.5, 0.0, 1.5, 14.5, 12.5, 14.5),
+            Block.createCuboidShape(0.0, 12.5, 0.0, 16.0, 16.0, 16.0));
+
     public PrimalAltarBlock(Settings settings) {
         super(settings);
         setDefaultState(stateManager.getDefaultState().with(FACING, Direction.NORTH).with(ACTIVE, false));
+    }
+
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.ENTITYBLOCK_ANIMATED;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public VoxelShape getCullingShape(BlockState state, BlockView world, BlockPos pos) {
+        return ALTAR_CULL_SHAPE;
     }
 
     @Override

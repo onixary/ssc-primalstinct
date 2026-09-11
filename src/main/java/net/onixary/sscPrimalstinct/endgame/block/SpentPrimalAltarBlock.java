@@ -1,7 +1,6 @@
 package net.onixary.sscPrimalstinct.endgame.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.ActionResult;
@@ -9,16 +8,25 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
 /**
  * 眷属实现03/06：失效的原初祭坛（独立方块，不能仅靠 ACTIVE=false 模拟）。
  * 右键永远不产出；SPENT 不回退，任何掉落/克隆路径不得把它还原为可领取祭坛。
  */
-public class SpentPrimalAltarBlock extends Block {
+public class SpentPrimalAltarBlock extends EndgameModelBlock {
 
+    /** 外轮廓和普通态祭坛同源，剔除形状直接复用 PrimalAltarBlock 那份。 */
     public SpentPrimalAltarBlock(Settings settings) {
         super(settings);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public VoxelShape getCullingShape(BlockState state, BlockView world, BlockPos pos) {
+        return PrimalAltarBlock.ALTAR_CULL_SHAPE;
     }
 
     @Override

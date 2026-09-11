@@ -132,7 +132,7 @@ dependencies {
     modApi("dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cca_version}") { transitive = false }
 
     // SSC 的运行时模组集（fabric.mod.json depends + 其构建脚本实际启用项；可选兼容项不列入）
-    modRuntimeOnly("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}") { transitive = false }
+    modImplementation("software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}") { transitive = false }
     implementation("com.eliotlash.mclib:mclib:20")                       // geckolib 的非 mod 库依赖
     modRuntimeOnly("org.ladysnake:satin:${project.satin_version}") { transitive = false }
     modRuntimeOnly("com.github.Virtuoel:Pehkui:${project.pehkui_version}") { transitive = false }

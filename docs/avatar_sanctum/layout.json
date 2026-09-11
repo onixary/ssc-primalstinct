@@ -1,6 +1,6 @@
 {
   "template": "ssc-primalstinct:avatar_sanctum",
-  "version": 3,
+  "version": 4,
   "origin": [
     -72,
     0,
@@ -28,9 +28,9 @@
     52
   ],
   "avatar_model_anchor": [
-    8,
-    125,
-    53
+    0,
+    107,
+    52
   ],
   "stone_tentacle_tips": [
     [
@@ -153,32 +153,38 @@
       "x"
     ]
   ],
-  "blocks": 325040,
-  "palette_size": 26,
+  "blocks": 325503,
+  "palette_size": 35,
   "seed": 20260911,
   "entities": 0,
   "materials": {
-    "minecraft:stone_bricks": 32229,
-    "minecraft:stone": 150661,
-    "minecraft:cracked_stone_bricks": 27134,
-    "minecraft:andesite": 42962,
-    "minecraft:tuff": 42489,
-    "minecraft:stone_brick_slab": 381,
-    "minecraft:sea_lantern": 10,
-    "minecraft:mossy_stone_bricks": 8267,
-    "minecraft:polished_andesite": 279,
+    "minecraft:stone_bricks": 32063,
+    "minecraft:stone": 150667,
+    "minecraft:cracked_stone_bricks": 27079,
+    "minecraft:andesite": 42948,
+    "minecraft:tuff": 42468,
+    "minecraft:stone_brick_slab": 485,
+    "minecraft:sea_lantern": 5,
+    "minecraft:mossy_stone_bricks": 8201,
+    "minecraft:polished_andesite": 111,
     "ssc-primalstinct:primal_portal_frame": 16,
-    "minecraft:moss_block": 38,
+    "minecraft:moss_block": 34,
     "minecraft:azalea_leaves": 126,
-    "minecraft:cracked_deepslate_tiles": 5,
-    "minecraft:deepslate_tiles": 10085,
+    "minecraft:polished_blackstone": 1453,
+    "minecraft:red_nether_bricks": 234,
+    "minecraft:crying_obsidian": 27,
+    "minecraft:redstone_lamp": 33,
+    "minecraft:polished_blackstone_bricks": 97,
+    "minecraft:blackstone": 62,
+    "minecraft:red_concrete": 39,
+    "minecraft:red_terracotta": 49,
     "minecraft:stone_brick_stairs": 59,
     "minecraft:polished_basalt": 2487,
+    "minecraft:deepslate_tiles": 10036,
     "minecraft:dark_prismarine": 1037,
-    "minecraft:polished_blackstone": 1083,
     "minecraft:moss_carpet": 146,
     "minecraft:fern": 11,
-    "minecraft:vine": 5525,
+    "minecraft:vine": 5520,
     "ssc-primalstinct:primal_portal": 9,
     "ssc-primalstinct:primal_conversion_platform": 1
   }

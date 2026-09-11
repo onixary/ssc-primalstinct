@@ -78,6 +78,9 @@ public class SSCPrimalstinct implements ModInitializer {
         // 眷属实现03：终局方块/方块实体注册（方块物品追加进创造标签页）
         net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks.registerAll();
 
+        // 眷属实现11：原始化身实体注册（仅演出展示）
+        net.onixary.sscPrimalstinct.endgame.entity.RegEndgameEntities.registerAll();
+
         // 眷属实现04：原初祭坛世界生成结构注册（STRUCTURE_TYPE / STRUCTURE_PIECE）
         net.onixary.sscPrimalstinct.endgame.worldgen.RegEndgameWorldgen.registerAll();
 

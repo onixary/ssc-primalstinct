@@ -1,7 +1,6 @@
 package net.onixary.sscPrimalstinct.endgame.block;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -20,7 +19,7 @@ import java.util.List;
  * 条件全部满足才调用 TransformationService.tryStart（资格判定的唯一入口在
  * EndgameEligibility，本类不做第二套规则）。
  */
-public class PrimalConversionPlatformBlockEntity extends BlockEntity {
+public class PrimalConversionPlatformBlockEntity extends EndgameGeoBlockEntity {
 
     public static final Identifier BLOCK_ENTITY_ID = EndgameRules.id("primal_conversion_platform");
 
@@ -39,7 +38,7 @@ public class PrimalConversionPlatformBlockEntity extends BlockEntity {
         if (entity.tickCounter % EndgameRules.PLATFORM_TICK_INTERVAL != 0) {
             return;
         }
-        // 检测区域覆盖台面上方一层（台面碰撞体 12px，玩家脚部落在 pos.y+0.75 附近），
+        // 检测区域覆盖台面上方一层（台面是半砖，玩家脚部落在 pos.y+0.5 附近），
         // 再以“支撑方块是本转化台”核实——楼上/邻块站立的玩家不计入
         Box detectBox = new Box(
                 pos.getX(), pos.getY() + 0.6, pos.getZ(),

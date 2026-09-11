@@ -2,9 +2,11 @@ package net.onixary.sscPrimalstinct.endgame.block;
 
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -19,12 +21,33 @@ import net.minecraft.world.World;
  * 接触门面只调 EndgameTeleportService（服务端碰撞判定；外部=进入化身维度固定出生点，
  * 维度内=按接触者个人锚点返回）。主副手/重复接触由传送服务的过门冷却合并。
  */
-public class PrimalPortalBlock extends Block {
+public class PrimalPortalBlock extends EndgameModelBlock {
 
     private static final VoxelShape SHAPE = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 16.0, 16.0);
 
     public PrimalPortalBlock(Settings settings) {
         super(settings);
+    }
+
+    /** 门面使用原版末地门 BE：复用 EndPortalBlockEntityRenderer 的星野效果与 Y 轴面判定。 */
+    @Override
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return new PrimalPortalBlockEntity(pos, state);
+    }
+
+    /** 不渲染方块模型，世界内显示完全由末地门 BER 绘制（同原版 end_portal）。 */
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.INVISIBLE;
+    }
+
+    /** 原版末地门的门面烟雾氛围粒子。 */
+    @Override
+    public void randomDisplayTick(BlockState state, World world, BlockPos pos, net.minecraft.util.math.random.Random random) {
+        double x = pos.getX() + random.nextDouble();
+        double y = pos.getY() + 0.45;
+        double z = pos.getZ() + random.nextDouble();
+        world.addParticle(net.minecraft.particle.ParticleTypes.SMOKE, x, y, z, 0.0, 0.0, 0.0);
     }
 
     @Override

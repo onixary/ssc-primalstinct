@@ -2,7 +2,8 @@ package net.onixary.sscPrimalstinct.endgame.client;
 
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.render.VertexConsumer;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
@@ -15,7 +16,7 @@ import net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks;
 import net.onixary.sscPrimalstinct.items.RegPrimalstinctItems;
 
 /** 已激活祭坛的奖励预览，不生成可拾取实体；领取或断电后随方块状态消失。 */
-public final class PrimalAltarRenderer implements BlockEntityRenderer<PrimalAltarBlockEntity> {
+public final class PrimalAltarRenderer extends EndgameGeoBlockRenderer<PrimalAltarBlockEntity> {
     private final ItemRenderer itemRenderer;
     private final ItemStack fragment = new ItemStack(RegPrimalstinctItems.SEDATIVE_FRAGMENT);
 
@@ -24,8 +25,9 @@ public final class PrimalAltarRenderer implements BlockEntityRenderer<PrimalAlta
     }
 
     @Override
-    public void render(PrimalAltarBlockEntity entity, float tickDelta, MatrixStack matrices,
-                       VertexConsumerProvider consumers, int light, int overlay) {
+    public void renderFinal(MatrixStack matrices, PrimalAltarBlockEntity entity, BakedGeoModel model,
+                            VertexConsumerProvider consumers, VertexConsumer buffer, float tickDelta,
+                            int light, int overlay, float red, float green, float blue, float alpha) {
         var state = entity.getCachedState();
         if (entity.getWorld() == null || !state.isOf(RegEndgameBlocks.PRIMAL_ALTAR)
                 || !state.get(PrimalAltarBlock.ACTIVE)) {

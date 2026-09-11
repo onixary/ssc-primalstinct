@@ -10,6 +10,20 @@ import net.minecraft.registry.Registry;
  */
 public final class RegEndgameBlockEntities {
 
+    public static final BlockEntityType<EndgameModelBlockEntity> ENDGAME_MODEL =
+            Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                    net.onixary.sscPrimalstinct.endgame.EndgameRules.id("endgame_model"),
+                    BlockEntityType.Builder.create(EndgameModelBlockEntity::new,
+                            RegEndgameBlocks.PRIMAL_ENERGY_WIRE, RegEndgameBlocks.SPENT_PRIMAL_ALTAR,
+                            RegEndgameBlocks.PRIMAL_PORTAL_FRAME).build(null));
+
+    /** 门面 BE：继承 EndPortalBlockEntity 复用原版末地门渲染（星野着色器 + Y 轴面判定）。 */
+    public static final BlockEntityType<PrimalPortalBlockEntity> PRIMAL_PORTAL =
+            Registry.register(Registries.BLOCK_ENTITY_TYPE,
+                    PrimalPortalBlockEntity.BLOCK_ENTITY_ID,
+                    BlockEntityType.Builder.create(PrimalPortalBlockEntity::new,
+                            RegEndgameBlocks.PRIMAL_PORTAL).build(null));
+
     public static final BlockEntityType<PrimalPedestalBlockEntity> PRIMAL_PEDESTAL =
             Registry.register(Registries.BLOCK_ENTITY_TYPE,
                     PrimalPedestalBlockEntity.BLOCK_ENTITY_ID,
@@ -32,6 +46,6 @@ public final class RegEndgameBlockEntities {
     }
 
     public static void registerAll() {
-        // 注册在静态字段完成；此入口供主入口显式触发类加载（幂等）
+        EndgameModelMigration.register();
     }
 }

@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.ShapeContext;
@@ -33,6 +34,11 @@ public class PrimalPedestalBlock extends HorizontalFacingBlock implements BlockE
     public PrimalPedestalBlock(Settings settings) {
         super(settings);
         setDefaultState(stateManager.getDefaultState().with(FACING, Direction.NORTH).with(FULFILLED, false));
+    }
+
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.ENTITYBLOCK_ANIMATED;
     }
 
     @Override

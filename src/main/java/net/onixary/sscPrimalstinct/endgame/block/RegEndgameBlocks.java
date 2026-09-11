@@ -44,7 +44,7 @@ public final class RegEndgameBlocks {
     private static <T extends Block> T register(String path, T block) {
         Identifier id = EndgameRules.id(path);
         Registry.register(Registries.BLOCK, id, block);
-        BlockItem item = new BlockItem(block, new Item.Settings());
+        BlockItem item = new EndgameGeoBlockItem(block, new Item.Settings());
         Registry.register(Registries.ITEM, id, item);
         GROUP_ITEMS.add(item);
         return block;
