@@ -44,6 +44,6 @@
       "weight": 6
     }
   ],
-  "remnant_drop_chance": 0.25,
+  "remnant_drop_chance": 0.5,
   "remnant_target_tag": "c:hostiles"
 }

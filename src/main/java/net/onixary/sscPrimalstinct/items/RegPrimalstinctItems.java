@@ -28,6 +28,13 @@ public final class RegPrimalstinctItems {
     public static final Item SEDATIVE_FRAGMENT = register("sedative_fragment",
             new SedativeFragmentItem(new Item.Settings()));
 
+    public static final Item PRIMAL_INSTINCT_FANG = register("primal_instinct_fang",
+            new PrimalInstinctFangItem(new Item.Settings()));
+
+    /** 眷属实现07：原初残余（创造取得/手动使用；生存常规途径为满级击杀自动触发的飞行表现）。 */
+    public static final Item PRIMAL_REMNANT = register("primal_remnant",
+            new PrimalRemnantItem(new Item.Settings()));
+
     public static final ItemGroup PRIMALSTINCT_GROUP = FabricItemGroup.builder()
             .icon(() -> new ItemStack(SEDATIVE_FRAGMENT))
             .displayName(Text.translatable("itemGroup.ssc-primalstinct"))

@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class PrimalstinctComponent implements Component {
 
-    public static final int CURRENT_SCHEMA_VERSION = 2;
+    public static final int CURRENT_SCHEMA_VERSION = 3;
 
     private final PlayerEntity player;
 
@@ -31,6 +31,7 @@ public class PrimalstinctComponent implements Component {
     private boolean selectionCompleted = false;
     private boolean entryHandled = false;
     private boolean instinctInitialized = false;
+    private boolean primalAwakened = false;
     private @Nullable Identifier selectedFormId = null;
     private float value = 0.0f;
     private boolean locked = false;
@@ -56,6 +57,11 @@ public class PrimalstinctComponent implements Component {
     public boolean isEntryHandled() { return entryHandled; }
     public void setEntryHandled(boolean handled) { entryHandled = handled; }
     public boolean isInstinctInitialized() { return instinctInitialized; }
+    public boolean isPrimalAwakened() { return primalAwakened; }
+    public void awakenPrimalInstinct() {
+        primalAwakened = true;
+        initializeInstinct();
+    }
     public void initializeInstinct() {
         if (instinctInitialized) return;
         value = 0.0f;
@@ -131,6 +137,7 @@ public class PrimalstinctComponent implements Component {
             value = 0.0f;
         }
         locked = tag.getBoolean("locked");
+        primalAwakened = tag.getBoolean("primalAwakened");
         entryHandled = tag.contains("entryHandled") ? tag.getBoolean("entryHandled") : selectionCompleted;
         instinctInitialized = tag.contains("instinctInitialized") ? tag.getBoolean("instinctInitialized")
                 : net.onixary.sscPrimalstinct.instinct.EntryPolicy.legacyInitialized(
@@ -153,6 +160,7 @@ public class PrimalstinctComponent implements Component {
         tag.putBoolean("selectionCompleted", selectionCompleted);
         tag.putBoolean("entryHandled", entryHandled);
         tag.putBoolean("instinctInitialized", instinctInitialized);
+        tag.putBoolean("primalAwakened", primalAwakened);
         if (selectedFormId != null) {
             tag.putString("selectedFormId", selectedFormId.toString());
         }

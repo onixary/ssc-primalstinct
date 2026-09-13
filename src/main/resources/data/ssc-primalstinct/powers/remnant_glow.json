@@ -1,0 +1,17 @@
+{
+  "type": "apoli:entity_glow",
+  "hidden": true,
+  "entity_condition": {
+    "type": "apoli:entity_type",
+    "entity_type": "ssc-primalstinct:primal_remnant"
+  },
+  "bientity_condition": {
+    "type": "apoli:distance",
+    "comparison": "<=",
+    "compare_to": 48
+  },
+  "use_teams": false,
+  "red": 1.0,
+  "green": 0.33,
+  "blue": 0.33
+}

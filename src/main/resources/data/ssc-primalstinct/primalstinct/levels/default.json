@@ -12,7 +12,9 @@
   "levels": {
     "1": {
       "powers": {
-        "add": [],
+        "add": [
+          "ssc-primalstinct:remnant_glow"
+        ],
         "remove": []
       }
     },
@@ -42,7 +44,9 @@
     },
     "5": {
       "powers": {
-        "add": [],
+        "add": [
+          "ssc-primalstinct:remnant_kill"
+        ],
         "remove": []
       }
     }

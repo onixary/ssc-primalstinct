@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "minecraft:bone" },
+    { "item": "minecraft:echo_shard" },
+    { "item": "shape-shifter-curse:untreated_moondust" },
+    { "item": "minecraft:redstone" }
+  ],
+  "result": { "item": "ssc-primalstinct:primal_instinct_fang", "count": 1 }
+}

@@ -44,6 +44,10 @@ public final class PrimalstinctApoliFactories {
         Registry.register(ApoliRegistries.ENTITY_ACTION,
                 AddPrimalstinctAction.getFactory().getSerializerId(),
                 AddPrimalstinctAction.getFactory());
+        // 眷属实现07：满级击杀触发的原初残余投放（资格/概率在动作内服务端核验，只掷一次随机）
+        Registry.register(ApoliRegistries.ENTITY_ACTION,
+                net.onixary.sscPrimalstinct.power.factory.SpawnPrimalRemnantAction.getFactory().getSerializerId(),
+                net.onixary.sscPrimalstinct.power.factory.SpawnPrimalRemnantAction.getFactory());
         Registry.register(ApoliRegistries.ENTITY_CONDITION,
                 PrimalstinctConditions.valueCondition().getSerializerId(),
                 PrimalstinctConditions.valueCondition());

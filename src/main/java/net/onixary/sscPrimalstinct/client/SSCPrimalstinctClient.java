@@ -70,6 +70,10 @@ public class SSCPrimalstinctClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
                 net.onixary.sscPrimalstinct.endgame.entity.RegEndgameEntities.PRIMAL_AVATAR,
                 net.onixary.sscPrimalstinct.endgame.client.PrimalAvatarRenderer::new);
+        // 眷属实现07：原初残余飞行实体（FlyingItemEntity 标准渲染，末影之眼同路径）
+        net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(
+                net.onixary.sscPrimalstinct.endgame.entity.RegEndgameEntities.PRIMAL_REMNANT,
+                net.minecraft.client.render.entity.FlyingItemEntityRenderer::new);
         // 门面：原版末地门渲染器子类（星野着色器动画 + 表面下移至一半高度）
         net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry.register(
                 net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlockEntities.PRIMAL_PORTAL,

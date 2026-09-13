@@ -1,8 +1,8 @@
 {
   "type": "ssc-primalstinct:instinct_perception",
-  "codex_chance": 0.35,
+  "codex_chance": 0.15,
   "palette_chance": 0,
-  "sign_chance": 0.35,
+  "sign_chance": 0.15,
   "item_text": "",
   "target_radius": 16,
   "proxy_entity": "minecraft:ocelot",

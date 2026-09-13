@@ -110,6 +110,11 @@ public final class PrimalstinctService {
     /** 每 tick 主循环（END_SERVER_TICK，主线程）。 */
     public static void tick(MinecraftServer server) {
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            // Also sanitize effects restored from NBT or invalidated by a roster reload.
+            if (player.hasStatusEffect(net.onixary.sscPrimalstinct.effect.PrimalCallEffect.INSTANCE)
+                    && !PrimalCallService.eligible(player)) {
+                player.removeStatusEffect(net.onixary.sscPrimalstinct.effect.PrimalCallEffect.INSTANCE);
+            }
             PrimalstinctLifecycle.refresh(player);
             if (!PrimalstinctLifecycle.isManaged(player)) continue;
             // 1) 基础自然增长：名单内形态自动持有（POWER 来源，满值即停）

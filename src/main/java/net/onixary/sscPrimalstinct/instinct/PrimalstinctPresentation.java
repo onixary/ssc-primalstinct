@@ -50,10 +50,7 @@ public final class PrimalstinctPresentation {
     public static void onLevelOrLockChanged(ServerPlayerEntity player, int levelBefore, int levelAfter,
                                             boolean lockChanged, boolean lockedNow) {
         if (levelAfter > levelBefore && !lockedNow) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.DARKNESS,
-                    DARKNESS_TICKS, 0, false, false, true));
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA,
-                    NAUSEA_TICKS, 0, false, false, true));
+            playStageEffects(player);
         }
         if (lockChanged && lockedNow) {
             // Apply once on entry into L5 lock, including jumps across multiple levels.
@@ -63,6 +60,13 @@ public final class PrimalstinctPresentation {
             }
             startLockCinematic(player);
         }
+    }
+
+    public static void playStageEffects(ServerPlayerEntity player) {
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.DARKNESS,
+                DARKNESS_TICKS, 0, false, false, true));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA,
+                NAUSEA_TICKS, 0, false, false, true));
     }
 
     /** 每 tick 表现检查（Service.tick 内、托管玩家循环中调用）。 */

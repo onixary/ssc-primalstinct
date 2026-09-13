@@ -1,0 +1,8 @@
+{
+  "type": "apoli:self_action_on_kill",
+  "cooldown": 0,
+  "hidden": true,
+  "entity_action": {
+    "type": "ssc-primalstinct:spawn_primal_remnant"
+  }
+}

@@ -22,6 +22,25 @@ public class PrimalstinctServerConfig implements me.shedaniel.autoconfig.ConfigD
     @SerializedName("choose_form_on_start")
     public boolean chooseFormOnStart = false;
 
+    @ConfigEntry.Category("General")
+    @Comment("Chance per mob kill to receive Primal Call, from 0 to 1. Restart to apply.")
+    @SerializedName("primal_call_kill_chance")
+    public float primalCallKillChance = 0.02f;
+
+    @ConfigEntry.Category("General")
+    @Comment("Primal Call duration in seconds. Milk cancels awakening. Restart to apply.")
+    @SerializedName("primal_call_duration_seconds")
+    public int primalCallDurationSeconds = 360;
+
+    public static float primalCallKillChance() {
+        return Float.isFinite(active.primalCallKillChance)
+                ? Math.max(0, Math.min(1, active.primalCallKillChance)) : 0.01f;
+    }
+
+    public static int primalCallDurationTicks() {
+        return Math.max(1, Math.min(86400, active.primalCallDurationSeconds)) * 20;
+    }
+
     /** 本会话权威值（服务端启动时从 AutoConfig holder 快照）。 */
     private static PrimalstinctServerConfig active = new PrimalstinctServerConfig();
 

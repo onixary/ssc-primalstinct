@@ -31,6 +31,8 @@ public class SSCPrimalstinct implements ModInitializer {
     @Override
     public void onInitialize() {
         net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect.register();
+        net.onixary.sscPrimalstinct.effect.PrimalCallEffect.register();
+        net.onixary.sscPrimalstinct.instinct.PrimalCallService.register();
         boolean sscLoaded = FabricLoader.getInstance().isModLoaded(SSC_MOD_ID);
         if (!sscLoaded) {
             LOGGER.error("SSC (shape-shifter-curse) is missing; this addon requires it as a hard dependency.");
@@ -89,6 +91,9 @@ public class SSCPrimalstinct implements ModInitializer {
 
         // 眷属实现08：5×5 门框检测与碎片开门（玩家锚定扫描）
         net.onixary.sscPrimalstinct.endgame.service.RitualPortalService.register();
+
+        // 眷属实现07：原初残余投放与结构指引（击杀 Power / 手动 use 共用 launch）
+        net.onixary.sscPrimalstinct.endgame.service.RemnantService.register();
 
         // 眷属实现10：跨维度传送（固定化身维度 + 个人返回锚点；含跌出边界守卫）
         net.onixary.sscPrimalstinct.endgame.service.EndgameTeleportService.register();

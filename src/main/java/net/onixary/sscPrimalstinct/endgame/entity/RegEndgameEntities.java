@@ -23,6 +23,16 @@ public final class RegEndgameEntities {
                             .makeFireImmune()
                             .build("primal_avatar"));
 
+    /** 眷属实现07：原初残余飞行实体（末影之眼同款参数：MISC、0.25³、跟踪 4/间隔 4）。 */
+    public static final EntityType<PrimalRemnantEntity> PRIMAL_REMNANT =
+            Registry.register(Registries.ENTITY_TYPE,
+                    EndgameRules.id("primal_remnant"),
+                    EntityType.Builder.<PrimalRemnantEntity>create(PrimalRemnantEntity::new, SpawnGroup.MISC)
+                            .setDimensions(0.25f, 0.25f)
+                            .maxTrackingRange(4)
+                            .trackingTickInterval(4)
+                            .build("primal_remnant"));
+
     private RegEndgameEntities() {
     }
 

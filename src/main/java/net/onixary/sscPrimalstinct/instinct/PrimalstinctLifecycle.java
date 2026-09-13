@@ -26,7 +26,8 @@ public final class PrimalstinctLifecycle {
         if (player.getWorld().isClient()) return clientManaged.test(player);
         if (!(player instanceof ServerPlayerEntity sp) || SelectionSessionManager.isPending(sp)) return false;
         Identifier form = SSCAdapter.currentFormIdentifier(player);
-        return form != null && PrimalRosterManager.resolve(form) != null;
+        return form != null && PrimalRosterManager.resolve(form) != null
+                && RegPrimalstinctComponent.PRIMALSTINCT.get(player).isPrimalAwakened();
     }
     public static boolean suppressLegacy(PlayerEntity player) {
         return isManaged(player) || player instanceof ServerPlayerEntity sp && SelectionSessionManager.isPending(sp);
