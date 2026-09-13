@@ -1,9 +1,11 @@
 package net.onixary.sscPrimalstinct.endgame.service;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
@@ -61,21 +63,61 @@ public final class TransformationService {
         WanderAiController.stopPlayer(player);
         CurlSleepController.wakeUp(player, "endgame_transform");
 
-        boolean started = SSCAdapter.startPrimalTransformation(player, mapping.targetForm,
-                () -> onTargetFormApplied(player));
-        if (!started) {
-            // SSC isFormCanUse 拒绝等启动失败：回滚本次会话并记录原因
-            component.setPhase(TransformPhase.FAILED);
-            component.clearSession();
-            SSCPrimalstinct.LOGGER.warn("[primalstinct] 变形启动失败（target={}，玩家 {}）",
-                    mapping.targetForm, player.getGameProfile().getName());
-            player.sendMessage(Text.translatable("ssc-primalstinct.endgame.transform.start_failed"), true);
+        // 启动同 tick 触发化身 Interact（无化身/异维度静默跳过，不阻断——眷属实现11/13）；
+        // 变形本体延迟 1 秒启动，让化身动画先起势（用户决策 2026-09-12）
+        net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.tryPlayInteract(player, sessionId, platformPos);
+        PENDING_LAUNCH.put(player.getUuid(), new PendingLaunch(sessionId, mapping.targetForm,
+                player.getWorld().getServer().getTicks() + TRANSFORM_DELAY_TICKS));
+        SSCPrimalstinct.LOGGER.info("[primalstinct] 转化会话启动：{} → {}（session={}，玩家 {}，{}t 后变形）",
+                mapping.sourceForm, mapping.targetForm, sessionId, player.getGameProfile().getName(),
+                TRANSFORM_DELAY_TICKS);
+    }
+
+    /** 变形启动延迟（tick）：蹲台触发后先播化身动画，再进入 SSC 变形演出。 */
+    private static final int TRANSFORM_DELAY_TICKS = 20;
+    /** 待启动延迟变形（玩家 → 会话）；断线/会话变化时作废。 */
+    private record PendingLaunch(UUID sessionId, net.minecraft.util.Identifier targetForm, int fireTick) {
+    }
+
+    private static final java.util.Map<UUID, PendingLaunch> PENDING_LAUNCH = new java.util.HashMap<>();
+
+    /** 主入口注册：延迟变形派发（END_SERVER_TICK）。 */
+    public static void register() {
+        ServerTickEvents.END_SERVER_TICK.register(TransformationService::processPendingLaunches);
+    }
+
+    private static void processPendingLaunches(net.minecraft.server.MinecraftServer server) {
+        if (PENDING_LAUNCH.isEmpty()) {
             return;
         }
-        // 启动同 tick 尝试触发化身 Interact（无化身/异维度静默跳过，不阻断——眷属实现11/13）
-        net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.tryPlayInteract(player, sessionId, platformPos);
-        SSCPrimalstinct.LOGGER.info("[primalstinct] 转化会话启动：{} → {}（session={}，玩家 {}）",
-                mapping.sourceForm, mapping.targetForm, sessionId, player.getGameProfile().getName());
+        var iterator = PENDING_LAUNCH.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
+            PendingLaunch pending = entry.getValue();
+            if (player == null) {
+                iterator.remove();  // 断线作废：登录对账按"仍为源形态"清理会话
+                continue;
+            }
+            if (server.getTicks() < pending.fireTick()) {
+                continue;
+            }
+            iterator.remove();
+            // 会话仍在同一启动中状态才派发（期间被终止则静默放弃）
+            EndgamePlayerComponent component = RegEndgameComponent.ENDGAME.get(player);
+            if (component.getTransformPhase() != TransformPhase.STARTED
+                    || !pending.sessionId().equals(component.getTransformSessionId())) {
+                continue;
+            }
+            boolean started = SSCAdapter.startPrimalTransformation(player, pending.targetForm(),
+                    () -> onTargetFormApplied(player));
+            if (!started) {
+                component.setPhase(TransformPhase.FAILED);
+                component.clearSession();
+                SSCPrimalstinct.LOGGER.warn("[primalstinct] 变形启动失败（target={}，玩家 {}）",
+                        pending.targetForm(), player.getGameProfile().getName());
+            }
+        }
     }
 
     /**
@@ -101,12 +143,12 @@ public final class TransformationService {
         // 结束表现
         player.getWorld().playSound(null, player.getBlockPos(),
                 SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.PLAYERS, 1.0f, 0.8f);
-        // 形态专属完成 Info（A 阶段为聊天消息；对话框 Info 升级见眷属实现14）
+        // 形态专属完成信息：发送到原版聊天框（无映射时不发）
         EndgameVariantMapping mapping = net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.variantFor(
                 component.getTransformSource() == null ? target : component.getTransformSource());
-        String infoKey = mapping != null ? mapping.completionInfoKey
-                : "ssc-primalstinct.endgame.transform.completed";
-        player.sendMessage(Text.translatable(infoKey), false);
+        if (mapping != null) {
+            player.sendMessage(Text.translatable(mapping.completionInfoKey).formatted(Formatting.RED), false);
+        }
         component.setPhase(TransformPhase.COMPLETED);
         component.clearSession();
         SSCPrimalstinct.LOGGER.info("[primalstinct] 转化完成：玩家 {} 已变为 {}",

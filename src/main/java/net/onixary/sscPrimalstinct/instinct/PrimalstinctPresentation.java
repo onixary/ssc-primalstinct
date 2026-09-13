@@ -4,6 +4,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 import net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter;
 import net.onixary.sscPrimalstinct.component.PrimalstinctComponent;
@@ -121,7 +122,7 @@ public final class PrimalstinctPresentation {
         Float warned = THRESHOLD_WARNED.get(uuid);
         if (value >= nextThreshold - THRESHOLD_APPROACH_WINDOW) {
             if (PrimalstinctService.currentRate(player) > 0.0f && (warned == null || warned != nextThreshold)) {
-                player.sendMessage(Text.translatable("chat.ssc-primalstinct.threshold_approach"), false);
+                player.sendMessage(Text.translatable("chat.ssc-primalstinct.threshold_approach").formatted(Formatting.RED), false);
                 THRESHOLD_WARNED.put(uuid, nextThreshold);
             }
         } else if (warned != null && warned == nextThreshold) {

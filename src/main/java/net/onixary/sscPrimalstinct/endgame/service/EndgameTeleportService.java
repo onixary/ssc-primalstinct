@@ -1,13 +1,17 @@
 package net.onixary.sscPrimalstinct.endgame.service;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 import net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks;
@@ -37,12 +41,22 @@ public final class EndgameTeleportService {
     /** 过门冷却（tick）；传送两端都设置，站在门内不连发。 */
     private static final long PORTAL_COOLDOWN_TICKS = 60L;
     private static final Map<UUID, Long> COOLDOWN = new HashMap<>();
+    private record PortalContact(ServerWorld world, BlockPos pos) {}
+    private static final Map<UUID, PortalContact> PENDING = new HashMap<>();
 
     private EndgameTeleportService() {
     }
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(EndgameTeleportService::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            PENDING.clear();
+            COOLDOWN.clear();
+        });
+        net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            PENDING.remove(handler.player.getUuid());
+            COOLDOWN.remove(handler.player.getUuid());
+        });
         net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 server.execute(() -> {
                     var player = handler.player;
@@ -55,7 +69,16 @@ public final class EndgameTeleportService {
     }
 
     /** 门面碰撞入口（PrimalPortalBlock.onEntityCollision 调用）。 */
-    public static void onPortalContact(ServerPlayerEntity player) {
+    public static void onPortalContact(ServerPlayerEntity player, ServerWorld world, BlockPos portalPos) {
+        if (player.getServerWorld() != world || !player.isAlive() || player.isSpectator()) {
+            return;
+        }
+        // Collision callbacks run inside Entity.move / movement packet validation.
+        // Teleporting here lets the unfinished move overwrite the destination coordinates.
+        PENDING.putIfAbsent(player.getUuid(), new PortalContact(world, portalPos.toImmutable()));
+    }
+
+    private static void processPortalContact(ServerPlayerEntity player) {
         if (!player.isAlive() || player.isSpectator()) {
             return;
         }
@@ -87,7 +110,7 @@ public final class EndgameTeleportService {
         }
         ServerWorld target = AvatarDimension.world(server);
         if (target == null || !AvatarSanctum.ensureReady(server)) {
-            player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.not_ready"), true);
+            // 维度缺失/场景初始化失败：服务端已有 error 日志，静默不传送
             return;
         }
         // 写入个人返回锚点（仅此路径写；入口旁安全落点，避开门面本身）
@@ -97,7 +120,6 @@ public final class EndgameTeleportService {
                 player.getWorld().getRegistryKey().getValue().toString(),
                 landing.getX(), landing.getY(), landing.getZ(), player.getYaw(), player.getPitch()));
         teleport(player, target, AvatarSanctum.SPAWN, AvatarSanctum.SPAWN_YAW, 0.0f);
-        player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.entered"), false);
     }
 
     // ---------- 返回（化身维度 → 个人锚点） ----------
@@ -129,10 +151,9 @@ public final class EndgameTeleportService {
             // 兜底：主世界出生点（未过门而被命令送入者也不被困住）
             destination = server.getOverworld();
             pos = destination.getSpawnPos();
-            player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.return_fallback"), false);
+            player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.return_fallback").formatted(Formatting.RED), false);
         }
         teleport(player, destination, pos, yaw, pitch);
-        player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.returned"), false);
     }
 
     // ---------- 公共传送出口 ----------
@@ -142,6 +163,8 @@ public final class EndgameTeleportService {
         WanderAiController.stopPlayer(player);
         CurlSleepController.wakeUp(player, "endgame_teleport");
         player.teleport(target, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, pitch);
+        player.setVelocity(Vec3d.ZERO);
+        player.fallDistance = 0;
         COOLDOWN.put(player.getUuid(), target.getTime());
         // 到达后同步本能状态快照（客户端外推/显隐立即校正）
         PrimalstinctNetwork.syncNow(player);
@@ -171,6 +194,16 @@ public final class EndgameTeleportService {
     // ---------- 维度内守卫：跌出场景安全边界回固定出生点 ----------
 
     private static void tick(MinecraftServer server) {
+        var contacts = new HashMap<>(PENDING);
+        PENDING.clear();
+        contacts.forEach((uuid, contact) -> {
+            ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+            if (player != null && player.getServerWorld() == contact.world()
+                    && player.getBoundingBox().intersects(new Box(contact.pos()).expand(0.5))
+                    && contact.world().getBlockState(contact.pos()).isOf(RegEndgameBlocks.PRIMAL_PORTAL)) {
+                processPortalContact(player);
+            }
+        });
         ServerWorld avatar = AvatarDimension.world(server);
         if (avatar == null) {
             return;
@@ -178,7 +211,7 @@ public final class EndgameTeleportService {
         for (ServerPlayerEntity player : avatar.getPlayers()) {
             if (player.getY() < -8.0) {
                 teleport(player, avatar, AvatarSanctum.SPAWN, AvatarSanctum.SPAWN_YAW, 0.0f);
-                player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.fell"), false);
+                player.sendMessage(Text.translatable("ssc-primalstinct.endgame.portal.fell").formatted(Formatting.RED), false);
             }
         }
     }

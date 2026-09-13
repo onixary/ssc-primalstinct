@@ -44,7 +44,8 @@ public class PrimalAltarStructure extends Structure {
         if (y < context.chunkGenerator().getSeaLevel()) {
             return Optional.empty();
         }
-        BlockPos anchor = new BlockPos(x, y, z);
+        // getHeightOnGround 返回首个空气格（地表+1）；实测整体高了一格，锚点下移 1 贴地
+        BlockPos anchor = new BlockPos(x, y - 1, z);
         StructureTemplate template = context.structureTemplateManager()
                 .getTemplate(RegEndgameWorldgen.TEMPLATE_ID)
                 .filter(t -> !t.getSize().equals(net.minecraft.util.math.Vec3i.ZERO))

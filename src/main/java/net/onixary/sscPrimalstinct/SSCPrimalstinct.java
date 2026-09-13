@@ -93,6 +93,10 @@ public class SSCPrimalstinct implements ModInitializer {
         // 眷属实现10：跨维度传送（固定化身维度 + 个人返回锚点；含跌出边界守卫）
         net.onixary.sscPrimalstinct.endgame.service.EndgameTeleportService.register();
 
+        // 眷属实现13/14：转化台接近引导对话框 + 变形延迟派发
+        net.onixary.sscPrimalstinct.endgame.service.ConversionGuideService.register();
+        net.onixary.sscPrimalstinct.endgame.service.TransformationService.register();
+
         // 眷属实现13：转化会话对账（登录兜底）+ 完成结算钩子（实际 FormID 生效为准）
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 server.execute(() -> net.onixary.sscPrimalstinct.endgame.service.TransformationService

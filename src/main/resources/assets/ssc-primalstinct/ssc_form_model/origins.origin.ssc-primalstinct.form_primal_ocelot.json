@@ -4,11 +4,9 @@
   "layer": "origins:origin",
   "form": "ssc-primalstinct:form_primal_ocelot",
   "wide_only": true,
-  "model": "shape-shifter-curse:geo/form/form_ocelot_3.geo.json",
-  "texture": "shape-shifter-curse:textures/form/form_ocelot_3/form_ocelot_3.png",
-  "texture_mask": "shape-shifter-curse:textures/form/form_ocelot_3/form_ocelot_3_colormask.png",
-  "fullbright_texture": "shape-shifter-curse:textures/form/form_ocelot_3/form_ocelot_3_emission.png",
-  "fullbright_texture_mask": "shape-shifter-curse:textures/form/form_ocelot_3/form_ocelot_3_emission_colormask.png",
+  "model": "ssc-primalstinct:geo/form/form_primal_ocelot.geo.json",
+  "texture": "ssc-primalstinct:textures/form/form_primal_ocelot/form_primal_ocelot.png",
+  "fullbright_texture": "ssc-primalstinct:textures/form/form_primal_ocelot/form_primal_ocelot_emission.png",
   "hidden": [
     "leftLeg",
     "rightLeg",
@@ -30,8 +28,7 @@
         "tail": [
           0,
           1,
-          2,
-          3
+          2
         ]
       }
     },
@@ -42,6 +39,16 @@
         ],
         "ear_b": [
           0
+        ],
+        "ear_c": [
+          0,
+          1,
+          2
+        ],
+        "ear_d": [
+          0,
+          1,
+          2
         ]
       }
     },

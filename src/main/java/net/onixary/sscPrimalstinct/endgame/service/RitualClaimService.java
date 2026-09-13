@@ -9,6 +9,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
@@ -35,14 +36,12 @@ public final class RitualClaimService {
         if (!(state.getBlock() instanceof PrimalAltarBlock) || !(world instanceof ServerWorld serverWorld)) {
             return false;
         }
-        // 1) 方块状态：必须 ACTIVE（三路供能有效）
+        // 1) 方块状态：必须 ACTIVE（三路供能有效）；未激活/无实例静默不响应
         if (!state.get(PrimalAltarBlock.ACTIVE)) {
-            feedback(player, "ssc-primalstinct.endgame.altar.not_active");
             return false;
         }
         BlockEntity raw = world.getBlockEntity(pos);
         if (!(raw instanceof PrimalAltarBlockEntity altar) || altar.getRitualId() == null) {
-            feedback(player, "ssc-primalstinct.endgame.altar.no_instance");
             return false;
         }
         // 2) 玩家资格：名单内形态 + 实际最高级（唯一规则入口 EndgameEligibility）
@@ -67,7 +66,7 @@ public final class RitualClaimService {
         serverWorld.spawnEntity(drop);
         world.playSound(null, pos, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.BLOCKS, 1.0f, 1.2f);
         // 6) 仅向领取者弹分支说明（正式对话框 Info 见眷属实现14）
-        player.sendMessage(Text.translatable("ssc-primalstinct.endgame.altar.claimed"), false);
+        player.sendMessage(Text.translatable("ssc-primalstinct.endgame.altar.claimed").formatted(Formatting.RED), false);
         SSCPrimalstinct.LOGGER.info("[primalstinct] 玩家 {} 领取祭坛 {} 的镇静碎片（ritual={}）",
                 player.getGameProfile().getName(), pos, altar.getRitualId());
         return true;

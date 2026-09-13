@@ -14,7 +14,7 @@ import net.onixary.sscPrimalstinct.endgame.block.RegEndgameBlocks;
 import net.onixary.sscPrimalstinct.endgame.state.EndgameWorldState;
 import net.onixary.sscPrimalstinct.util.AvatarDimension;
 
-/** Fixed authored NBT sanctuary. No runtime layout randomization or entity spawning. */
+/** Fixed authored NBT sanctuary; its avatar is spawned only during first initialization. */
 public final class AvatarSanctum {
     /**
      * 每次改动圣所几何都要 +1，否则已经初始化过的世界会直接返回、不会重铺。
@@ -44,7 +44,7 @@ public final class AvatarSanctum {
         }
         EndgameWorldState state = EndgameWorldState.get(world);
         if (state.isSceneInitialized() && state.sceneTemplateVersion() >= TEMPLATE_VERSION) {
-            return ensureAvatarEntity(world);  // 场景就绪也幂等核验化身（缺则补，重复去重）
+            return true;
         }
         var optional = world.getStructureTemplateManager().getTemplate(TEMPLATE_ID);
         if (optional.isEmpty() || !optional.get().getSize().equals(TEMPLATE_SIZE)) {
@@ -77,8 +77,12 @@ public final class AvatarSanctum {
             SSCPrimalstinct.LOGGER.error("[primalstinct] 圣所模板放置失败：{}", TEMPLATE_ID);
             return false;
         }
+        // Entity queries cannot prove absence while the entity chunk is unloaded.
+        // Only a genuinely new scene gets an avatar; upgrades and re-entry never respawn it.
+        if (!state.isSceneInitialized() && !spawnInitialAvatar(world)) {
+            return false;
+        }
         state.markSceneInitialized(TEMPLATE_VERSION);
-        ensureAvatarEntity(world);
         for (var player : world.getPlayers()) {
             if (isInsideLegacyPlaceholder(player.getBlockPos())) {
                 player.teleport(world, SPAWN.getX() + 0.5, SPAWN.getY(), SPAWN.getZ() + 0.5, SPAWN_YAW, 0);
@@ -100,25 +104,9 @@ public final class AvatarSanctum {
         }
     }
 
-    /**
-     * 化身实体幂等核验（眷属实现09/11）：固定锚点出生、意外重复保留唯一合法实例。
-     * 实体直接生成在锚点方块内（不替换方块）；chunk 卸载/重启随世界持久化。
-     */
-    private static boolean ensureAvatarEntity(ServerWorld world) {
+    /** Spawn once with the new scene; normal entity persistence handles chunk reloads. */
+    private static boolean spawnInitialAvatar(ServerWorld world) {
         Vec3d center = new Vec3d(AVATAR_ANCHOR.getX() + 0.5, AVATAR_ANCHOR.getY(), AVATAR_ANCHOR.getZ() + 0.5);
-        var existing = world.getEntitiesByClass(
-                net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.class,
-                new net.minecraft.util.math.Box(center, center).expand(16.0), e -> e.isAlive());
-        if (!existing.isEmpty()) {
-            if (existing.size() > 1) {
-                existing.sort(java.util.Comparator.comparingDouble(e -> e.squaredDistanceTo(center)));
-                for (int i = 1; i < existing.size(); i++) {
-                    existing.get(i).discard();
-                }
-                SSCPrimalstinct.LOGGER.warn("[primalstinct] 圣所化身意外重复（{} 只），已保留最近锚点的一只", existing.size());
-            }
-            return true;
-        }
         var avatar = net.onixary.sscPrimalstinct.endgame.entity.RegEndgameEntities.PRIMAL_AVATAR.create(world);
         if (avatar == null) {
             SSCPrimalstinct.LOGGER.error("[primalstinct] 化身实体创建失败");
@@ -126,7 +114,10 @@ public final class AvatarSanctum {
         }
         avatar.refreshPositionAndAngles(center.x, center.y, center.z,
                 net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.ANCHOR_YAW, 0.0f);
-        world.spawnEntity(avatar);
+        if (!world.spawnEntity(avatar)) {
+            SSCPrimalstinct.LOGGER.error("[primalstinct] Failed to spawn initial sanctuary avatar at {}", AVATAR_ANCHOR);
+            return false;
+        }
         SSCPrimalstinct.LOGGER.info("[primalstinct] 圣所化身已就位于锚点 {}", AVATAR_ANCHOR);
         return true;
     }

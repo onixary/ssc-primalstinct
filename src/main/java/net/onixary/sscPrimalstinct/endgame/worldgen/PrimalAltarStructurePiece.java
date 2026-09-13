@@ -180,8 +180,9 @@ public class PrimalAltarStructurePiece extends StructurePiece {
         }
         BlockPos origin = templateOrigin(template, anchor);
         Vec3i size = template.getSize();
-        return new BlockBox(origin.getX(), origin.getY() - 1, origin.getZ(),
-                origin.getX() + size.getX() - 1, origin.getY() + size.getY() - 1 + 2,
+        // 包围盒底部必须与模板底行对齐：beard_thin 会把地形整平到盒底，多减 1 会让模板永远悬空 1 格
+        return new BlockBox(origin.getX(), origin.getY(), origin.getZ(),
+                origin.getX() + size.getX() - 1, origin.getY() + size.getY() - 1,
                 origin.getZ() + size.getZ() - 1);
     }
 

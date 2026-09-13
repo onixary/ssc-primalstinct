@@ -7,6 +7,8 @@ import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
+import java.util.function.Function;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.core.animatable.GeoAnimatable;
 import software.bernie.geckolib.renderer.GeoRenderer;
@@ -14,18 +16,22 @@ import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
 
 /** Alpha-masked fullbright pass using the artist's *_emission.png without renaming or flattening it. */
 public final class EndgameEmissionLayer<T extends GeoAnimatable> extends GeoRenderLayer<T> {
-    private final EndgameGeoModel<T> model;
+    private final Function<T, Identifier> emissionTexture;
 
     public EndgameEmissionLayer(GeoRenderer<T> renderer, EndgameGeoModel<T> model) {
+        this(renderer, animatable -> model.visual(animatable).emission);
+    }
+
+    public EndgameEmissionLayer(GeoRenderer<T> renderer, Function<T, Identifier> emissionTexture) {
         super(renderer);
-        this.model = model;
+        this.emissionTexture = emissionTexture;
     }
 
     @Override
     public void render(MatrixStack matrices, T animatable, BakedGeoModel bakedModel, RenderLayer renderType,
                        VertexConsumerProvider consumers, VertexConsumer buffer, float tickDelta,
                        int light, int overlay) {
-        var emission = model.visual(animatable).emission;
+        var emission = emissionTexture.apply(animatable);
         // Resource-manager lookup also handles F3+T/resource-pack changes; no stale negative cache.
         if (MinecraftClient.getInstance().getResourceManager().getResource(emission).isEmpty()) {
             return;

@@ -52,10 +52,10 @@ public class PrimalPortalBlock extends EndgameModelBlock {
 
     @Override
     public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
-        if (world.isClient() || !(entity instanceof ServerPlayerEntity player)) {
+        if (!(world instanceof ServerWorld serverWorld) || !(entity instanceof ServerPlayerEntity player)) {
             return;
         }
-        net.onixary.sscPrimalstinct.endgame.service.EndgameTeleportService.onPortalContact(player);
+        net.onixary.sscPrimalstinct.endgame.service.EndgameTeleportService.onPortalContact(player, serverWorld, pos);
     }
 
     @Override
