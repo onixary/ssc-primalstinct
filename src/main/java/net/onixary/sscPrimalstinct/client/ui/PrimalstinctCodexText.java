@@ -16,7 +16,8 @@ public final class PrimalstinctCodexText {
         if (Language.getInstance().hasTranslation(key)) return Text.translatable(key);
         String fallback = PREFIX + "level." + level + "." + section;
         if (Language.getInstance().hasTranslation(fallback)) return Text.translatable(fallback);
-        return Text.translatable(PREFIX + section + ".fallback", level);
+        // 无专属文案：显示空白，不再触发通用兜底句（2026-09-14 用户决策）
+        return Text.empty();
     }
 
     public static Text formName(Identifier form) {

@@ -62,6 +62,18 @@ public class PrimalstinctComponent implements Component {
         primalAwakened = true;
         initializeInstinct();
     }
+    /**
+     * 退出原始本能系统（镇静碎片，2026-09-14 用户决策）：
+     * 清空觉醒标记与本能数值/锁定，回到 SSC 原版本能逻辑；
+     * 再次觉醒（原始呼唤）时从头初始化。形态选择与暂存区不动
+     * （暂存物品由库存规则放宽时的掉落管线归还）。
+     */
+    public void exitPrimalSystem() {
+        primalAwakened = false;
+        instinctInitialized = false;
+        value = 0.0f;
+        locked = false;
+    }
     public void initializeInstinct() {
         if (instinctInitialized) return;
         value = 0.0f;

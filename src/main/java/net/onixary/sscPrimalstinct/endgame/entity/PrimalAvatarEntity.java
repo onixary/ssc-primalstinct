@@ -4,8 +4,11 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Colors;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -26,6 +29,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import static net.minecraft.particle.DustParticleEffect.RED;
+
 /**
  * 眷属实现11：原始化身实体（仅演出展示用，LivingEntity 标准渲染路径）。
  * 使用 PathAwareEntity（GeckoLib 旋转/动画/插值的标准测试路径），但关闭全部 AI 与导航。
@@ -38,6 +43,9 @@ public class PrimalAvatarEntity extends PathAwareEntity implements GeoEntity {
 
     /** interact 播放窗口（tick）：窗口内的新请求视为同次表现，不重启动画。 */
     public static final int INTERACT_WINDOW_TICKS = 100;
+    // Placeholder interaction VFX. Tune the group in spawnInteractParticles below.
+    public static final int INTERACT_PARTICLE_INTERVAL_TICKS = 5;
+    public static final double INTERACT_PARTICLE_Y_OFFSET = 1.5;
     public static final float ANCHOR_YAW = 180.0f;
     /** 可见性包围盒半径（格）：覆盖触手模型的完整伸展范围，防止小碰撞箱导致视锥剔除。 */
     public static final double VISIBILITY_EXTENT = 12.0;
@@ -49,6 +57,7 @@ public class PrimalAvatarEntity extends PathAwareEntity implements GeoEntity {
 
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
     private long interactUntilTick = Long.MIN_VALUE;
+    private long nextInteractParticleTick = Long.MAX_VALUE;
 
     public PrimalAvatarEntity(EntityType<? extends PathAwareEntity> type, World world) {
         super(type, world);
@@ -162,7 +171,22 @@ public class PrimalAvatarEntity extends PathAwareEntity implements GeoEntity {
             setVelocity(Vec3d.ZERO);
             velocityDirty = true;
         }
+        long now = getWorld().getTime();
+        if (now < interactUntilTick && now >= nextInteractParticleTick) {
+            spawnInteractParticles((ServerWorld) getWorld());
+            nextInteractParticleTick = now + INTERACT_PARTICLE_INTERVAL_TICKS;
+        }
+    }
 
+    /** Server-broadcast placeholder group, centered 1.5 blocks above the entity origin. */
+    private void spawnInteractParticles(ServerWorld world) {
+        double y = getY() + INTERACT_PARTICLE_Y_OFFSET;
+        world.spawnParticles(net.minecraft.particle.ParticleTypes.SOUL_FIRE_FLAME,
+                getX(), y, getZ(), 8, 0.35, 0.2, 0.35, 0.02);
+        world.spawnParticles(net.minecraft.particle.ParticleTypes.ENCHANT,
+                getX(), y, getZ(), 12, 0.5, 0.3, 0.5, 0.1);
+        world.spawnParticles(new DustParticleEffect(RED, 1.0F),
+                getX(), y, getZ(), 1, 0.5, 0.3, 0.5, 0.1);
     }
 
     // ---------- 动画（GeckoLib） ----------
@@ -173,6 +197,7 @@ public class PrimalAvatarEntity extends PathAwareEntity implements GeoEntity {
             return;  // 播放窗口内合并新请求
         }
         interactUntilTick = now + INTERACT_WINDOW_TICKS;
+        nextInteractParticleTick = now;
         triggerAnim("avatar_controller", "interact");
     }
 

@@ -37,8 +37,9 @@ public final class PrimalCallService {
         // Rebuild the SSC form so its old powers are reconciled with the new ownership.
         PrimalstinctLifecycle.refresh(player);
         SSCAdapter.rebuildCurrentForm(player);
-        // 觉醒提示由 playStageEffects 的黑暗/恶心演出承担，不再发聊天（2026-09-14 用户决策：与现有提示冲突）
+        // 觉醒演出：黑暗/恶心 + L1 提示与对话（L1 无跨级事件，需在此显式触发）
         PrimalstinctPresentation.playStageEffects(player);
+        PrimalstinctPresentation.playAwakening(player);
     }
 
     public static void register() {

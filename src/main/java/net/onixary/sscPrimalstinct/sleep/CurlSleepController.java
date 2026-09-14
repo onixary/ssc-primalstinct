@@ -41,12 +41,16 @@ public final class CurlSleepController {
         }
         CurlSleepPower power = findActivePower(player);
         if (power == null || !player.isAlive() || player.isSpectator() || player.isSleeping()) return;
-        if (!player.isOnGround()) {
+        if (!player.isOnGround() || !hasSupport(player)) {
             player.sendMessage(Text.translatable("ssc-primalstinct.sleep.need_ground"), true);
             return;
         }
         if (player.hasVehicle()) {
             player.sendMessage(Text.translatable("ssc-primalstinct.sleep.no_vehicle"), true);
+            return;
+        }
+        if (!canSleep(player, power)) {
+            player.sendMessage(Text.translatable("ssc-primalstinct.sleep.unavailable"), true);
             return;
         }
         SESSIONS.put(player.getUuid(), new Session(player.getServerWorld(), player.getPos()));
@@ -56,17 +60,25 @@ public final class CurlSleepController {
         updateSleep(player, power);
     }
 
-    private static void updateSleep(ServerPlayerEntity player, CurlSleepPower power) {
-        boolean canSleep = power.isAllowSleep() && player.getWorld().getDimension().bedWorks()
+    private static boolean canSleep(ServerPlayerEntity player, CurlSleepPower power) {
+        return power.isAllowSleep() && player.getWorld().getDimension().bedWorks()
                 && !player.getWorld().isDay();
-        if (canSleep && !player.isSleeping()) {
+    }
+
+    private static boolean hasSupport(ServerPlayerEntity player) {
+        return !player.getWorld().isSpaceEmpty(player, player.getBoundingBox().offset(0, -0.1, 0));
+    }
+
+    private static void updateSleep(ServerPlayerEntity player, CurlSleepPower power) {
+        if (!canSleep(player, power)) {
+            wakeUp(player, "sleep_no_longer_allowed");
+            return;
+        }
+        if (!player.isSleeping()) {
             ((CurlSleepState) player).primalstinct$resetSleepTimer();
             player.setSleepingPosition(player.getBlockPos());
             // Merely setting SLEEPING_POSITION never updates SleepManager's cached count.
             player.getServerWorld().updateSleepingPlayers();
-        } else if (!canSleep && player.isSleeping()) {
-            wakeUp(player, "sleep_no_longer_allowed");
-            return;
         }
         PrimalstinctService.setRate(player, SLEEP_RATE_KEY, PrimalstinctSource.POWER,
                 power.getInstinctRateWhileSleeping());
@@ -102,7 +114,7 @@ public final class CurlSleepController {
         }
         // Sleeping movement packets/pose updates do not reliably preserve onGround.
         // Test physical support instead of treating a transient flag as a wake request.
-        if (player.getWorld().isSpaceEmpty(player, player.getBoundingBox().offset(0, -0.1, 0))) {
+        if (!hasSupport(player)) {
             wakeUp(player, "lost_support");
             return;
         }

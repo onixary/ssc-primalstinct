@@ -13,9 +13,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerInteractionManager.class)
 public abstract class ClientPlayerInteractionManagerMixin {
-    @Inject(method = "interactBlock", at = @At("HEAD"), cancellable = true)
+    // Keep the outer interactBlock call: it sends the sequenced packet even when
+    // local prediction is suppressed, so server rolls, messages and actions still run.
+    @Inject(method = "interactBlockInternal", at = @At("HEAD"), cancellable = true)
     private void primalstinct$denyPrediction(ClientPlayerEntity player, Hand hand, BlockHitResult hit,
                                              CallbackInfoReturnable<ActionResult> cir) {
-        if (InteractionRestrictions.blocksInteraction(player, hand, hit)) cir.setReturnValue(ActionResult.FAIL);
+        if (InteractionRestrictions.blocksInteraction(player, hand, hit)
+                || InteractionRestrictions.waitForDoorInteraction(player, hit)) {
+            cir.setReturnValue(ActionResult.CONSUME);
+        }
     }
 }

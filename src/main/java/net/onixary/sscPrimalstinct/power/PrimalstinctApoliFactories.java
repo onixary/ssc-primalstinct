@@ -23,6 +23,10 @@ public final class PrimalstinctApoliFactories {
     }
 
     public static void register() {
+        var bedSpawnOnly = net.onixary.sscPrimalstinct.power.factory.BedSpawnOnlyPower.getFactory();
+        Registry.register(ApoliRegistries.POWER_FACTORY, bedSpawnOnly.getSerializerId(), bedSpawnOnly);
+        var preventTrade = net.onixary.sscPrimalstinct.power.factory.PreventVillagerTradePower.getFactory();
+        Registry.register(ApoliRegistries.POWER_FACTORY, preventTrade.getSerializerId(), preventTrade);
         var failure = net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower.getFactory();
         Registry.register(ApoliRegistries.POWER_FACTORY, failure.getSerializerId(), failure);
         var perception = net.onixary.sscPrimalstinct.power.factory.InstinctPerceptionPower.getFactory();

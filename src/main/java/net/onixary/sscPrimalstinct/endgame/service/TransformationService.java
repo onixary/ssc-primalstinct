@@ -64,7 +64,7 @@ public final class TransformationService {
         CurlSleepController.wakeUp(player, "endgame_transform");
 
         // 启动同 tick 触发化身 Interact（无化身/异维度静默跳过，不阻断——眷属实现11/13）；
-        // 变形本体延迟 1 秒启动，让化身动画先起势（用户决策 2026-09-12）
+        // 变形本体延迟 0.5 秒启动，让化身动画先起势。
         net.onixary.sscPrimalstinct.endgame.entity.PrimalAvatarEntity.tryPlayInteract(player, sessionId, platformPos);
         PENDING_LAUNCH.put(player.getUuid(), new PendingLaunch(sessionId, mapping.targetForm,
                 player.getWorld().getServer().getTicks() + TRANSFORM_DELAY_TICKS));
@@ -74,7 +74,7 @@ public final class TransformationService {
     }
 
     /** 变形启动延迟（tick）：蹲台触发后先播化身动画，再进入 SSC 变形演出。 */
-    private static final int TRANSFORM_DELAY_TICKS = 20;
+    private static final int TRANSFORM_DELAY_TICKS = 10;
     /** 待启动延迟变形（玩家 → 会话）；断线/会话变化时作废。 */
     private record PendingLaunch(UUID sessionId, net.minecraft.util.Identifier targetForm, int fireTick) {
     }

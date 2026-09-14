@@ -5,6 +5,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Language;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 import net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter;
 import net.onixary.sscPrimalstinct.component.PrimalstinctComponent;
@@ -52,6 +53,10 @@ public final class PrimalstinctPresentation {
         if (levelAfter > levelBefore && !lockedNow) {
             playStageEffects(player);
         }
+        // 升阶剧情对话（聊天栏红色；满值锁定的对话延后到锁定演出结束，与 locked actionbar 同时机）
+        if (levelAfter > levelBefore && !(lockedNow && levelAfter >= PrimalRosterManager.active().levels.maxLevel())) {
+            sendStageDialog(player, levelAfter);
+        }
         if (lockChanged && lockedNow) {
             // Apply once on entry into L5 lock, including jumps across multiple levels.
             if (levelAfter == 5 && PrimalstinctLifecycle.isManaged(player)) {
@@ -67,6 +72,32 @@ public final class PrimalstinctPresentation {
                 DARKNESS_TICKS, 0, false, false, true));
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA,
                 NAUSEA_TICKS, 0, false, false, true));
+    }
+
+    /** 升阶剧情对话键：非满级按等级取 ssc-primalstinct.level_up.N.dialog，满级取 locked.dialog。 */
+    private static String stageDialogKey(int level) {
+        return level >= PrimalRosterManager.active().levels.maxLevel()
+                ? "ssc-primalstinct.level_up.locked.dialog"
+                : "ssc-primalstinct.level_up." + level + ".dialog";
+    }
+
+    /** 聊天栏红色对话（与转化台引导对话同款式）；键缺失时静默跳过，不弹原始键名。 */
+    private static void sendStageDialog(ServerPlayerEntity player, int level) {
+        String key = stageDialogKey(level);
+        if (!Language.getInstance().hasTranslation(key)) {
+            return;
+        }
+        player.sendMessage(Text.translatable(key).formatted(Formatting.RED), false);
+    }
+
+    /**
+     * 觉醒进入原始本能系统（成为 L1）的表现（PrimalCallService.awaken 调用）。
+     * L1 无跨级事件（value 从 0 起步即在 L1），hud.level_up.1 与 .1.dialog 需在此显式触发
+     * （2026-09-14 用户决策：level_up.1 从未触发的问题）。客户端首帧快照 lastLevel=-1 不弹 actionbar，无双发。
+     */
+    public static void playAwakening(ServerPlayerEntity player) {
+        player.sendMessage(Text.translatable("hud.ssc-primalstinct.level_up.1"), true);
+        sendStageDialog(player, 1);
     }
 
     /** 每 tick 表现检查（Service.tick 内、托管玩家循环中调用）。 */
@@ -99,6 +130,11 @@ public final class PrimalstinctPresentation {
         if (countdown <= 1) {
             LOCK_LABEL_COUNTDOWN.remove(player.getUuid());
             player.sendMessage(Text.translatable("hud.ssc-primalstinct.level_up.locked"), true);
+            // 满值锁定的剧情对话与 actionbar 同时机补发（演出期间弹字会被屏幕效果盖住）
+            String key = stageDialogKey(PrimalRosterManager.active().levels.maxLevel());
+            if (Language.getInstance().hasTranslation(key)) {
+                player.sendMessage(Text.translatable(key).formatted(Formatting.RED), false);
+            }
         } else {
             LOCK_LABEL_COUNTDOWN.put(player.getUuid(), countdown - 1);
         }

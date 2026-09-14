@@ -24,6 +24,7 @@ public final class InteractionRestrictions {
     public static boolean blocksInteraction(PlayerEntity player, Hand hand, BlockHitResult hit) {
         if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return false;
         Block block = player.getWorld().getBlockState(hit.getBlockPos()).getBlock();
+        if (block instanceof BedBlock) return false;
         if (block instanceof DoorBlock || block instanceof TrapdoorBlock || block instanceof FenceGateBlock) {
             for (PreventDoorPower power : PowerHolderComponent.getPowers(player, PreventDoorPower.class)) {
                 if (power.isActive()) return true;
@@ -49,6 +50,18 @@ public final class InteractionRestrictions {
         return false;
     }
 
+    /** Doors subject to a server-side roll must not open speculatively on the client. */
+    public static boolean waitForDoorInteraction(PlayerEntity player, BlockHitResult hit) {
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return false;
+        if (player.shouldCancelInteraction()
+                && (!player.getMainHandStack().isEmpty() || !player.getOffHandStack().isEmpty())) return false;
+        Block block = player.getWorld().getBlockState(hit.getBlockPos()).getBlock();
+        if (!(block instanceof DoorBlock || block instanceof TrapdoorBlock || block instanceof FenceGateBlock)) return false;
+        return PowerHolderComponent.getPowers(player,
+                net.onixary.sscPrimalstinct.power.factory.InteractionFailurePower.class)
+                .stream().anyMatch(power -> power.isActive() && power.blockChance > 0);
+    }
+
     /** Random decisions run only on the authoritative server, once per tick/position. */
     private static final java.util.Map<PlayerEntity, Roll> LAST_ROLL = new java.util.WeakHashMap<>();
     private record Roll(long tick, net.minecraft.util.math.BlockPos pos, boolean denied) {}
@@ -61,10 +74,11 @@ public final class InteractionRestrictions {
         if (player.shouldCancelInteraction() && (!player.getMainHandStack().isEmpty() || !player.getOffHandStack().isEmpty())) return false;
         var state = player.getWorld().getBlockState(hit.getBlockPos());
         Block block = state.getBlock();
+        if (block instanceof BedBlock) return false;
         boolean container = isContainerBlock(block) || player.getWorld().getBlockEntity(hit.getBlockPos()) instanceof net.minecraft.inventory.Inventory;
         boolean interactive = container || isProcessingBlock(block) || state.createScreenHandlerFactory(player.getWorld(), hit.getBlockPos()) != null
                 || block instanceof DoorBlock || block instanceof TrapdoorBlock || block instanceof FenceGateBlock
-                || block instanceof ButtonBlock || block instanceof LeverBlock || block instanceof BedBlock
+                || block instanceof ButtonBlock || block instanceof LeverBlock
                 || block instanceof AbstractSignBlock || block instanceof JukeboxBlock || block instanceof NoteBlock
                 || block instanceof RepeaterBlock || block instanceof ComparatorBlock || block instanceof BellBlock
                 || block instanceof CakeBlock || block instanceof ComposterBlock || block instanceof RespawnAnchorBlock

@@ -21,6 +21,7 @@ DYNAMIC_PREFIXES = [
     'codex.ssc-primalstinct.page.',        # PrimalstinctCodexText.section 动态拼接
     'ssc-primalstinct.form.',              # formName() 动态拼接
     'text.autoconfig.ssc-primalstinct',    # Cloth Config 按字段名自动生成
+    'ssc-primalstinct.level_up.',          # PrimalstinctPresentation.stageDialogKey 动态拼接（.N.dialog / locked.dialog）
 ]
 
 dead, live = [], []
