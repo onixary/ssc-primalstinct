@@ -32,6 +32,34 @@ public final class PrimalstinctService {
     /** 每玩家运行期速率贡献（稳定键 → 贡献）。 */
     private static final Map<UUID, LinkedHashMap<String, PrimalstinctKernel.Contribution>> RATE_STATES = new LinkedHashMap<>();
 
+    // ---------- 一次性事件边框脉冲（2026-09-16） ----------
+    /** 脉冲持续时长（tick）：一次性增/减事件后本能条边框的提示窗口。 */
+    public static final int PULSE_TICKS = 40;
+    /** 服务端权威脉冲：方向与过期 tick（随快照下发，客户端不自行判定）。 */
+    private record Pulse(int direction, long untilTick) {
+    }
+
+    private static final Map<UUID, Pulse> PULSES = new java.util.HashMap<>();
+
+    /** 按实际数值变化方向记录脉冲（modify 事务内调用）。 */
+    private static void recordPulse(ServerPlayerEntity player, float actualDelta) {
+        int direction = actualDelta > 0.0f ? 1 : actualDelta < 0.0f ? -1 : 0;
+        if (direction == 0) {
+            return;
+        }
+        long now = player.getServer() == null ? 0L : player.getServer().getTicks();
+        PULSES.put(player.getUuid(), new Pulse(direction, now + PULSE_TICKS));
+    }
+
+    /** 当前生效的边框脉冲方向（+1/-1/0）：窗口内随所有快照下发。 */
+    public static int pulseDirection(ServerPlayerEntity player) {
+        Pulse pulse = PULSES.get(player.getUuid());
+        if (pulse == null || player.getServer() == null) {
+            return 0;
+        }
+        return player.getServer().getTicks() < pulse.untilTick() ? pulse.direction() : 0;
+    }
+
     private PrimalstinctService() {
     }
 
@@ -51,14 +79,15 @@ public final class PrimalstinctService {
         if (!result.applied()) {
             return false;
         }
+        float valueBefore = component.getValue();
         component.setValue(result.value());
         component.setLocked(result.locked());
-        boolean levelCrossed = component.getLevel() != levelBefore;
-        if (levelCrossed || result.lockChanged()) {
-            onChanged(player);
-            PrimalstinctPresentation.onLevelOrLockChanged(player, levelBefore, component.getLevel(),
-                    result.lockChanged(), component.isLocked());
-        }
+        // 一次性事件边框脉冲：按实际数值变化方向记录，持续 PULSE_TICKS（2026-09-16）
+        recordPulse(player, result.value() - valueBefore);
+        // 即时同步：让脉冲与数值跳变立刻到达客户端（不等待限频校正）
+        onChanged(player);
+        PrimalstinctPresentation.onLevelOrLockChanged(player, levelBefore, component.getLevel(),
+                result.lockChanged(), component.isLocked());
         return true;
     }
 
@@ -103,6 +132,7 @@ public final class PrimalstinctService {
     /** 断线清理运行期速率与表现状态（重登后由 tick/Power 重建）。 */
     public static void clearPlayer(UUID uuid) {
         RATE_STATES.remove(uuid);
+        PULSES.remove(uuid);
         PrimalstinctPresentation.clearPlayer(uuid);
         WanderAiController.clearPlayer(uuid);
     }

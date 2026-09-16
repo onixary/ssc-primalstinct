@@ -24,11 +24,29 @@
     "remove": []
   },
   "level_overrides": {
+    "1": {
+      "powers": {
+        "add": [
+          "ssc-primalstinct:remnant_glow"
+        ],
+        "remove": []
+      }
+    },
     "2": {
       "powers": {
         "add": [
           "ssc-primalstinct:snow_fox_3_restrict_l2_hotbar",
-          "ssc-primalstinct:snow_fox_3_restrict_l2_inv"
+          "ssc-primalstinct:snow_fox_3_restrict_l2_inv",
+          "shape-shifter-curse:barehand_digging_speed_up"
+        ],
+        "remove": []
+      }
+    },
+    "3": {
+      "powers": {
+        "add": [
+          "shape-shifter-curse:barehand_attack_up",
+          "ssc-primalstinct:bed_spawn_only"
         ],
         "remove": []
       }
@@ -37,11 +55,21 @@
       "powers": {
         "add": [
           "ssc-primalstinct:snow_fox_3_restrict_l4_hotbar",
-          "ssc-primalstinct:snow_fox_3_restrict_l4_inv"
+          "ssc-primalstinct:snow_fox_3_restrict_l4_inv",
+          "ssc-primalstinct:prevent_villager_trade"
         ],
         "remove": [
-          "ssc-primalstinct:snow_fox_3_prevent_l0_place"
+          "ssc-primalstinct:snow_fox_3_prevent_l0_place",
+          "shape-shifter-curse:barehand_digging_speed_up"
         ]
+      }
+    },
+    "5": {
+      "powers": {
+        "add": [
+          "ssc-primalstinct:remnant_kill"
+        ],
+        "remove": []
       }
     }
   }

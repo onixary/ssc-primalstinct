@@ -100,7 +100,8 @@ public final class PrimalstinctNetwork {
                 PrimalstinctService.BASE_GROWTH_PER_SECOND,
                 roster.levels.thresholds,
                 net.onixary.sscPrimalstinct.config.PrimalstinctServerConfig.chooseFormOnStart(),
-                net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(player));
+                net.onixary.sscPrimalstinct.selection.SelectionSessionManager.isPending(player),
+                PrimalstinctService.pulseDirection(player));
     }
 
     /** 卡15：当前 SSC 形态是否受本玩法管理（名单内含子形态继承）。HUD 显隐以此为准，不读 NoInstinct。 */

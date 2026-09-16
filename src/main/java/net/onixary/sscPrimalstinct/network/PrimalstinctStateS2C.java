@@ -11,6 +11,8 @@ import net.onixary.sscPrimalstinct.SSCPrimalstinct;
  * maxValue/baseRate/thresholds（等级表刻度与速率分档基准；多人环境下客户端无法读取
  * 服务端数据包，随快照同步）。baseRate 供 HUD 复刻旧 SSC 的“增速分档外框提示”：
  * rate 相对 baseRate 的超出量决定条外框/填充的分档表现。
+ * 2026-09-16 增补 pulseDirection：一次性增减事件（add_primalstinct 等）的边框脉冲方向
+ * （+1 增 / -1 减 / 0 无），服务端记录并在窗口期内随所有快照下发，客户端不自行判定。
  * 1.20.1 网络 API：Identifier + PacketByteBuf（与 SSC 的 ModPackets 同风格）。
  */
 public record PrimalstinctStateS2C(
@@ -25,7 +27,8 @@ public record PrimalstinctStateS2C(
         boolean managed,
         float maxValue,
         float baseRate,
-        float[] thresholds, boolean chooseFormOnStart, boolean selectionPending) {
+        float[] thresholds, boolean chooseFormOnStart, boolean selectionPending,
+        int pulseDirection) {
 
     public static final Identifier ID = Identifier.of(SSCPrimalstinct.MOD_ID, "state_s2c");
 
@@ -42,7 +45,8 @@ public record PrimalstinctStateS2C(
                 buf.readBoolean(),
                 buf.readFloat(),
                 buf.readFloat(),
-                readThresholds(buf), buf.readBoolean(), buf.readBoolean());
+                readThresholds(buf), buf.readBoolean(), buf.readBoolean(),
+                buf.readVarInt());
     }
 
     public void write(PacketByteBuf buf) {
@@ -60,6 +64,7 @@ public record PrimalstinctStateS2C(
         writeThresholds(buf, thresholds);
         buf.writeBoolean(chooseFormOnStart);
         buf.writeBoolean(selectionPending);
+        buf.writeVarInt(pulseDirection);
     }
 
     private static float[] readThresholds(PacketByteBuf buf) {

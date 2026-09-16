@@ -4,7 +4,7 @@
     "type": "apoli:actor_action",
     "action": {
       "type": "ssc-primalstinct:add_primalstinct",
-      "amount": 0.3
+      "amount": 0.9
     }
   },
   "bientity_condition": {

@@ -2,7 +2,7 @@
   "type": "apoli:modify_jump",
   "modifier": {
     "operation": "multiply_base",
-    "value": 0.8
+    "value": 0.6
   },
   "hidden": true
 }

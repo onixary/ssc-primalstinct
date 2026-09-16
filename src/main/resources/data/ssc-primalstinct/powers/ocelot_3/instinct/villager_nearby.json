@@ -5,7 +5,7 @@
   "condition": {
     "type": "ssc-primalstinct:nearby_entity",
     "entity": "minecraft:villager",
-    "radius": 8,
+    "radius": 4,
     "require_visibility": false
   },
   "hidden": true

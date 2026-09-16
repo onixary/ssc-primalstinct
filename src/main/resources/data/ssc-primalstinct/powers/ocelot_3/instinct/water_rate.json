@@ -1,7 +1,7 @@
 {
   "type": "ssc-primalstinct:modify_primalstinct_rate",
   "source_id": "water",
-  "rate_per_second": -0.037037,
+  "rate_per_second": -0.06,
   "condition": {
     "type": "apoli:submerged_in",
     "fluid": "minecraft:water"

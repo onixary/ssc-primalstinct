@@ -8,48 +8,5 @@
     50,
     75,
     100
-  ],
-  "levels": {
-    "1": {
-      "powers": {
-        "add": [
-          "ssc-primalstinct:remnant_glow"
-        ],
-        "remove": []
-      }
-    },
-    "2": {
-      "powers": {
-        "add": [
-          "shape-shifter-curse:barehand_digging_speed_up"
-        ],
-        "remove": []
-      }
-    },
-    "3": {
-      "powers": {
-        "add": [
-          "shape-shifter-curse:barehand_attack_up",
-          "ssc-primalstinct:bed_spawn_only"
-        ],
-        "remove": []
-      }
-    },
-    "4": {
-      "powers": {
-        "add": ["ssc-primalstinct:prevent_villager_trade"],
-        "remove": [
-          "shape-shifter-curse:barehand_digging_speed_up"
-        ]
-      }
-    },
-    "5": {
-      "powers": {
-        "add": [
-          "ssc-primalstinct:remnant_kill"
-        ],
-        "remove": []
-      }
-    }
-  }
+  ]
 }

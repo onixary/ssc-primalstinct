@@ -34,6 +34,6 @@ public final class RegPrimalVariants {
                 .bodyType(PlayerFormBodyType.FERAL)
                 .applyScale(0.75f, 0.6f));
         SSCPrimalstinct.LOGGER.info("[primalstinct] 原始变体形态已注册：{}", PRIMAL_OCELOT);
-        // 其余名单形态（snow_fox_3 / axolotl_3 / bat_3_sub_avali）在 D 里程碑（眷属实现12 全形态覆盖）追加
+        // 其余名单形态（snow_fox_3 / familiar_fox_3 / anubis_wolf_3）在 D 里程碑（眷属实现12 全形态覆盖）追加
     }
 }

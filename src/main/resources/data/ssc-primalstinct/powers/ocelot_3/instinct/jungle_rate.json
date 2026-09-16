@@ -4,11 +4,10 @@
   "rate_per_second": 0.027778,
   "condition": {
     "type": "apoli:biome",
-    "biomes": [
-      "minecraft:jungle",
-      "minecraft:sparse_jungle",
-      "minecraft:bamboo_jungle"
-    ]
+    "condition": {
+      "type": "apoli:in_tag",
+      "tag": "minecraft:is_jungle"
+    }
   },
   "hidden": true
 }

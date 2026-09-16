@@ -143,7 +143,11 @@ public final class PrimalInstinctHud {
         RenderSystem.disableBlend();
     }
 
-    /** SSC updateBarTextures 逐行复刻：rate 相对 baseRate 的超出量选行（基础自然增长=平稳行）。 */
+    /**
+     * SSC updateBarTextures 逐行复刻：rate 相对 baseRate 的超出量选行（基础自然增长=平稳行）。
+     * 一次性事件（add_primalstinct / 物品 / 命令）不改变持续速率：脉冲方向由服务端随快照下发，
+     * 正脉冲将行至少抬到增长I、负脉冲强制下降行，窗口 40 tick（2026-09-16）。
+     */
     private static int rateRow(PrimalstinctStateS2C snapshot) {
         float rate = snapshot.rate();
         float base = snapshot.baseRate();
@@ -153,16 +157,22 @@ public final class PrimalInstinctHud {
         if (rate > base + TIER_INCREASE_2) {
             return V_INCREASE_2;
         }
+        int row = V_IDLE;
         if (rate > base + TIER_INCREASE_1) {
-            return V_INCREASE_1;
+            row = V_INCREASE_1;
+        } else if (rate > base + TIER_SLIGHT) {
+            row = V_SLIGHT_INCREASE;
+        } else if (rate < 0.0f) {
+            row = V_DECREASE;
         }
-        if (rate > base + TIER_SLIGHT) {
-            return V_SLIGHT_INCREASE;
+        int pulse = snapshot.pulseDirection();
+        if (pulse > 0) {
+            return Math.max(row, V_INCREASE_1);  // 持续高增速时保留更高档
         }
-        if (rate < 0.0f) {
+        if (pulse < 0) {
             return V_DECREASE;
         }
-        return V_IDLE;
+        return row;
     }
 
     /**

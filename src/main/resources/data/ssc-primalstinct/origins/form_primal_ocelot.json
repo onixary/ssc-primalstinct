@@ -36,7 +36,22 @@
     "shape-shifter-curse:form_tan_prevent_dirty_water_thirst",
     "shape-shifter-curse:form_tan_cold_resistance_mild",
     "shape-shifter-curse:cat_friendly",
-    "shape-shifter-curse:toggle_clip_at_ledge"
+    "shape-shifter-curse:toggle_clip_at_ledge",
+
+
+    "shape-shifter-curse:cat_friendly",
+    "ssc-primalstinct:curl_sleep",
+    "ssc-primalstinct:remnant_glow",
+    "ssc-primalstinct:primal_ocelot/guaranteed_hotbar",
+    "ssc-primalstinct:ocelot_3/level_5/attributes",
+    "ssc-primalstinct:ocelot_3/level_5/jump",
+    "ssc-primalstinct:ocelot_3/level_5/food",
+    "ssc-primalstinct:ocelot_3/level_5/mining",
+    "ssc-primalstinct:ocelot_3/level_5/attack",
+    "ssc-primalstinct:ocelot_3/level_5/overheating",
+    "ssc-primalstinct:ocelot_3/level_5/regeneration",
+    "ssc-primalstinct:ocelot_3/level_5/harvest",
+    "ssc-primalstinct:bed_spawn_only"
   ],
   "icon": {
     "item": "minecraft:player_head"
