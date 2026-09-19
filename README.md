@@ -2,7 +2,7 @@
 
 English | [简体中文](README.zh-CN.md)
 
-# Shape Shifter's Curse: Primalstinct
+# Shape Shifter Curse: Primalstinct
 
 ## Introduction
 
