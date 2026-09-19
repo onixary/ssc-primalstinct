@@ -194,4 +194,45 @@ public final class InventoryLockManager {
         }
         return slots;
     }
+
+    /**
+     * offer 路径（offerOrDrop：关闭工作台/光标返还等）的空槽探测。
+     * 原版 getEmptySlot 扫 0–35 含锁定槽：允许快捷栏占满时会选中锁定槽，
+     * offer 先 split 再 insertStack，被 insertStack 拒绝后已 split 的物品即丢失——物品消失 Bug 的根因。
+     */
+    public static int emptyAllowedSlot(PlayerInventory inv, InventoryLockRule rule) {
+        if (!rule.allowsAnyInsert()) {
+            return -1;
+        }
+        for (int slot : orderedAllowedSlots(rule)) {
+            if (inv.getStack(slot).isEmpty()) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    /** offer 路径的可叠加槽探测：与原版一致先手持、再副手、后主背包，仅跳过锁定槽。 */
+    public static int occupiedAllowedSlotWithRoomForStack(PlayerInventory inv, InventoryLockRule rule, ItemStack stack) {
+        if (stack.isEmpty() || !rule.allowsAnyInsert()) {
+            return -1;
+        }
+        if (!rule.isLocked(inv.selectedSlot) && canStackAddMore(inv.getStack(inv.selectedSlot), stack)) {
+            return inv.selectedSlot;
+        }
+        if (!rule.isLocked(InventoryLockRule.OFFHAND_SLOT)
+                && canStackAddMore(inv.getStack(InventoryLockRule.OFFHAND_SLOT), stack)) {
+            return InventoryLockRule.OFFHAND_SLOT;
+        }
+        for (int slot : orderedAllowedSlots(rule)) {
+            if (canStackAddMore(inv.getStack(slot), stack)) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean canStackAddMore(ItemStack target, ItemStack stack) {
+        return !target.isEmpty() && ItemStack.canCombine(target, stack) && target.getCount() < target.getMaxCount();
+    }
 }

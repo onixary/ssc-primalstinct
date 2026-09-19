@@ -6,9 +6,5 @@
   "failure_action": {
     "type": "ssc-primalstinct:add_primalstinct",
     "amount": 0.1
-  },
-  "success_action": {
-    "type": "ssc-primalstinct:add_primalstinct",
-    "amount": -0.2
   }
 }

@@ -17,12 +17,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * insertStack(ItemStack) 重定向到"仅允许槽"的定向插入；insertStack(slot, stack) 对锁定槽直接失败。
  * offer/offerOrDrop 内部复用 insertStack，随之覆盖。直接 setStack 的旁路在规则变化时被
  * InventoryLockManager 的搬移逻辑收编（不做逐 tick 扫描）。
+ * offer 先经 getEmptySlot/getOccupiedSlotWithRoomForStack 选槽再 split+insertStack：
+ * 这两个探测也须只认允许槽，否则选中的锁定槽会吞掉已 split 的物品（关闭工作台物品消失 Bug）。
  */
 @Mixin(PlayerInventory.class)
 public abstract class PlayerInventoryMixin {
 
     @Shadow
     public PlayerEntity player;
+
+    @Shadow
+    public int selectedSlot;
 
     @Inject(method = "insertStack(Lnet/minecraft/item/ItemStack;)Z", at = @At("HEAD"), cancellable = true)
     private void primalstinct$insertIntoAllowedOnly(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
@@ -48,5 +53,30 @@ public abstract class PlayerInventoryMixin {
         if (rule != null && rule.isLocked(slot)) {
             cir.setReturnValue(false);
         }
+    }
+
+    @Inject(method = "getEmptySlot", at = @At("HEAD"), cancellable = true)
+    private void primalstinct$emptySlotWithinAllowed(CallbackInfoReturnable<Integer> cir) {
+        if (!(this.player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer)) {
+            return;
+        }
+        InventoryLockRule rule = InventoryLockManager.ruleIfRestricted(serverPlayer);
+        if (rule == null) {
+            return;
+        }
+        cir.setReturnValue(InventoryLockManager.emptyAllowedSlot((PlayerInventory) (Object) this, rule));
+    }
+
+    @Inject(method = "getOccupiedSlotWithRoomForStack", at = @At("HEAD"), cancellable = true)
+    private void primalstinct$occupiedSlotWithinAllowed(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+        if (!(this.player instanceof net.minecraft.server.network.ServerPlayerEntity serverPlayer)) {
+            return;
+        }
+        InventoryLockRule rule = InventoryLockManager.ruleIfRestricted(serverPlayer);
+        if (rule == null) {
+            return;
+        }
+        cir.setReturnValue(
+                InventoryLockManager.occupiedAllowedSlotWithRoomForStack((PlayerInventory) (Object) this, rule, stack));
     }
 }

@@ -35,10 +35,15 @@ public class OcelotStageDataTest {
         var levels = PrimalLevels.defaults();
         for (int stage : new int[]{1, 2, 3, 4, 5, 3, 1, 5}) {
             var plan = PowerPlanResolver.resolve(profile, stage, levels);
-            assertEquals(overrides.get(stage).add, plan.grants.keySet());
-            // 等级专属能力须来自本级目录；跨级常驻的本能 Power（白板"本能设计"）位于 /instinct/
-            assertTrue(plan.grants.keySet().stream().allMatch(id ->
-                    id.getPath().contains("/level_" + stage + "/") || id.getPath().contains("/instinct/")));
+            // 期望集合按表单数据自 1..stage 折叠得出（先 remove 后 add）：
+            // 等级目录能力随级替换；未被后级 remove 的跨级 Power（如 bed_spawn_only）持续生效，
+            // 降级后从头重算即可还原——resolve() 对任意等级往返都应得到同一终态
+            Set<Identifier> expected = new HashSet<>();
+            for (int l = 1; l <= stage; l++) {
+                expected.removeAll(overrides.get(l).remove);
+                expected.addAll(overrides.get(l).add);
+            }
+            assertEquals("stage " + stage, expected, plan.grants.keySet());
         }
     }
     @Test public void schedulesAndInventoryMatchWhiteboard() throws Exception {

@@ -40,7 +40,8 @@
     "client.InstinctItemTextMixin",
     "client.InstinctOutlineMixin",
     "client.InstinctOutlineColorMixin",
-    "client.FontStorageAccessor"
+    "client.FontStorageAccessor",
+    "client.LivingEntityTurnHeadMixin"
   ],
   "injectors": {
     "defaultRequire": 1

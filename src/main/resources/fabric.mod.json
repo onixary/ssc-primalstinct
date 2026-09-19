@@ -16,6 +16,7 @@
     "sources": "https://github.com/onixary/ssc-primalstinct"
   },
   "license": "MIT",
+  "icon": "assets/ssc-primalstinct/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
