@@ -13,15 +13,16 @@ import net.minecraft.world.World;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 import net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter;
 import net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent;
+import net.onixary.sscPrimalstinct.data.PrimalRosterManager;
+import net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager;
 import net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle;
 
 /**
  * 卡14→眷属实现07 调整（2026-09-14 用户决策）：
  * 镇静碎片——退出原始本能系统，回到 SSC 原版本能逻辑。
- * 使用条件：已觉醒（primalAwakened）；未觉醒使用无作用且不消耗。
+ * 使用条件：已觉醒的初始形态且原始本能满值；其他情况仅提示无作用且不消耗。
  * 退出管线：清觉醒标记与数值 → 管理权切换（速率/游荡/蜷缩清理、Power 结算、HUD 同步、
  * 库存规则放宽归还暂存物品）→ 重建形态 → SSC 本能条清零。
- * 永久形态无需特判：SSC 原版逻辑对 NoInstinct/LockInstinct 旗帜形态自动保持本能条禁用。
  */
 public class SedativeFragmentItem extends Item {
 
@@ -40,7 +41,11 @@ public class SedativeFragmentItem extends Item {
         }
 
         var component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
-        if (!component.isPrimalAwakened()) {
+        var formId = SSCAdapter.currentFormIdentifier(player);
+        if (!PrimalstinctLifecycle.isManaged(player)
+                || formId == null || EndgameRosterManager.isVariant(formId)
+                || EndgameRosterManager.variantFor(formId) == null
+                || component.getValue() < PrimalRosterManager.active().levels.maxValue) {
             player.sendMessage(Text.translatable("ssc-primalstinct.item.sedative_fragment.no_effect"), true);
             return TypedActionResult.fail(stack);
         }
