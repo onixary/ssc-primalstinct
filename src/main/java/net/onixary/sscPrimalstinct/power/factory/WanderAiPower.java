@@ -14,7 +14,8 @@ import net.onixary.sscPrimalstinct.SSCPrimalstinct;
  * 架构参考 Naturalis VanillaMobWanderDriver（服务端隐形代理实体方案，MIT）：
  * 服务端创建不加入世界的代理生物跑原生游荡 AI，玩家跟随其运动向量。
  * 不控制镜头，鼠标转向不影响接管；移动/跳跃/潜行/攻击/使用按键释放控制权。
- * 字段：entity（代理生物 ID，须为 PathAwareEntity 系）；afk_ticks（无输入等待 tick）。
+ * 字段：entity（代理生物 ID，须为 PathAwareEntity 系）；afk_ticks（无输入等待 tick；
+ * 负值（如 -1）禁用静止自动接管，接管逻辑仍可被本能过热等强制调用）。
  * wander_chance：游荡随机抽取参数，越小越频繁，默认 120，最小 1（不是固定等待 tick）。
  * speed_multiplier：代理移动属性倍率，默认 1；非正数或非有限值回退到 1。
  * jump_height_multiplier：代理陆地跳跃高度倍率，默认 1；按原版重力/阻力换算起跳速度。

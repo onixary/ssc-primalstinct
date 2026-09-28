@@ -1,0 +1,12 @@
+{
+  "type": "ssc-primalstinct:instinct_perception",
+  "codex_chance": 0,
+  "palette_chance": 0,
+  "sign_chance": 0,
+  "target_radius": 16,
+  "proxy_entity": "minecraft:ocelot",
+  "hidden": true,
+  "watch_entity": "minecraft:ocelot",
+  "watch_radius": 16,
+  "watch_require_visibility": true
+}

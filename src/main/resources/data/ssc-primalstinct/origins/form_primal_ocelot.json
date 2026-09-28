@@ -51,6 +51,8 @@
     "ssc-primalstinct:ocelot_3/level_5/overheating",
     "ssc-primalstinct:ocelot_3/level_5/regeneration",
     "ssc-primalstinct:ocelot_3/level_5/harvest",
+    "ssc-primalstinct:primal_ocelot/ai",
+    "ssc-primalstinct:primal_ocelot/perception",
     "ssc-primalstinct:bed_spawn_only"
   ],
   "icon": {

@@ -34,7 +34,8 @@ import java.util.UUID;
  * 水平移动指令及一次性起跳速度发给玩家客户端，重力和位置上报走原版移动链路，
  * 仅接管位移，不修改玩家视角。
  *
- * 接管条件：Power 活跃 + 托管 + 未锁定 + 无输入持续 afk_ticks。
+ * 接管条件：Power 活跃 + 托管 + 未锁定 + 无输入持续 afk_ticks（afk_ticks 为负（如 -1）时
+ * 仅保留 InstinctOverheating 等强制接管，不自动接管）。
  * InstinctOverheating 跳过 AFK 等待且输入不能退出；效果结束主动释放。
  * 释放（任一即弃）：直接按键输入（updateInput mixin）、客户端按键上报（C2S）、
  * 疾跑、非站立姿势、Power 失效/锁定/睡眠、断线/接管态变化。
@@ -123,12 +124,18 @@ public final class WanderAiController {
                 return;
             }
             drive(player, power, state);
-        } else if (forced || now - state.lastActiveTick >= Math.max(1, power.getAfkTicks())) {
+        } else if (forced || afkAutoStart(power, now, state)) {
             start(player, power, state);
             if (state.wandering) {
                 drive(player, power, state);
             }
         }
+    }
+
+    /** afk_ticks 为负（如 -1）时禁用“静止一段时间自动接管”，仅保留过热等强制接管入口。 */
+    private static boolean afkAutoStart(WanderAiPower power, long now, State state) {
+        return power.getAfkTicks() >= 0
+                && now - state.lastActiveTick >= Math.max(1, power.getAfkTicks());
     }
 
     private static void refreshPositionBaseline(ServerPlayerEntity player, State state) {
