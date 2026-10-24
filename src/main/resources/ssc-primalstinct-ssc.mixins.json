@@ -5,12 +5,17 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "ssc-primalstinct-refmap.json",
   "mixins": [
+    "FeralRenderFormMixin",
+    "FormAttunerBlockMixin",
+    "FormUtilsMixin",
     "InstinctUtilsMixin",
     "InstinctValueConditionMixin",
     "InstinctUtilsAccessor",
     "StartBookPacketMixin"
   ],
   "client": [
+    "client.FeralModelMixin",
+    "client.FeralTransformAnimationMixin",
     "client.InstinctBarRendererMixin",
     "client.InstinctClientTickMixin"
   ],

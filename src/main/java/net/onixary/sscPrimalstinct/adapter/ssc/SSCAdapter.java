@@ -21,6 +21,14 @@ public final class SSCAdapter {
     private SSCAdapter() {
     }
 
+    /** Independent of instinct ownership: the primal form itself cannot attune. */
+    public static boolean blockPrimalAttunement(PlayerEntity player) {
+        if (!RegPrimalVariants.PRIMAL_OCELOT.equals(currentFormIdentifier(player))) return false;
+        player.sendMessage(net.minecraft.text.Text.translatable("ssc-primalstinct.attunement.blocked")
+                .formatted(net.minecraft.util.Formatting.RED), false);
+        return true;
+    }
+
     public static void invalidateInstinctRate(PlayerEntity player) {
         net.onixary.sscPrimalstinct.mixin.ssc.InstinctUtilsAccessor.primalstinct$rates().put(player.getUuid(), Float.NaN);
     }
@@ -39,7 +47,7 @@ public final class SSCAdapter {
 
     public static void rebuildCurrentForm(PlayerEntity player) {
         var form = net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.getPlayerForm(player);
-        net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form);
+        net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form, true);
     }
 
     public static void refreshFood(PlayerEntity player) {

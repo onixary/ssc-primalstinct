@@ -1,0 +1,8 @@
+{
+  "form": "shape-shifter-curse:axolotl_3",
+  "replace_model": false,
+  "replace_animation": false,
+  "scale": 1.0,
+  "eye_scale": 0.6,
+  "remove_powers": ["shape-shifter-curse:form_axolotl_3_crawling"]
+}

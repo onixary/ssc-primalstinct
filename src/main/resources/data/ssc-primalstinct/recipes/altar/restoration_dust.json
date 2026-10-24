@@ -1,0 +1,11 @@
+{
+  "type": "shape-shifter-curse:altar_shapeless",
+  "ingredients": [
+    { "item": "minecraft:gold_nugget" },
+    { "item": "minecraft:amethyst_shard" },
+    { "item": "shape-shifter-curse:untreated_moondust" }
+  ],
+  "result": { "item": "ssc-primalstinct:restoration_dust", "count": 1 },
+  "time": 200,
+  "moondust_cost": 4
+}

@@ -3,12 +3,15 @@ package net.onixary.sscPrimalstinct.endgame.state;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.PersistentState;
 import net.onixary.sscPrimalstinct.SSCPrimalstinct;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 眷属实现02：终局世界状态（PersistentState，按世界保存）。
@@ -32,6 +35,8 @@ public class EndgameWorldState extends PersistentState {
     }
 
     private final Map<String, AltarInstance> altars = new HashMap<>();
+    /** 结构定位返回区块起点；每个原初祭坛结构的控制器位于其起始区块中心。 */
+    private final Set<String> claimedAltarChunks = new HashSet<>();
     /** 门户状态（眷属实现08）：键 = 维度|内孔中心坐标；BROKEN 后修框需新碎片再开。 */
     private final Map<String, PortalState> portals = new HashMap<>();
     /** 化身维度场景初始化：templateVersion 与完成标记（幂等初始化，眷属实现09）。 */
@@ -59,6 +64,9 @@ public class EndgameWorldState extends PersistentState {
                 altar.portal = PortalState.CLOSED;
             }
             state.altars.put(key, altar);
+            if (altar.rewardClaimed) {
+                state.indexClaimedAltar(key);
+            }
         }
         state.portals.clear();
         NbtCompound portalsTag = tag.getCompound("portals");
@@ -134,6 +142,7 @@ public class EndgameWorldState extends PersistentState {
             return false;
         }
         instance.rewardClaimed = true;
+        indexClaimedAltar(altarKey(world, pos, ritualId));
         markDirty();
         return true;
     }
@@ -142,6 +151,23 @@ public class EndgameWorldState extends PersistentState {
                                    Identifier ritualId) {
         AltarInstance instance = peekAltar(world, pos, ritualId);
         return instance != null && instance.rewardClaimed;
+    }
+
+    /** 不加载区块即可跳过已领取的结构；索引从原有存档记录重建，无需迁移存档格式。 */
+    public boolean isRewardClaimedInChunk(net.minecraft.world.World world, BlockPos locatePos, Identifier ritualId) {
+        return claimedAltarChunks.contains(world.getRegistryKey().getValue() + "|"
+                + new ChunkPos(locatePos).toLong() + "|" + ritualId);
+    }
+
+    private void indexClaimedAltar(String key) {
+        String[] parts = key.split("\\|", 3);
+        if (parts.length != 3) return;
+        try {
+            BlockPos pos = BlockPos.fromLong(Long.parseLong(parts[1]));
+            claimedAltarChunks.add(parts[0] + "|" + new ChunkPos(pos).toLong() + "|" + parts[2]);
+        } catch (NumberFormatException ignored) {
+            // 保留无法解析的旧记录，但不将其当作有效结构索引。
+        }
     }
 
     public PortalState portalState(net.minecraft.world.World world, net.minecraft.util.math.BlockPos pos,

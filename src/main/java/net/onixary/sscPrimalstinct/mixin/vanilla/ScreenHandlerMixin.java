@@ -58,9 +58,8 @@ public abstract class ScreenHandlerMixin {
         if (rule == null) {
             return;
         }
-        // 快捷栏数字键交换：button 为快捷栏索引，锁定槽不可参与
-        if (actionType == SlotActionType.SWAP && button >= 0 && button < InventoryLockRule.HOTBAR_SIZE
-                && rule.isLocked(button)) {
+        // 数字键/F 键交换：button 是另一端的玩家背包索引（副手为 40）。
+        if (actionType == SlotActionType.SWAP && rule.isLocked(button)) {
             ci.cancel();
             return;
         }

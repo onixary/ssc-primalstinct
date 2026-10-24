@@ -1,0 +1,56 @@
+// ./gradlew runServer --offline --init-script tools/endgame-regression.init.gradle
+// Optional: -PsscRegressionRuntimeJar=path/to/a/server-compatible/ssc.jar
+// Runs only in build/endgame-regression-server; the test mod is never packaged in the addon.
+allprojects { p ->
+    afterEvaluate {
+        def runDir = p.layout.projectDirectory.dir('build/endgame-regression-server')
+        p.loom.runs.server.runDir 'build/endgame-regression-server'
+        p.loom.runs.server.programArgs 'nogui'
+        def compileChecks = p.tasks.register('compileEndgameRegression', JavaCompile) {
+            source = p.fileTree('src/testmod/java') { include '**/*.java' }
+            classpath = p.sourceSets.main.compileClasspath + p.sourceSets.main.output
+            destinationDirectory = p.layout.buildDirectory.dir('endgame-regression-classes')
+            options.release = 17
+            options.encoding = 'UTF-8'
+        }
+        def checksJar = p.tasks.register('endgameRegressionJar', Jar) {
+            dependsOn compileChecks
+            from compileChecks.flatMap { it.destinationDirectory }
+            from p.file('src/testmod/resources')
+            archiveFileName = 'endgame-regression.jar'
+            destinationDirectory = runDir.dir('mods')
+        }
+        def prepare = p.tasks.register('prepareEndgameRegression') {
+            dependsOn checksJar
+            doLast {
+                def runtimeJar = p.file(p.findProperty('sscRegressionRuntimeJar') ?: p.findProperty('sscJar') ?:
+                        "../shape-shifter-curse-fabric/build/libs/shape-shifter-curse-fabric-${p.ssc_version}.jar")
+                p.copy {
+                    from runtimeJar
+                    into runDir.dir('mods')
+                    rename { 'shape-shifter-curse.jar' }
+                }
+                runDir.file('eula.txt').asFile.text = 'eula=true\n'
+                runDir.file('server.properties').asFile.text = '''server-ip=127.0.0.1
+server-port=25579
+online-mode=true
+level-name=regression-world
+level-type=minecraft:flat
+generator-settings={"layers":[{"block":"minecraft:bedrock","height":1}],"biome":"minecraft:plains"}
+generate-structures=false
+view-distance=2
+simulation-distance=2
+'''
+            }
+        }
+        p.tasks.named('runServer') {
+            dependsOn prepare
+            doLast {
+                def log = runDir.file('logs/latest.log').asFile
+                if (!log.exists() || !log.getText('UTF-8').contains('ENDGAME_REGRESSION_PASSED')) {
+                    throw new GradleException('Endgame server regression failed; see build/endgame-regression-server/logs/latest.log')
+                }
+            }
+        }
+    }
+}

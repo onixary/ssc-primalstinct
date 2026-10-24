@@ -29,6 +29,7 @@
       "net.onixary.sscPrimalstinct.client.config.PrimalstinctModMenuIntegration"
     ],
     "cardinal-components-entity": [
+      "net.onixary.sscPrimalstinct.feral.RegFeralComponent",
       "net.onixary.sscPrimalstinct.component.RegPrimalstinctComponent",
       "net.onixary.sscPrimalstinct.endgame.state.RegEndgameComponent"
     ]
@@ -39,6 +40,7 @@
   ],
   "custom": {
     "cardinal-components": [
+      "ssc-primalstinct:feral_presentation",
       "ssc-primalstinct:primalstinct",
       "ssc-primalstinct:endgame"
     ]

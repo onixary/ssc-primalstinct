@@ -30,6 +30,7 @@ public class SSCPrimalstinct implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        net.onixary.sscPrimalstinct.feral.FeralService.register();
         net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect.register();
         net.onixary.sscPrimalstinct.effect.PrimalCallEffect.register();
         net.onixary.sscPrimalstinct.instinct.PrimalCallService.register();

@@ -20,6 +20,9 @@ public final class RegPrimalstinctItems {
 
     private static final List<Item> GROUP_ITEMS = new ArrayList<>();
 
+    public static final Item FERAL_CRYSTAL = register("feral_crystal", new FeralCatalystItem(false));
+    public static final Item RESTORATION_DUST = register("restoration_dust", new FeralCatalystItem(true));
+
     /** 眷属实现03：终局方块物品在方块注册时追加进本组（entries 回调惰性读取，注册期追加即生效）。 */
     public static void appendEndgameItems(List<Item> items) {
         GROUP_ITEMS.addAll(items);

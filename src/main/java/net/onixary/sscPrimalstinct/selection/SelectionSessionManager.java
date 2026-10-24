@@ -92,7 +92,7 @@ public final class SelectionSessionManager {
         // 变形
         var form = net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.getForm(formId);
         if (form == null || !net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.isFormCanUse(player, form)) return false;
-        net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form);
+        net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.setForm(player, form);
 
         // 验证实际最终 FormID
         Identifier actualForm = SSCAdapter.currentFormIdentifier(player);

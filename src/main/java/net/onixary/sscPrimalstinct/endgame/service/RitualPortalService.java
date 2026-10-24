@@ -2,6 +2,7 @@ package net.onixary.sscPrimalstinct.endgame.service;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.Block;
+import net.minecraft.block.FluidBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -82,6 +83,10 @@ public final class RitualPortalService {
 
     /** 开门事务：预检（环完整/内孔可替换/未开启）→ 填门面 → 消耗 1 碎片 → 表现与状态。 */
     private static boolean tryOpen(ServerWorld world, ItemEntity item, BlockPos innerOrigin) {
+        BlockPos center = innerOrigin.add(1, 0, 1);
+        if (EndgameWorldState.get(world).portalStateCenter(world, center) == EndgameWorldState.PortalState.OPEN) {
+            return false;
+        }
         // 1) 12 个非角环位全部为原初门框（缺角=四角无要求）
         for (int x = -1; x <= 3; x++) {
             for (int z = -1; z <= 3; z++) {
@@ -99,7 +104,7 @@ public final class RitualPortalService {
         for (int x = 0; x <= 2; x++) {
             for (int z = 0; z <= 2; z++) {
                 BlockState inner = world.getBlockState(innerOrigin.add(x, 0, z));
-                if (!inner.isAir() && !inner.getFluidState().isEmpty()) {
+                if (!inner.isAir() && !(inner.getBlock() instanceof FluidBlock)) {
                     return false;  // 堵孔不开门（眷属实现08）
                 }
             }
@@ -116,7 +121,6 @@ public final class RitualPortalService {
         stack.decrement(1);
         item.setStack(stack);
         // 5) 表现 + 状态记录（CENTER = 内孔中心；OPEN 后不再消费）
-        BlockPos center = innerOrigin.add(1, 0, 1);
         EndgameWorldState.get(world).setPortalState(world, center, EndgameWorldState.PortalState.OPEN);
         world.playSound(null, center, SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.6f, 1.4f);
         world.spawnParticles(ParticleTypes.PORTAL,

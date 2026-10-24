@@ -1,0 +1,11 @@
+{
+  "type": "shape-shifter-curse:altar_shapeless",
+  "ingredients": [
+    { "item": "minecraft:echo_shard" },
+    { "item": "minecraft:rotten_flesh" },
+    { "item": "shape-shifter-curse:untreated_moondust" }
+  ],
+  "result": { "item": "ssc-primalstinct:feral_crystal", "count": 1 },
+  "time": 200,
+  "moondust_cost": 4
+}

@@ -256,7 +256,7 @@ public final class RemnantService {
     }
 
     /** SPENT 判定：世界状态实例记录（不加载区块；奖励已领=该遗迹已耗尽）。 */
-    private static boolean isSpent(ServerWorld world, BlockPos altarPos, EndgameRitualConfig config) {
-        return EndgameWorldState.get(world).isRewardClaimed(world, altarPos, config.ritualId);
+    private static boolean isSpent(ServerWorld world, BlockPos locatePos, EndgameRitualConfig config) {
+        return EndgameWorldState.get(world).isRewardClaimedInChunk(world, locatePos, config.ritualId);
     }
 }

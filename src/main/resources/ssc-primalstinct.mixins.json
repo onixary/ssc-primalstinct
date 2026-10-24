@@ -30,6 +30,7 @@
     "BlockItemPlaceMixin"
   ],
   "client": [
+    "client.PrimalPerkScreenMixin",
     "client.KeyboardInputOverheatingMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.InGameHudMixin",
