@@ -144,6 +144,7 @@ public final class FeralComponent implements AutoSyncedComponent {
         tag.putBoolean("active", active);
         tag.putFloat("scale", profile.scale());
         tag.putFloat("eye_scale", profile.eyeScale());
+        if (profile.modelOrigin() != null) tag.putString("model_origin", profile.modelOrigin().toString());
         var configured = new NbtList();
         for (var id : profile.removePowers()) configured.add(NbtString.of(id.toString()));
         tag.put("remove_powers", configured);
@@ -172,7 +173,8 @@ public final class FeralComponent implements AutoSyncedComponent {
                 tag.contains("model") ? Identifier.tryParse(tag.getString("model")) : null,
                 tag.contains("animation") ? Identifier.tryParse(tag.getString("animation")) : null,
                 tag.contains("scale") ? tag.getFloat("scale") : 1.0f,
-                tag.contains("eye_scale") ? tag.getFloat("eye_scale") : 0.6f, configured);
+                tag.contains("eye_scale") ? tag.getFloat("eye_scale") : 0.6f, configured,
+                tag.contains("model_origin") ? Identifier.tryParse(tag.getString("model_origin")) : null);
         appliedScale = null;
         transitionStart = -1;
         cached = null;

@@ -169,8 +169,8 @@ public final class EndgameRegressionChecks implements ModInitializer {
                 check(state.active() && render.getBodyType() == net.onixary.shapeShifterCurseFabric.player_form.PlayerFormBodyType.FERAL,
                         "Render entry changes body type for mouth items and animations");
                 check(FormUtils.getPlayerForm(player) == form && form.getBodyType() != render.getBodyType(), "Real form remains untouched");
-                check(render.getFormID().equals(form.getFormID()) && render.getRenderLayerOverride().getRight().equals(form.getFormLayer().getRight()),
-                        "Default presentation retains the original model and form identity");
+                check(render.getFormID().equals(form.getFormID()) && render.getRenderLayerOverride().getRight().equals(configuredProfile.modelOrigin() != null ? configuredProfile.modelOrigin() : form.getFormLayer().getRight()),
+                        "Presentation selects configured model origin and retains real form identity");
                 check(render.getDefaultEyeScale() == configuredProfile.eyeScale() && render.getPerkTreeID().equals(tree), "Presentation uses configured eye baseline and preserves perk identity");
                 check(baseScale(player, "WIDTH") == configuredProfile.scale() && baseScale(player, "HEIGHT") == configuredProfile.scale()
                         && baseScale(player, "EYE_HEIGHT") == configuredProfile.eyeScale() && baseScale(player, "HITBOX_HEIGHT") == configuredProfile.eyeScale(),

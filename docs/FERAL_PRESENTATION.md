@@ -31,7 +31,7 @@
 - `eye_scale`：眼高与碰撞箱高度缩放，默认 `0.6`。两项均须为有限正数，语义与 SSC `applyScale(scale, eyeScale)` 一致；同时更新持物渲染使用的默认眼高基准。
 - `remove_powers`：野性化期间移除的原形态 Power ID 数组，默认空数组。只移除真实形态 Origin source 的授权，保留其他来源的同名能力；复原或配置取消屏蔽时补回实际移除的授权与保存的 Power 状态。切到不同形态时丢弃旧记录，由 SSC 加载新形态能力，避免旧能力泄漏。屏蔽记录随玩家保存，重载能力后重新移除。
 - `enabled`：默认 true；false 禁用该条配置。
-- `replace_model`：默认 false，保留自身模型和贴图。true 时必须提供 `model_form`，使用该形态的渲染模型层（含贴图）；相应客户端资源须可用。
+- `replace_model`：默认 false，保留自身模型和贴图。true 时提供 `model_form` 借用已注册形态，或提供 `model_origin` 直接引用 `ssc_form_model` 配置的 `form` 字段（固定 `origins:origin` 层）；两者不能同时指定。相应客户端资源须可用。
 - `replace_animation`：默认 false，使用 SSC 通用四足动画。true 时必须提供 `animation_form`，使用该形态的状态动画控制器。
 
 例如保留蝙蝠模型但使用豹猫的运动动画：
@@ -90,3 +90,7 @@
 蝾螈 `CrawlingPower.tick()` 会持续重写眼高，与野性化不兼容。现通过蝾螈配置的 `remove_powers` 移除 `shape-shifter-curse:form_axolotl_3_crawling`，复原后添加回去；已删除此前的 `FeralCrawlingScaleMixin` 及注册，不再修改爬行能力内部逻辑。当前蝾螈 eye_scale=0.3 保留。
 
 实现参考 `PrimalPowerReconciler`，在服务端主线程按 (power ID, origin source) 动态移除与恢复并同步。回归覆盖能力移除、复原、重新加载能力、其他来源保护、存档记录恢复、配置增删屏蔽和切换形态不泄漏旧能力。
+
+## 蝾螈野性化独立模型
+
+`axolotl_3.json` 已启用 `replace_model`，`model_origin` 为 `ssc-primalstinct:form_axolotl_3_feralization`。客户端配置 `ssc_form_model/origins.origin.ssc-primalstinct.form_axolotl_3_feralization.json` 引用同名导出模型、贴图及 colormask，沿用匹配骨骼的尾巴、头部鳃和眨眼控制器。它只是渲染资源，无需注册新能力形态或 Origin。复原后使用原蝾螈模型；动画仍为通用 Feral。

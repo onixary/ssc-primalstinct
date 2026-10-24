@@ -12,7 +12,10 @@ import java.util.Map;
 
 /** Server datapack whitelist. Resolved choices are synchronized with each affected player. */
 public final class FeralProfiles implements SimpleSynchronousResourceReloadListener {
-    public record Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers) {
+    public record Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers, Identifier modelOrigin) {
+        public Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers) {
+            this(modelForm, animationForm, scale, eyeScale, removePowers, null);
+        }
         public Profile(Identifier modelForm, Identifier animationForm) { this(modelForm, animationForm, 1.0f, 0.6f, java.util.Set.of()); }
         public Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale) {
             this(modelForm, animationForm, scale, eyeScale, java.util.Set.of());
@@ -43,7 +46,9 @@ public final class FeralProfiles implements SimpleSynchronousResourceReloadListe
                     if (json.has("enabled") && !json.get("enabled").getAsBoolean()) continue;
                     Profile profile = new Profile(replacement(json, "model"), replacement(json, "animation"),
                             json.has("scale") ? json.get("scale").getAsFloat() : 1.0f,
-                            json.has("eye_scale") ? json.get("eye_scale").getAsFloat() : 0.6f, removedPowers(json));
+                            json.has("eye_scale") ? json.get("eye_scale").getAsFloat() : 0.6f, removedPowers(json),
+                            json.has("replace_model") && json.get("replace_model").getAsBoolean() && json.has("model_origin")
+                                    ? new Identifier(json.get("model_origin").getAsString()) : null);
                     if (next.putIfAbsent(form, profile) != null) throw new IllegalArgumentException("Duplicate form: " + form);
                 }
             }
@@ -63,6 +68,10 @@ public final class FeralProfiles implements SimpleSynchronousResourceReloadListe
 
     private static Identifier replacement(JsonObject json, String kind) {
         if (!json.has("replace_" + kind) || !json.get("replace_" + kind).getAsBoolean()) return null;
+        if (kind.equals("model") && json.has("model_origin")) {
+            if (json.has("model_form")) throw new IllegalArgumentException("Choose model_origin or model_form, not both");
+            return null;
+        }
         Identifier id = new Identifier(json.get(kind + "_form").getAsString());
         if (RegPlayerForms.getPlayerForm(id) == null) throw new IllegalArgumentException("Unknown " + kind + " form: " + id);
         return id;

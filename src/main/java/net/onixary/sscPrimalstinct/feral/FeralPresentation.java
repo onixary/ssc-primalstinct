@@ -14,10 +14,12 @@ public final class FeralPresentation extends Form_FeralBase {
     private final IForm original;
     private final IForm model;
     private final IForm animation;
+    private final Identifier modelOrigin;
 
     public FeralPresentation(IForm original, FeralProfiles.Profile profile) {
         super(original.getFormID());
         this.original = original;
+        this.modelOrigin = profile.modelOrigin();
         // Same builder as SSC, also records the eye baseline used by held-item rendering.
         this.applyScale(profile.scale(), profile.eyeScale());
         this.model = profile.modelForm() == null ? original : RegPlayerForms.getPlayerForm(profile.modelForm());
@@ -30,6 +32,7 @@ public final class FeralPresentation extends Form_FeralBase {
     @Override public Identifier getPerkTreeID() { return original.getPerkTreeID(); }
     @Override public Pair<Identifier, Identifier> getFormLayer() { return original.getFormLayer(); }
     @Override public Pair<Identifier, Identifier> getRenderLayerOverride() {
+        if (modelOrigin != null) return new Pair<>(new Identifier("origins", "origin"), modelOrigin);
         IForm chosen = model == null ? original : model;
         var override = chosen.getRenderLayerOverride();
         return override == null ? chosen.getFormLayer() : override;
