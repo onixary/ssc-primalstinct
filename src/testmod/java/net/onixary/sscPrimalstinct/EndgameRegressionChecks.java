@@ -148,6 +148,40 @@ public final class EndgameRegressionChecks implements ModInitializer {
         var properties = (net.minecraft.world.level.ServerWorldProperties) world.getLevelProperties();
         long previousTime = world.getTime();
         try {
+            // Reproduce set_form's actual immediate-transform path during a cursed moon.
+            var moon = net.onixary.shapeShifterCurseFabric.player_form.utils.PlayerFormComponent.COMPONENT.get(player);
+            var feral = net.onixary.sscPrimalstinct.feral.RegFeralComponent.FERAL.get(player);
+            for (boolean finishFirst : new boolean[]{false, true}) {
+                FormUtils.setForm(player, RegPlayerForms.BAT_3);
+                check(net.onixary.sscPrimalstinct.feral.FeralService.start(player, false), "Bat starts feral before command switch");
+                properties.setTime(world.getTime() + (finishFirst
+                        ? net.onixary.sscPrimalstinct.feral.FeralService.DURATION
+                        : net.onixary.sscPrimalstinct.feral.FeralService.MIDPOINT));
+                net.onixary.sscPrimalstinct.feral.FeralService.tick(player);
+                moon.isCursedMoonApplied = true;
+                moon.BeforeCursedMoonAppliedForm = null;
+                moon.AfterCursedMoonAppliedForm = null;
+                check(net.onixary.shapeShifterCurseFabric.player_form.utils.TransformManager.forceTransform(player, RegPlayerForms.AXOLOTL_3, true),
+                        "set_form path switches feral bat to ordinary axolotl");
+                check(!feral.active() && !feral.transitioning() && feral.source() == null, "Command clears active and in-flight feral state");
+                var savedState = new NbtCompound();
+                feral.writeToNbt(savedState);
+                feral.readFromNbt(savedState);
+                check(!net.onixary.sscPrimalstinct.feral.FeralService.start(player, true), "Ordinary axolotl correctly has nothing to restore");
+                check(net.onixary.sscPrimalstinct.feral.FeralService.start(player, false), "Permanent axolotl accepts crystal despite moon participation flag after save/load");
+                properties.setTime(world.getTime() + net.onixary.sscPrimalstinct.feral.FeralService.DURATION);
+                net.onixary.sscPrimalstinct.feral.FeralService.tick(player);
+                check(net.onixary.sscPrimalstinct.feral.FeralService.start(player, true), "Newly feral axolotl accepts restoration dust");
+                properties.setTime(world.getTime() + net.onixary.sscPrimalstinct.feral.FeralService.DURATION);
+                net.onixary.sscPrimalstinct.feral.FeralService.tick(player);
+                check(!feral.active() && feral.source() == null, "Restoration clears newly applied state");
+                moon.BeforeCursedMoonAppliedForm = RegPlayerForms.AXOLOTL_2;
+                moon.AfterCursedMoonAppliedForm = RegPlayerForms.AXOLOTL_3;
+                check(!net.onixary.sscPrimalstinct.feral.FeralService.start(player, false), "Actual temporary moon transformation still rejects crystal");
+                moon.isCursedMoonApplied = false;
+                moon.BeforeCursedMoonAppliedForm = null;
+                moon.AfterCursedMoonAppliedForm = null;
+            }
             for (var form : new net.onixary.shapeShifterCurseFabric.player_form.IForm[]{RegPlayerForms.AXOLOTL_3, RegPlayerForms.BAT_3}) {
                 FormUtils.setForm(player, form);
                 var holder = io.github.apace100.apoli.component.PowerHolderComponent.KEY.get(player);

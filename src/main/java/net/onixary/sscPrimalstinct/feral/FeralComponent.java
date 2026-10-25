@@ -144,6 +144,9 @@ public final class FeralComponent implements AutoSyncedComponent {
         tag.putBoolean("active", active);
         tag.putFloat("scale", profile.scale());
         tag.putFloat("eye_scale", profile.eyeScale());
+        var animations = new NbtCompound();
+        profile.powerAnimations().forEach((id, animation) -> animations.putString(id.toString(), animation.toString()));
+        tag.put("power_animations", animations);
         if (profile.modelOrigin() != null) tag.putString("model_origin", profile.modelOrigin().toString());
         var configured = new NbtList();
         for (var id : profile.removePowers()) configured.add(NbtString.of(id.toString()));
@@ -162,6 +165,9 @@ public final class FeralComponent implements AutoSyncedComponent {
     @Override public void readFromNbt(NbtCompound tag) {
         source = tag.contains("source") ? Identifier.tryParse(tag.getString("source")) : null;
         active = source != null && tag.getBoolean("active");
+        var animations = new java.util.HashMap<Identifier, Identifier>();
+        var animationTag = tag.getCompound("power_animations");
+        for (var id : animationTag.getKeys()) animations.put(new Identifier(id), new Identifier(animationTag.getString(id)));
         var configured = new java.util.HashSet<Identifier>();
         for (var entry : tag.getList("remove_powers", NbtElement.STRING_TYPE)) configured.add(new Identifier(entry.asString()));
         removedPowers.clear();
@@ -174,7 +180,7 @@ public final class FeralComponent implements AutoSyncedComponent {
                 tag.contains("animation") ? Identifier.tryParse(tag.getString("animation")) : null,
                 tag.contains("scale") ? tag.getFloat("scale") : 1.0f,
                 tag.contains("eye_scale") ? tag.getFloat("eye_scale") : 0.6f, configured,
-                tag.contains("model_origin") ? Identifier.tryParse(tag.getString("model_origin")) : null);
+                tag.contains("model_origin") ? Identifier.tryParse(tag.getString("model_origin")) : null, animations);
         appliedScale = null;
         transitionStart = -1;
         cached = null;

@@ -1,0 +1,61 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"bat_3_feralization_attach_side": {
+			"loop": true,
+			"animation_length": 0.5417,
+			"bones": {
+				"head": {
+					"position": {
+						"vector": [0, -9, 4]
+					}
+				},
+				"torso": {
+					"rotation": {
+						"vector": [25, 0, 0]
+					},
+					"position": {
+						"vector": [0, -8, 4]
+					}
+				},
+				"rightArm": {
+					"rotation": {
+						"vector": [-87.83399, 17.05372, -3.07511]
+					},
+					"position": {
+						"vector": [3, -9, 3]
+					}
+				},
+				"leftArm": {
+					"rotation": {
+						"vector": [-87.83399, -17.05372, 3.07511]
+					},
+					"position": {
+						"vector": [-3, -9, 3]
+					}
+				},
+				"rightLeg": {
+					"rotation": {
+						"vector": [-49.66569, -4, 9]
+					},
+					"position": {
+						"vector": [0, -3, 7]
+					}
+				},
+				"leftLeg": {
+					"rotation": {
+						"vector": [-49.66569, 4, -9]
+					},
+					"position": {
+						"vector": [0, -3, 7]
+					}
+				},
+				"body": {
+					"position": {
+						"vector": [0, -3, -2]
+					}
+				}
+			}
+		}
+	}
+}

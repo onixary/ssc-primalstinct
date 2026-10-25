@@ -15,11 +15,13 @@ public final class FeralPresentation extends Form_FeralBase {
     private final IForm model;
     private final IForm animation;
     private final Identifier modelOrigin;
+    private final java.util.Map<Identifier, Identifier> powerAnimations;
 
     public FeralPresentation(IForm original, FeralProfiles.Profile profile) {
         super(original.getFormID());
         this.original = original;
         this.modelOrigin = profile.modelOrigin();
+        this.powerAnimations = profile.powerAnimations();
         // Same builder as SSC, also records the eye baseline used by held-item rendering.
         this.applyScale(profile.scale(), profile.eyeScale());
         this.model = profile.modelForm() == null ? original : RegPlayerForms.getPlayerForm(profile.modelForm());
@@ -44,6 +46,12 @@ public final class FeralPresentation extends Form_FeralBase {
     @Override public void registerPowerAnim(PlayerEntity player, AnimSystem.AnimSystemData data) { original.registerPowerAnim(player, data); }
     @Override public boolean isPowerAnimRegistered(PlayerEntity player, AnimSystem.AnimSystemData data) { return original.isPowerAnimRegistered(player, data); }
     @Override public Pair<Boolean, AnimationHolder> getPowerAnim(PlayerEntity player, AnimSystem.AnimSystemData data, Identifier id) {
+        var replacement = powerAnimations.get(id);
+        if (replacement != null) {
+            // Resolve on demand so resource reloads cannot leave a stale animation cached here.
+            var holder = new AnimationHolder(replacement, true);
+            if (holder.getAnimation() != null) return new Pair<>(true, holder);
+        }
         return original.getPowerAnim(player, data, id);
     }
 }

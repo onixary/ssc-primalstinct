@@ -1,7 +1,12 @@
 {
   "form": "shape-shifter-curse:bat_3",
-  "replace_model": false,
+  "replace_model": true,
   "replace_animation": false,
   "scale": 1.0,
-  "eye_scale": 0.6
+  "eye_scale": 0.6,
+  "model_origin": "ssc-primalstinct:form_bat_3_feralization",
+  "power_animations": {
+    "shape-shifter-curse:attach_side": "ssc-primalstinct:bat_3_feralization_attach_side",
+    "shape-shifter-curse:attach_bottom": "ssc-primalstinct:bat_3_feralization_attach_bottom"
+  }
 }

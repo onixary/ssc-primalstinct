@@ -12,7 +12,10 @@ import java.util.Map;
 
 /** Server datapack whitelist. Resolved choices are synchronized with each affected player. */
 public final class FeralProfiles implements SimpleSynchronousResourceReloadListener {
-    public record Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers, Identifier modelOrigin) {
+    public record Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers, Identifier modelOrigin, Map<Identifier, Identifier> powerAnimations) {
+        public Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers, Identifier modelOrigin) {
+            this(modelForm, animationForm, scale, eyeScale, removePowers, modelOrigin, Map.of());
+        }
         public Profile(Identifier modelForm, Identifier animationForm, float scale, float eyeScale, java.util.Set<Identifier> removePowers) {
             this(modelForm, animationForm, scale, eyeScale, removePowers, null);
         }
@@ -22,6 +25,7 @@ public final class FeralProfiles implements SimpleSynchronousResourceReloadListe
         }
         public Profile {
             removePowers = java.util.Set.copyOf(removePowers);
+            powerAnimations = Map.copyOf(powerAnimations);
             if (!Float.isFinite(scale) || scale <= 0 || !Float.isFinite(eyeScale) || eyeScale <= 0)
                 throw new IllegalArgumentException("Feral scale and eye_scale must be finite positive numbers");
         }
@@ -48,7 +52,7 @@ public final class FeralProfiles implements SimpleSynchronousResourceReloadListe
                             json.has("scale") ? json.get("scale").getAsFloat() : 1.0f,
                             json.has("eye_scale") ? json.get("eye_scale").getAsFloat() : 0.6f, removedPowers(json),
                             json.has("replace_model") && json.get("replace_model").getAsBoolean() && json.has("model_origin")
-                                    ? new Identifier(json.get("model_origin").getAsString()) : null);
+                                    ? new Identifier(json.get("model_origin").getAsString()) : null, powerAnimations(json));
                     if (next.putIfAbsent(form, profile) != null) throw new IllegalArgumentException("Duplicate form: " + form);
                 }
             }
@@ -56,6 +60,15 @@ public final class FeralProfiles implements SimpleSynchronousResourceReloadListe
         } catch (Exception e) {
             SSCPrimalstinct.LOGGER.error("Invalid feral presentation configuration; retaining previous whitelist", e);
         }
+    }
+
+    private static Map<Identifier, Identifier> powerAnimations(JsonObject json) {
+        var result = new HashMap<Identifier, Identifier>();
+        if (json.has("power_animations")) {
+            for (var entry : json.getAsJsonObject("power_animations").entrySet())
+                result.put(new Identifier(entry.getKey()), new Identifier(entry.getValue().getAsString()));
+        }
+        return result;
     }
 
     private static java.util.Set<Identifier> removedPowers(JsonObject json) {

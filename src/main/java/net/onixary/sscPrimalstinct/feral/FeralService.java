@@ -35,7 +35,7 @@ public final class FeralService {
             profile = component.profile();
         } else if (component.active() || profile == null || !FormUtils.FinalForm.hasFlag(form)
                 || form.getBodyType() == PlayerFormBodyType.FERAL
-                || PlayerFormComponent.COMPONENT.get(player).isCursedMoonApplied
+                || temporaryCursedMoonForm(player)
                 || EffectManager.hasTransformativeEffect(player)) {
             return false;
         }
@@ -44,6 +44,15 @@ public final class FeralService {
         ModPacketsS2CServer.sendTransformState(player, true, form.getFormID(), form.getFormID());
         PlayerTransformEffectManager.applyStartTransformEffect(player, MIDPOINT);
         return true;
+    }
+
+    private static boolean temporaryCursedMoonForm(ServerPlayerEntity player) {
+        var component = PlayerFormComponent.COMPONENT.get(player);
+        // The moon flag is also set for permanent forms which never transformed.
+        // Only the recorded moon transformation's current result is temporary.
+        return component.isCursedMoonApplied && component.BeforeCursedMoonAppliedForm != null
+                && component.AfterCursedMoonAppliedForm != null
+                && component.AfterCursedMoonAppliedForm.isPlayerForm(player);
     }
 
     public static void tick(ServerPlayerEntity player) {

@@ -1,6 +1,6 @@
 # 野性化表现
 
-`ssc-primalstinct:feral_crystal`（野性结晶）将白名单内、非四足的最终形态切换为 Feral 表现。默认白名单是 `shape-shifter-curse:axolotl_3` 和 `shape-shifter-curse:bat_3`。药水临时变形、诅咒之月状态、已野性化或正在变形时不消耗结晶。
+`ssc-primalstinct:feral_crystal`（野性结晶）将白名单内、非四足的最终形态切换为 Feral 表现。默认白名单是 `shape-shifter-curse:axolotl_3` 和 `shape-shifter-curse:bat_3`。药水临时变形、诅咒之月实际造成的临时形态、已野性化或正在变形时不消耗结晶。
 
 `ssc-primalstinct:restoration_dust`（复原粉尘）撤销野性化。两者右键使用，成功消耗 1 个（创造模式不消耗），失败保留物品并显示本地化提示。
 
@@ -94,3 +94,22 @@
 ## 蝾螈野性化独立模型
 
 `axolotl_3.json` 已启用 `replace_model`，`model_origin` 为 `ssc-primalstinct:form_axolotl_3_feralization`。客户端配置 `ssc_form_model/origins.origin.ssc-primalstinct.form_axolotl_3_feralization.json` 引用同名导出模型、贴图及 colormask，沿用匹配骨骼的尾巴、头部鳃和眨眼控制器。它只是渲染资源，无需注册新能力形态或 Origin。复原后使用原蝾螈模型；动画仍为通用 Feral。
+
+## 野性化 Power 动画映射
+
+`power_animations` 独立于 `replace_animation`，将技能动画 ID 映射到玩家动画资源 ID，默认空对象。仅在野性化期间生效；未配置或资源缺失时委托原形态，复原后使用原动画。映射随玩家状态保存、同步，数据包 `/reload` 可更新映射。没有新增 Mixin，不改变攀附能力。
+
+蝙蝠已配置：
+
+```json
+"power_animations": {
+  "shape-shifter-curse:attach_side": "ssc-primalstinct:bat_3_feralization_attach_side",
+  "shape-shifter-curse:attach_bottom": "ssc-primalstinct:bat_3_feralization_attach_bottom"
+}
+```
+
+占位资源位于 `assets/ssc-primalstinct/player_animation/`，分别为 `bat_3_feralization_attach_side.json` 与 `bat_3_feralization_attach_bottom.json`，内容暂复制原蝙蝠对应动画。替换时保留文件名、内部动画名，保持循环动画，使用玩家动画骨骼命名。资源替换后重载客户端资源（F3+T）或重启。沿墙移动的 CLIMB 状态不由该映射处理。
+
+## 命令切形态与诅咒之月
+
+`isCursedMoonApplied` 是诅咒之月参与标记，最终形态未变身也会被置为 true。结晶只在该标记与 Before/After 变形记录同时存在、当前形态等于 After 时拒绝使用，不再仅因夜晚参与标记拒绝永久形态。`set_form` 切换会清除野性化；普通形态拒绝复原粉尘属于正常行为，重新野性化后可复原。回归覆盖蝙蝠演出中/完成后经命令路径切蝾螈、保存读取、重新野性化/复原，以及实际月变身仍被拒绝。
