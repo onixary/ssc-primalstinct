@@ -1,6 +1,7 @@
 package net.onixary.sscPrimalstinct.adapter.ssc;
 
 import net.minecraft.util.Identifier;
+import net.onixary.shapeShifterCurseFabric.player_form.NormalForm;
 import net.onixary.shapeShifterCurseFabric.player_form.PlayerFormBodyType;
 import net.onixary.shapeShifterCurseFabric.player_form.RegPlayerForms;
 import net.onixary.shapeShifterCurseFabric.player_form.forms.Form_Ocelot3;
@@ -32,7 +33,7 @@ public final class RegPrimalVariants {
                 .formFlag(FormUtils.FinalForm, FormUtils.InhibitorImmune,
                         FormUtils.NoInstinct, FormUtils.NoCursedMoonEffect)
                 .bodyType(PlayerFormBodyType.FERAL)
-                .applyScale(0.75f, 0.6f));
+                .applyScaleFunc(NormalForm.NORMAL_SCALE_FUNC_BUILDER.apply(0.75f, 0.6f)));
         SSCPrimalstinct.LOGGER.info("[primalstinct] 原始变体形态已注册：{}", PRIMAL_OCELOT);
         // 其余名单形态（snow_fox_3 / familiar_fox_3 / anubis_wolf_3）在 D 里程碑（眷属实现12 全形态覆盖）追加
     }

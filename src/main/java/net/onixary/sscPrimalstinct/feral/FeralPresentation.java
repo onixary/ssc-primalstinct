@@ -22,8 +22,9 @@ public final class FeralPresentation extends Form_FeralBase {
         this.original = original;
         this.modelOrigin = profile.modelOrigin();
         this.powerAnimations = profile.powerAnimations();
-        // Same builder as SSC, also records the eye baseline used by held-item rendering.
-        this.applyScale(profile.scale(), profile.eyeScale());
+        // Configure SSC scaling and record the eye baseline used by held-item rendering separately.
+        this.applyScaleFunc(NORMAL_SCALE_FUNC_BUILDER.apply(profile.scale(), profile.eyeScale()));
+        this.OverwriteEyeScale(profile.eyeScale());
         this.model = profile.modelForm() == null ? original : RegPlayerForms.getPlayerForm(profile.modelForm());
         this.animation = profile.animationForm() == null ? null : RegPlayerForms.getPlayerForm(profile.animationForm());
     }
