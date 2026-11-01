@@ -22,7 +22,11 @@ public final class PrimalCallService {
                 || player.isSpectator() || SelectionSessionManager.isPending(player)
                 || RegPrimalstinctComponent.PRIMALSTINCT.get(player).isPrimalAwakened()) return false;
         var form = SSCAdapter.currentFormIdentifier(player);
-        return form != null && PrimalRosterManager.resolve(form) != null;
+        var profile = form == null ? null : PrimalRosterManager.resolve(form);
+        // 原始呼唤只属于 selectable=true 的完整流程入口形态（豹猫 ocelot_3）；
+        // selectable=false 的终局/变体永久形态（如 primal_ocelot，转化台路径不置觉醒标记）
+        // 不参与杀怪触发流程，否则 buff 到期还会把不该觉醒的形态拉进 awaken()。
+        return profile != null && profile.selectable;
     }
 
     public static boolean apply(ServerPlayerEntity player) {
