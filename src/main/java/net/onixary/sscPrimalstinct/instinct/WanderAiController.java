@@ -73,7 +73,7 @@ public final class WanderAiController {
         long now = player.age;
         WanderAiPower power = findActivePower(player);
         boolean forced = player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE);
-        if (forced && !player.isCreative() && power != null && PrimalstinctLifecycle.isManaged(player)) {
+        if (forced && !player.isCreative() && power != null && PrimalstinctLifecycle.canUseFormAbilities(player)) {
             // Sleeping is an input action too; it must not become an escape from takeover.
             if (player.hasVehicle()) player.stopRiding();
             net.onixary.sscPrimalstinct.sleep.CurlSleepController.wakeUp(player, "instinct_overheating");
@@ -81,7 +81,7 @@ public final class WanderAiController {
         }
         boolean blocked = !player.isAlive() || player.isCreative() || player.isSpectator() || player.hasVehicle()
                 || player.getAbilities().flying || power == null
-                || !PrimalstinctLifecycle.isManaged(player)
+                || !PrimalstinctLifecycle.canUseFormAbilities(player)
                 || PrimalstinctPresentation.isLockCinematicActive(player)
                 || player.isSleeping()
                 || net.onixary.sscPrimalstinct.sleep.CurlSleepController.isCurlSleeping(player);
@@ -347,7 +347,7 @@ public final class WanderAiController {
                                                              WanderAiPower power, boolean throughWalls) {
         java.util.Set<Integer> targets = new java.util.HashSet<>();
         if (!Double.isFinite(radius) || radius <= 0 || !player.isAlive() || player.isCreative() || player.isSpectator()
-                || !PrimalstinctLifecycle.isManaged(player)) return targets;
+                || !PrimalstinctLifecycle.canUseFormAbilities(player)) return targets;
         double range = Math.min(radius, 128);
         MobEntity probe = createProxy(player, power);
         if (probe == null) return targets;
@@ -370,7 +370,7 @@ public final class WanderAiController {
 
     public static boolean isForced(ServerPlayerEntity player) {
         return !player.isCreative() && player.hasStatusEffect(InstinctOverheatingEffect.INSTANCE)
-                && PrimalstinctLifecycle.isManaged(player) && findActivePower(player) != null;
+                && PrimalstinctLifecycle.canUseFormAbilities(player) && findActivePower(player) != null;
     }
 
     /** 服务端按键输入标记（updateInput mixin 写入；仅服务线程）。 */

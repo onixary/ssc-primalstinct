@@ -16,7 +16,7 @@ public class BedSpawnOnlyPower extends Power {
     public BedSpawnOnlyPower(PowerType<?> type, LivingEntity entity) { super(type, entity); }
 
     public static boolean applies(PlayerEntity player) {
-        return PrimalstinctLifecycle.isManaged(player)
+        return PrimalstinctLifecycle.canUseFormAbilities(player)
                 && PowerHolderComponent.getPowers(player, BedSpawnOnlyPower.class).stream().anyMatch(Power::isActive);
     }
 

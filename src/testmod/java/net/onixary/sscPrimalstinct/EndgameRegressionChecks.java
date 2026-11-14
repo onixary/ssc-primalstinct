@@ -55,6 +55,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
             ran = true;
             try {
                 ServerWorld world = server.getOverworld();
+                checkInnatePrimalAbilities(server);
                 checkSscCompatibility(server);
                 checkFeralPresentation(server);
                 checkPortal(world);
@@ -74,6 +75,39 @@ public final class EndgameRegressionChecks implements ModInitializer {
     private void check(boolean condition, String message) {
         if (!condition) throw new AssertionError(message);
         checks++;
+    }
+
+    private void checkInnatePrimalAbilities(MinecraftServer server) {
+        var player = player(server, "InnatePrimal");
+        var component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
+        var primal = RegPlayerForms.getPlayerForm(net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT);
+        check(net.onixary.shapeShifterCurseFabric.player_form.utils.TransformManager.forceTransform(player, primal, true),
+                "Direct set_form path accepts primal ocelot");
+        PrimalPowerReconciler.reconcile(player);
+        check(net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(player),
+                "Unawakened primal form can use innate abilities");
+        check(!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)
+                        && !component.isPrimalAwakened() && !component.isInstinctInitialized(),
+                "Direct primal form does not initialize instinct progression");
+        check(net.onixary.sscPrimalstinct.sleep.CurlSleepController.findActivePower(player) != null,
+                "Direct primal form can curl sleep");
+        check(net.onixary.sscPrimalstinct.power.factory.BedSpawnOnlyPower.applies(player),
+                "Direct primal form retains bed spawn restriction");
+        player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                net.onixary.sscPrimalstinct.effect.InstinctOverheatingEffect.INSTANCE, 100));
+        check(net.onixary.sscPrimalstinct.instinct.WanderAiController.isForced(player),
+                "Direct primal form supports forced overheating takeover");
+        net.onixary.sscPrimalstinct.instinct.WanderAiController.tickPlayer(player);
+        check(net.onixary.sscPrimalstinct.instinct.WanderAiController.isTakeoverActive(player),
+                "Unawakened primal AI actually starts");
+        FormUtils.setForm(player, RegPlayerForms.OCELOT_3);
+        net.onixary.sscPrimalstinct.instinct.WanderAiController.tickPlayer(player);
+        check(!net.onixary.sscPrimalstinct.instinct.WanderAiController.isTakeoverActive(player)
+                        && !net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(player),
+                "Leaving primal form releases innate AI without awakening ordinary ocelot");
+        check(!net.onixary.sscPrimalstinct.power.factory.BedSpawnOnlyPower.applies(player)
+                        && net.onixary.sscPrimalstinct.sleep.CurlSleepController.findActivePower(player) == null,
+                "Ordinary unawakened form does not retain primal sleep rules");
     }
 
     private void checkSscCompatibility(MinecraftServer server) throws Exception {
@@ -106,7 +140,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
         PrimalPowerReconciler.reconcile(player);
         check(!holder.hasPower(pounce, source) && holder.hasPower(replacement), "Rebuild keeps only addon pounce");
         var armor = io.github.apace100.apoli.power.PowerTypeRegistry.get(new Identifier("shape-shifter-curse:perks/ocelot_armor_1"));
-        check(holder.hasPower(armor, source), "Reconciliation preserves unlocked perks");
+        check(!holder.hasPower(armor, source), "Managed forms clear unlocked perk effects");
         var primal = RegPlayerForms.getPlayerForm(net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT);
         check(primal.getPerkTreeID().equals(net.onixary.shapeShifterCurseFabric.perk.RegPerks.EMPTY_PERK_TREE), "Primal ocelot has no perk tree");
         FormUtils.setForm(player, primal);
@@ -122,7 +156,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
         check(net.onixary.shapeShifterCurseFabric.blocks.FormAttunerBlock.playerLastAttunerPos.get(player) == null,
                 "Primal attuner use must be blocked before recording attunement");
         FormUtils.setForm(player, RegPlayerForms.OCELOT_3);
-        check(holder.hasPower(armor, source), "Ordinary ocelot perk progress remains intact");
+        check(!holder.hasPower(armor, source), "Cleared perks do not return after switching forms");
         check(!net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter.blockPrimalAttunement(player),
                 "Ordinary ocelot may still open perks");
         attuner.onUse(attuner.getDefaultState(), world, attunerPos, player, net.minecraft.util.Hand.MAIN_HAND, hit);
@@ -205,7 +239,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
                 check(FormUtils.getPlayerForm(player) == form && form.getBodyType() != render.getBodyType(), "Real form remains untouched");
                 check(render.getFormID().equals(form.getFormID()) && render.getRenderLayerOverride().getRight().equals(configuredProfile.modelOrigin() != null ? configuredProfile.modelOrigin() : form.getFormLayer().getRight()),
                         "Presentation selects configured model origin and retains real form identity");
-                check(render.getDefaultEyeScale() == configuredProfile.eyeScale() && render.getPerkTreeID().equals(tree), "Presentation uses configured eye baseline and preserves perk identity");
+                check(render.getEyeScale() == configuredProfile.eyeScale() && render.getPerkTreeID().equals(tree), "Presentation uses configured eye baseline and preserves perk identity");
                 check(baseScale(player, "WIDTH") == configuredProfile.scale() && baseScale(player, "HEIGHT") == configuredProfile.scale()
                         && baseScale(player, "EYE_HEIGHT") == configuredProfile.eyeScale() && baseScale(player, "HITBOX_HEIGHT") == configuredProfile.eyeScale(),
                         "Midpoint applies default body, eye and hitbox scales");
@@ -221,7 +255,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
                     check(baseScale(player, "EYE_HEIGHT") == 0.5f, "Removed crawling cannot overwrite eye scale");
                 }
                 check(baseScale(player, "WIDTH") == 0.8f && baseScale(player, "EYE_HEIGHT") == 0.5f
-                        && state.renderForm(form).getDefaultEyeScale() == 0.5f, "Changed profile updates physical scale and render eye baseline together");
+                        && state.renderForm(form).getEyeScale() == 0.5f, "Changed profile updates physical scale and render eye baseline together");
                 state.setProfile(net.onixary.sscPrimalstinct.feral.FeralProfiles.get(form.getFormID()));
                 state.ensureScale();
                 var customRender = new net.onixary.sscPrimalstinct.feral.FeralPresentation(form,

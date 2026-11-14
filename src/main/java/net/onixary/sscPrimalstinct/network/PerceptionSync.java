@@ -19,7 +19,7 @@ public final class PerceptionSync {
                 java.util.Set<Integer> targets = new java.util.HashSet<>();
                 boolean hasHeat = false; float heatMeter = 0; int heatTargets = 0; boolean heatFrozen = false;
                 java.util.Set<Integer> watch = new java.util.HashSet<>();
-                if (player.isAlive() && PrimalstinctLifecycle.isManaged(player)) {
+                if (player.isAlive() && PrimalstinctLifecycle.canUseFormAbilities(player)) {
                     for (var power : PowerHolderComponent.getPowers(player, InstinctPerceptionPower.class)) {
                         if (!power.isActive()) continue;
                         codex = Math.max(codex, power.codex); palette = Math.max(palette, power.palette);

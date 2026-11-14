@@ -146,7 +146,12 @@ public final class PrimalstinctService {
                 player.removeStatusEffect(net.onixary.sscPrimalstinct.effect.PrimalCallEffect.INSTANCE);
             }
             PrimalstinctLifecycle.refresh(player);
-            if (!PrimalstinctLifecycle.isManaged(player)) continue;
+            if (!PrimalstinctLifecycle.isManaged(player)) {
+                // Innate endgame powers still tick; no instinct initialization, growth or presentation.
+                net.onixary.sscPrimalstinct.sleep.CurlSleepController.validate(player);
+                WanderAiController.tickPlayer(player);
+                continue;
+            }
             // 1) 基础自然增长：名单内形态自动持有（POWER 来源，满值即停）
             ensureBaseRate(player);
             // 1.5) 速率 Power 扫描：活跃贡献/失活移除（卡07，稳定键 "power:<source_id>"）

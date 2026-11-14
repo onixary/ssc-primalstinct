@@ -47,7 +47,7 @@ public final class PerceptionClientState {
     public static boolean heatFrozen() { return heatFrozen; }
     private static boolean active() {
         var client = MinecraftClient.getInstance();
-        return client.isOnThread() && client.player != null && client.player.isAlive() && client.world != null && ClientPrimalstinctState.managed()
+        return client.isOnThread() && client.player != null && client.player.isAlive() && client.world != null && net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(client.player)
                 && client.world.getRegistryKey().getValue().equals(dimension);
     }
     public static boolean outlined(int id) { return active() && targets.contains(id); }

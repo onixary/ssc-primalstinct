@@ -32,10 +32,21 @@ public final class PrimalstinctLifecycle {
     public static boolean suppressLegacy(PlayerEntity player) {
         return isManaged(player) || player instanceof ServerPlayerEntity sp && SelectionSessionManager.isPending(sp);
     }
+
+    /** Innate endgame abilities do not require awakening or start instinct progression. */
+    public static boolean canUseFormAbilities(PlayerEntity player) {
+        if (player instanceof ServerPlayerEntity sp && SelectionSessionManager.isPending(sp)) return false;
+        return isManaged(player) || net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT
+                .equals(SSCAdapter.currentFormIdentifier(player));
+    }
     public static void refresh(ServerPlayerEntity player) {
         boolean managed = isManaged(player);
         Boolean previous = MANAGED.put(player.getUuid(), managed);
-        if (managed) RegPrimalstinctComponent.PRIMALSTINCT.get(player).initializeInstinct();
+        if (managed) {
+            RegPrimalstinctComponent.PRIMALSTINCT.get(player).initializeInstinct();
+            // Also covers restored saves and switches between two managed forms.
+            SSCAdapter.clearCurrentFormPerks(player);
+        }
         if (previous == null || previous != managed) {
             WanderAiController.stopPlayer(player);
             PrimalstinctService.clearPlayer(player.getUuid());

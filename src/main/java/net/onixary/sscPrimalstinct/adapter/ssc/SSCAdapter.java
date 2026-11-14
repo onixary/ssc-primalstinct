@@ -50,6 +50,16 @@ public final class SSCAdapter {
         net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils._loadForm(player, form, true);
     }
 
+    /** Reset only the active form's perk tree, using SSC's reset/reapply semantics. */
+    public static void clearCurrentFormPerks(net.minecraft.server.network.ServerPlayerEntity player) {
+        PlayerFormComponent component = PlayerFormComponent.COMPONENT.get(player);
+        if (component.formPerkMap.remove(component.nowForm.getPerkTreeID()) != null) {
+            component.sync();
+            // Perks can both add powers and remove baseline powers; rebuild both sides.
+            net.onixary.shapeShifterCurseFabric.player_form.utils.FormUtils.reApplyPower(player);
+        }
+    }
+
     public static void refreshFood(PlayerEntity player) {
         net.onixary.shapeShifterCurseFabric.util.CustomEdibleUtils.ReloadPlayerCustomEdible(player);
     }

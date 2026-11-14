@@ -122,7 +122,7 @@ public final class CurlSleepController {
     }
 
     public static @Nullable CurlSleepPower findActivePower(ServerPlayerEntity player) {
-        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)) return null;
+        if (!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(player)) return null;
         for (CurlSleepPower power : PowerHolderComponent.getPowers(player, CurlSleepPower.class)) {
             if (power.isActive()) return power;
         }
