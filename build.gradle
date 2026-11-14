@@ -10,6 +10,16 @@ base {
     archivesName = project.archives_base_name
 }
 
+def use_precompile_ssc = System.getenv('use_precompile_ssc')
+if (use_precompile_ssc != null && use_precompile_ssc == "true") {
+    use_precompile_ssc = true
+} else {
+    use_precompile_ssc = false
+}
+
+// 如果不是开发者 可以把下面这行解除注释 可以不用编译SSC
+// use_precompile_ssc = true
+
 loom {
     runs {
         client {
@@ -110,6 +120,7 @@ repositories {
 //  mods 目录的生产 jar 由 FabricLoader 运行时重映射，带完整模组集知识，无此问题。
 //  更新 SSC 基线后：SSC 工程重新 remapJar，再手动把 build/libs 产物替换进两个 run/*/mods。）
 def sscJar = file(properties.sscJar ?: "../shape-shifter-curse-fabric/build/libs/shape-shifter-curse-fabric-${project.ssc_version}.jar")
+def sscJarPreCompile = file("./libs/shape-shifter-curse-fabric-1.10.0.jar")
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -120,10 +131,14 @@ dependencies {
 
     // SSC 仅编译引用；运行时见 installSscToRunDirs。
     // 注意 SSC 的 Fabric mod ID 是 shape-shifter-curse（与产物名不同）；其内嵌 Origins 源码，环境不得另装真 Origins。
-    if (!sscJar.exists()) {
-        throw new GradleException("SSC 基线产物未找到: ${sscJar}\n请先在 SSC 工程执行 ./gradlew remapJar 生成 ${project.ssc_version} 产物，或用 -PsscJar=... 指定 jar 路径。")
+    if (!use_precompile_ssc) {
+        if (!sscJar.exists()) {
+            throw new GradleException("SSC 基线产物未找到: ${sscJar}\n请先在 SSC 工程执行 ./gradlew remapJar 生成 ${project.ssc_version} 产物，或用 -PsscJar=... 指定 jar 路径。")
+        }
+        modCompileOnly files(sscJar)
+    } else {
+        modCompileOnly files(sscJarPreCompile)
     }
-    modCompileOnly files(sscJar)
 
     // 与 SSC 对齐的编译依赖；运行时由下方平铺声明提供（Apoli 同时也是 SSC 的 jij），不重复 include。
     modImplementation("io.github.apace100:apoli:${project.apoli_version}") { transitive = false }
