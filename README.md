@@ -10,7 +10,7 @@ The official addon of [Shape Shifter Curse](https://github.com/onixary/shape-shi
 
 ## Roadmap
 
-● Primal Ocelot route (missing localization descriptions)
+● Primal Ocelot route
 
 ○ Primal Snow Fox route
 
