@@ -55,6 +55,7 @@ public final class EndgameRegressionChecks implements ModInitializer {
             ran = true;
             try {
                 ServerWorld world = server.getOverworld();
+                checkSnowyAltar(world);
                 checkInnatePrimalAbilities(server);
                 checkSscCompatibility(server);
                 checkFeralPresentation(server);
@@ -77,7 +78,52 @@ public final class EndgameRegressionChecks implements ModInitializer {
         checks++;
     }
 
-    private void checkInnatePrimalAbilities(MinecraftServer server) {
+    private void checkSnowyAltar(ServerWorld world) {
+        var template = world.getServer().getStructureTemplateManager().getTemplateOrBlank(
+                net.onixary.sscPrimalstinct.endgame.worldgen.RegEndgameWorldgen.TEMPLATE_ID);
+        var anchor = new BlockPos(15, 180, 15);
+        var config = EndgameRosterManager.active();
+        var piece = new net.onixary.sscPrimalstinct.endgame.worldgen.PrimalAltarStructurePiece(
+                net.onixary.sscPrimalstinct.endgame.worldgen.RegEndgameWorldgen.PRIMAL_ALTAR_PIECE,
+                anchor, config.ritualId,
+                new Identifier[]{new Identifier("minecraft:stone"), new Identifier("minecraft:dirt"), new Identifier("minecraft:diamond")},
+                new int[]{1, 2, 3}, template);
+        var bounds = piece.getBoundingBox();
+        var structure = world.getRegistryManager().get(net.minecraft.registry.RegistryKeys.STRUCTURE)
+                .get(new Identifier("ssc-primalstinct:primal_altar"));
+        check(structure.getFeatureGenerationStep() == net.minecraft.world.gen.GenerationStep.Feature.TOP_LAYER_MODIFICATION,
+                "Altar must generate after surface snow-block features");
+        // Neighbor chunks first, anchor chunk last: old whole-template replay lost their bindings.
+        var chunks = net.minecraft.util.math.ChunkPos.stream(
+                new net.minecraft.util.math.ChunkPos(bounds.getMinX() >> 4, bounds.getMinZ() >> 4),
+                new net.minecraft.util.math.ChunkPos(bounds.getMaxX() >> 4, bounds.getMaxZ() >> 4))
+                .sorted(java.util.Comparator.comparingInt(c -> c.equals(new net.minecraft.util.math.ChunkPos(anchor)) ? 1 : 0)).toList();
+        for (var chunk : chunks) {
+            var box = new net.minecraft.util.math.BlockBox(chunk.getStartX(), world.getBottomY(), chunk.getStartZ(),
+                    chunk.getEndX(), world.getTopY() - 1, chunk.getEndZ());
+            for (var pos : BlockPos.iterate(chunk.getStartX(), bounds.getMinY(), chunk.getStartZ(),
+                    chunk.getEndX(), bounds.getMaxY(), chunk.getEndZ())) {
+                world.setBlockState(pos, Blocks.SNOW_BLOCK.getDefaultState(), Block.NOTIFY_LISTENERS);
+            }
+            piece.generate(world, world.getStructureAccessor(), world.getChunkManager().getChunkGenerator(),
+                    world.random, box, chunk, anchor);
+            piece.placeCore(world, box, world.random);
+        }
+        var altar = (net.onixary.sscPrimalstinct.endgame.block.PrimalAltarBlockEntity) world.getBlockEntity(anchor);
+        check(altar != null && altar.getPedestals().size() == 3, "Snowy altar retains all three pedestals");
+        for (var pos : altar.getPedestals()) {
+            check(world.getBlockEntity(pos) instanceof net.onixary.sscPrimalstinct.endgame.block.PrimalPedestalBlockEntity pedestal
+                    && config.ritualId.equals(pedestal.getRitualId()) && anchor.equals(pedestal.getControllerPos())
+                    && pedestal.getRequirementItem() != null, "Each snowy pedestal retains its offering and controller binding");
+        }
+        for (var path : altar.getWirePaths()) {
+            check(!path.isEmpty(), "Each pedestal has a wire path");
+            for (var pos : path) check(world.getBlockState(pos).isOf(RegEndgameBlocks.PRIMAL_ENERGY_WIRE),
+                    "Snow blocks do not replace altar wires");
+        }
+    }
+
+    private void checkInnatePrimalAbilities(MinecraftServer server) throws Exception {
         var player = player(server, "InnatePrimal");
         var component = RegPrimalstinctComponent.PRIMALSTINCT.get(player);
         var primal = RegPlayerForms.getPlayerForm(net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT);
@@ -85,10 +131,38 @@ public final class EndgameRegressionChecks implements ModInitializer {
                 "Direct set_form path accepts primal ocelot");
         PrimalPowerReconciler.reconcile(player);
         check(net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(player),
-                "Unawakened primal form can use innate abilities");
-        check(!net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)
-                        && !component.isPrimalAwakened() && !component.isInstinctInitialized(),
-                "Direct primal form does not initialize instinct progression");
+                "Direct primal form can use innate abilities");
+        check(net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.isManaged(player)
+                        && component.isPrimalAwakened() && component.isInstinctInitialized(),
+                "Direct primal form awakens and enables the instinct page");
+        var holder = io.github.apace100.apoli.component.PowerHolderComponent.KEY.get(player);
+        try (var input = getClass().getResourceAsStream("/data/ssc-primalstinct/origins/form_primal_ocelot.json")) {
+            var origin = com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(input,
+                    java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject();
+            for (var power : origin.getAsJsonArray("powers")) {
+                check(holder.hasPower(io.github.apace100.apoli.power.PowerTypeRegistry.get(new Identifier(power.getAsString()))),
+                        "Direct primal form grants " + power.getAsString());
+            }
+        }
+        var rule = InventoryLockManager.ruleIfRestricted(player);
+        check(rule != null && rule.allowedHotbarSlots() == 1 && rule.allowedMainSlots() == 27,
+                "Direct primal form enforces one hotbar slot without restricting main inventory");
+        var packet = (net.onixary.sscPrimalstinct.network.PrimalstinctStateS2C) method(
+                net.onixary.sscPrimalstinct.network.PrimalstinctNetwork.class, "snapshot", MinecraftServer.class,
+                ServerPlayerEntity.class, net.onixary.sscPrimalstinct.component.PrimalstinctComponent.class, float.class)
+                .invoke(null, server, player, component, 0f);
+        check(packet.managed(), "Client snapshot enables the instinct button");
+        component.setValue(75);
+        net.onixary.sscPrimalstinct.adapter.ssc.SSCAdapter.rebuildCurrentForm(player);
+        PrimalPowerReconciler.reconcile(player);
+        check(component.getValue() == 75 && InventoryLockManager.ruleIfRestricted(player).allowedHotbarSlots() == 1,
+                "Repeated form rebuild preserves instinct progress and hotbar restriction");
+        // Reproduce a saved primal form that predates automatic awakening, without another form-change event.
+        component.exitPrimalSystem();
+        net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.forget(player.getUuid());
+        PrimalPowerReconciler.reconcile(player);
+        check(component.isPrimalAwakened() && InventoryLockManager.ruleIfRestricted(player).allowedHotbarSlots() == 1,
+                "Restored unawakened primal save is repaired by reconciliation");
         check(net.onixary.sscPrimalstinct.sleep.CurlSleepController.findActivePower(player) != null,
                 "Direct primal form can curl sleep");
         check(net.onixary.sscPrimalstinct.power.factory.BedSpawnOnlyPower.applies(player),
@@ -99,15 +173,20 @@ public final class EndgameRegressionChecks implements ModInitializer {
                 "Direct primal form supports forced overheating takeover");
         net.onixary.sscPrimalstinct.instinct.WanderAiController.tickPlayer(player);
         check(net.onixary.sscPrimalstinct.instinct.WanderAiController.isTakeoverActive(player),
-                "Unawakened primal AI actually starts");
+                "Direct primal AI actually starts");
         FormUtils.setForm(player, RegPlayerForms.OCELOT_3);
+        check(component.isPrimalAwakened(), "Awakening persists when leaving primal form");
+        component.exitPrimalSystem();
+        PrimalPowerReconciler.reconcile(player);
         net.onixary.sscPrimalstinct.instinct.WanderAiController.tickPlayer(player);
         check(!net.onixary.sscPrimalstinct.instinct.WanderAiController.isTakeoverActive(player)
                         && !net.onixary.sscPrimalstinct.instinct.PrimalstinctLifecycle.canUseFormAbilities(player),
-                "Leaving primal form releases innate AI without awakening ordinary ocelot");
+                "Ordinary ocelot can still exit the instinct system");
         check(!net.onixary.sscPrimalstinct.power.factory.BedSpawnOnlyPower.applies(player)
                         && net.onixary.sscPrimalstinct.sleep.CurlSleepController.findActivePower(player) == null,
                 "Ordinary unawakened form does not retain primal sleep rules");
+        check(InventoryLockManager.ruleIfRestricted(player) == null, "Ordinary unawakened form has no inventory lock");
+        SSCPrimalstinct.LOGGER.info("DIRECT_PRIMAL_REGRESSION_PASSED");
     }
 
     private void checkSscCompatibility(MinecraftServer server) throws Exception {

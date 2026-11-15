@@ -42,7 +42,7 @@ import java.util.Set;
  * （开发世界用结构方块导出，名字 ssc-primalstinct:primal_altar）。约定：
  * 模板内恰好 1 个原初祭坛方块、恰好 3 个原初基座、导线从各基座以四向相邻连向祭坛。
  * 放置锚点 = 模板内祭坛方块落在地形表面锚位（模板整体平移自动对齐，无需把祭坛摆在角落）。
- * 绑定（ritualId/基座需求/三路导线）在 postPlace 从模板数据推导，晚于地物落成后重放，免疫覆盖。</p>
+ * 在 top_layer_modification 阶段按区块放置；postPlace 从模板推导并绑定仪式数据。</p>
  *
  * <p><b>回退模式</b>：模板缺失时使用内置编码布局（原点=祭坛，北侧 4×4 门框）。</p>
  *
@@ -121,14 +121,10 @@ public class PrimalAltarStructurePiece extends StructurePiece {
                          ChunkPos chunkPos, BlockPos pivot) {
         StructureTemplate template = loadTemplate(world);
         if (template != null) {
-            // 模板模式：锚点所在 chunk 一次性放置整块模板（覆盖范围在 feature 区域内，安全跨 chunk 写入）
-            if (chunkBox.contains(anchor)) {
-                BlockPos templateOrigin = templateOrigin(template, anchor);
-                template.place(world, templateOrigin, templateOrigin,
-                        new StructurePlacementData(), random, Block.NOTIFY_LISTENERS);
-                SSCPrimalstinct.LOGGER.debug("[primalstinct] 模板模式放置：anchor={}, origin={}",
-                        anchor, templateOrigin);
-            }
+            // 每个区块在自己的晚期生成阶段放置，避免邻区块后续地物覆盖或重置已绑定的 BE。
+            BlockPos templateOrigin = templateOrigin(template, anchor);
+            template.place(world, templateOrigin, templateOrigin,
+                    new StructurePlacementData().setBoundingBox(chunkBox), random, Block.NOTIFY_LISTENERS);
             return;
         }
         SSCPrimalstinct.LOGGER.debug("[primalstinct] 祭坛 generate（回退布局）：anchor={}, chunkBox={}", anchor, chunkBox);
@@ -136,18 +132,13 @@ public class PrimalAltarStructurePiece extends StructurePiece {
     }
 
     /**
-     * 关键方块与 BE 绑定（postPlace，地物落成后重放修复）。
-     * 模板模式：重放模板 + 从模板数据推导绑定；回退模式：重放祭坛/基座/导线并绑定。
+     * 关键方块与 BE 绑定（postPlace，同一结构生成阶段内）。
+     * 模板模式：从已放置的模板数据推导绑定；回退模式：放置祭坛/基座/导线并绑定。
      */
     public void placeCore(StructureWorldAccess world, BlockBox chunkBox, Random random) {
         SSCPrimalstinct.LOGGER.debug("[primalstinct] 祭坛 postPlace：anchor={}, chunkBox={}", anchor, chunkBox);
         StructureTemplate template = loadTemplate(world);
         if (template != null) {
-            if (chunkBox.contains(anchor)) {
-                BlockPos templateOrigin = templateOrigin(template, anchor);
-                template.place(world, templateOrigin, templateOrigin,
-                        new StructurePlacementData(), random, Block.NOTIFY_LISTENERS);
-            }
             if (ritualId == null) {
                 return;
             }
@@ -304,15 +295,13 @@ public class PrimalAltarStructurePiece extends StructurePiece {
                             .with(PrimalPedestalBlock.FACING, LAYOUT_PEDESTAL_FACING[i]));
             List<BlockPos> path = new ArrayList<>();
             for (int[] offset : LAYOUT_WIRE_PATHS[i]) {
-                BlockPos wirePos = placeFallback(world, chunkBox, offset[0], 0, offset[1],
+                placeFallback(world, chunkBox, offset[0], 0, offset[1],
                         RegEndgameBlocks.PRIMAL_ENERGY_WIRE.getDefaultState());
-                if (wirePos != null) {
-                    path.add(wirePos);
-                }
+                path.add(anchor.add(offset[0], 0, offset[1]));
             }
+            pedestals.add(anchor.add(LAYOUT_PEDESTALS[i][0], 0, LAYOUT_PEDESTALS[i][1]));
+            paths.add(path);
             if (pedestalPos != null) {
-                pedestals.add(pedestalPos);
-                paths.add(path);
                 if (rolled) {
                     bindPedestal(world, pedestalPos, offerings[i], offeringCounts[i], anchor);
                 }

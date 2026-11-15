@@ -33,13 +33,19 @@ public final class PrimalstinctLifecycle {
         return isManaged(player) || player instanceof ServerPlayerEntity sp && SelectionSessionManager.isPending(sp);
     }
 
-    /** Innate endgame abilities do not require awakening or start instinct progression. */
+    /** Innate abilities also work during the transition before lifecycle refresh. */
     public static boolean canUseFormAbilities(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity sp && SelectionSessionManager.isPending(sp)) return false;
         return isManaged(player) || net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT
                 .equals(SSCAdapter.currentFormIdentifier(player));
     }
     public static void refresh(ServerPlayerEntity player) {
+        // 指令、正常转化及旧存档恢复统一补齐觉醒；幂等初始化保留已有本能进度。
+        if (!SelectionSessionManager.isPending(player)
+                && net.onixary.sscPrimalstinct.adapter.ssc.RegPrimalVariants.PRIMAL_OCELOT
+                        .equals(SSCAdapter.currentFormIdentifier(player))) {
+            RegPrimalstinctComponent.PRIMALSTINCT.get(player).awakenPrimalInstinct();
+        }
         boolean managed = isManaged(player);
         Boolean previous = MANAGED.put(player.getUuid(), managed);
         if (managed) {

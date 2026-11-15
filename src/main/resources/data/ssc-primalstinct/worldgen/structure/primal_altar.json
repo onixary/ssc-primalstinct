@@ -1,7 +1,7 @@
 {
   "type": "ssc-primalstinct:primal_altar",
   "biomes": "#minecraft:has_structure/primal_altar",
-  "step": "surface_structures",
+  "step": "top_layer_modification",
   "spawn_overrides": {},
   "terrain_adaptation": "beard_thin"
 }

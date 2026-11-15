@@ -118,7 +118,7 @@ public class PrimalAltarStructure extends Structure {
     }
 
     /**
-     * 地物落成后重放模板并绑定 BE（眷属实现04：关键方块免疫地物覆盖）。
+     * 模板放置后绑定 BE；生成阶段由数据配置为 top_layer_modification，晚于植被和积雪块地物。
      */
     @Override
     public void postPlace(net.minecraft.world.StructureWorldAccess world,

@@ -14,6 +14,11 @@ public final class PrimalstinctCodexText {
         String key = PREFIX + "form." + form.getNamespace() + "." + form.getPath()
                 + ".level." + level + "." + section;
         if (Language.getInstance().hasTranslation(key)) return Text.translatable(key);
+        // 原始豹猫的页面文案沿用 shape-shifter-curse 分组，实际形态 ID 属于附属。
+        String textForm = form.toString().equals("ssc-primalstinct:primal_ocelot")
+                ? "shape-shifter-curse.primal_ocelot" : form.getNamespace() + "." + form.getPath();
+        String formKey = PREFIX + "form." + textForm + "." + section;
+        if (Language.getInstance().hasTranslation(formKey)) return Text.translatable(formKey);
         String fallback = PREFIX + "level." + level + "." + section;
         if (Language.getInstance().hasTranslation(fallback)) return Text.translatable(fallback);
         // 无专属文案：显示空白，不再触发通用兜底句（2026-09-14 用户决策）
