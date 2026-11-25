@@ -3,6 +3,7 @@ package net.onixary.sscPrimalstinct;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.BedBlock;
@@ -48,13 +49,20 @@ import java.util.UUID;
 public final class EndgameRegressionChecks implements ModInitializer {
     private boolean ran;
     private int checks;
+    private int offeringsAtWorldLoad;
 
     @Override public void onInitialize() {
+        ServerWorldEvents.LOAD.register((server, world) -> {
+            if (World.OVERWORLD.equals(world.getRegistryKey())) {
+                offeringsAtWorldLoad = EndgameRosterManager.active().offerings.size();
+            }
+        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (ran) return;
             ran = true;
             try {
                 ServerWorld world = server.getOverworld();
+                check(offeringsAtWorldLoad >= 3, "Altar offerings are active before spawn chunks generate");
                 checkSnowyAltar(world);
                 checkInnatePrimalAbilities(server);
                 checkSscCompatibility(server);

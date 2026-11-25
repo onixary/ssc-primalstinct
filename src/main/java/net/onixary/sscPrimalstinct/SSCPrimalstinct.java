@@ -65,7 +65,8 @@ public class SSCPrimalstinct implements ModInitializer {
         // 眷属实现02：终局数据包（endgame/rituals + endgame/variants，同一加载流程）
         ResourceManagerHelper.get(ResourceType.SERVER_DATA)
                 .registerReloadListener(new net.onixary.sscPrimalstinct.endgame.data.EndgameReloadListener());
-        ServerLifecycleEvents.SERVER_STARTED.register(server ->
+        // 出生区可能在 SERVER_STARTED 前生成祭坛，必须先发布校验过的供物池。
+        ServerLifecycleEvents.SERVER_STARTING.register(server ->
                 net.onixary.sscPrimalstinct.endgame.data.EndgameRosterManager.validateAndSwap());
 
         // 卡03：S2C 同步协议（事件钩子 + 限频校正）

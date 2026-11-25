@@ -24,7 +24,7 @@ import java.util.TreeMap;
  * 眷属实现02：解析 data/&lt;ns&gt;/endgame/{rituals/default.json, variants/*.json} 为候选快照。
  * 复用名单数据包的“候选解析→引用验证→原子替换”流程：
  * 这里只做结构与数值校验；对 SSC Form / 物品注册表的引用验证在
- * EndgameRosterManager.validateAndSwap（SERVER_STARTED / reload 后，注册数据可用时）。
+ * EndgameRosterManager.validateAndSwap（SERVER_STARTING / reload 后，注册数据可用时）。
  * 任何文件解析失败 → 候选作废、保留上一版运行快照。
  */
 public final class EndgameReloadListener implements SimpleSynchronousResourceReloadListener {

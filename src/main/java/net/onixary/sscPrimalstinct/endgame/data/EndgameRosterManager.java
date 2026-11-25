@@ -14,7 +14,7 @@ import java.util.Set;
 
 /**
  * 眷属实现02：终局配置生命周期管理（与 PrimalRosterManager 同模式）。
- * 解析（reload 线程）产出候选；引用校验与原子交换在 SERVER_STARTED / END_DATA_PACK_RELOAD
+ * 解析（reload 线程）产出候选；引用校验与原子交换在 SERVER_STARTING / END_DATA_PACK_RELOAD
  * 进行（此时 SSC Form / 物品注册表可用），全部成功才替换运行快照；热重载失败保留上一版。
  * 已生成祭坛的供物写在基座 BE NBT 中，不因 reload 重新抽取。
  */
@@ -60,7 +60,7 @@ public final class EndgameRosterManager {
         lastParseErrors = List.copyOf(errors);
     }
 
-    /** SERVER_STARTED / END_DATA_PACK_RELOAD 时调用；幂等。 */
+    /** SERVER_STARTING / END_DATA_PACK_RELOAD 时调用；幂等。 */
     public static synchronized void validateAndSwap() {
         EndgameRitualConfig candidate = pending;
         if (candidate == null) {
